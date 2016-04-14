@@ -69,8 +69,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         }
 
         for (GraphQLMutationProvider provider : mutationProviders) {
-            GraphQLFieldDefinition mutation = provider.getMutation();
-            mutationObject.field(mutation);
+            provider.getMutations().forEach(mutationObject::field);
         }
 
         readOnlySchema = newSchema().query(object.build()).build();

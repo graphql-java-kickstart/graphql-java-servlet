@@ -16,6 +16,8 @@ package graphql.servlet;
 
 import graphql.schema.GraphQLFieldDefinition;
 
+import java.util.Collection;
+
 public interface GraphQLMutationProvider {
-    GraphQLFieldDefinition getMutation();
+    Collection<GraphQLFieldDefinition> getMutations();
 }
