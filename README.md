@@ -10,9 +10,7 @@ You can download it from bintray (Gradle syntax):
 
 ```groovy
 repositories {
-    maven {
-        url  "http://dl.bintray.com/yrashk/maven"
-    }
+  jcenter()
 }
 
 dependencies {
