@@ -1,0 +1,128 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:3.1.0'
+    }
+}
+
+plugins {
+    id "com.github.hierynomus.license" version "0.12.1"
+    id "com.jfrog.bintray" version "1.6"
+    id 'net.researchgate.release' version '2.3.4'
+}
+
+apply plugin: 'idea'
+
+release {
+    tagTemplate = 'v${version}'
+    failOnPublishNeeded = false
+}
+
+afterReleaseBuild.dependsOn bintrayUpload
+
+repositories {
+    jcenter()
+    mavenLocal()
+}
+
+apply plugin: 'java'
+apply plugin: 'osgi'
+apply plugin: 'license'
+apply plugin: 'java-library-distribution'
+apply plugin: 'biz.aQute.bnd.builder'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+jar {
+    manifest {
+        instruction 'Require-Capability', 'osgi.extender'
+    }
+}
+
+license {
+    exclude 'introspectionQuery'
+}
+
+publishing {
+    publications {
+        MyPublication(MavenPublication) {
+            from components.java
+            groupId 'graphql-java-servlet'
+            artifactId project.name
+            version project.version
+        }
+    }
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publications = ['MyPublication']
+    pkg {
+        repo = 'maven'
+        name = project.name
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/yrashk/graphql-java-servlet'
+        version {
+            name = project.version
+        }
+    }
+}
+
+dependencies {
+    // The production code uses the SLF4J logging API at compile time
+    compile 'org.slf4j:slf4j-api:1.7.18'
+    compile 'org.slf4j:slf4j-simple:1.7.18'
+
+    // Useful utilities
+    compile 'com.google.guava:guava:19.0'
+
+    // Unit testing
+    testCompile 'org.testng:testng:6.9.10'
+    testCompile "org.mockito:mockito-core:1.+"
+
+    // Remove boilerplate
+    compile 'org.projectlombok:lombok:1.16.8'
+
+    // OSGi
+    compile 'org.osgi:org.osgi.core:6.0.0'
+    compile 'org.osgi:org.osgi.service.cm:1.5.0'
+    compile 'org.osgi:org.osgi.service.component:1.3.0'
+    compile 'biz.aQute.bnd:biz.aQute.bndlib:3.1.0'
+
+    // Servlet
+    compile 'javax.servlet:javax.servlet-api:3.1.0'
+
+    // GraphQL
+    compile 'com.graphql-java:graphql-java:2.0.0'
+    compile 'graphql-java-annotations:graphql-java-annotations:0.7.1'
+
+    // JSON
+    compile 'com.fasterxml.jackson.core:jackson-core:2.7.3'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.3'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.3'
+
+}
+
+test.useTestNG()
+
+idea {
+    project {
+        languageLevel = '1.8'
+        vcs = 'Git'
+        ipr.withXml { xmlFile ->
+            // enable 'Annotation Processors'
+            xmlFile.asNode().component.find {
+                it.@name == 'CompilerConfiguration'
+            }['annotationProcessing'][0].replaceNode {
+                annotationProcessing {
+                    profile(default: true, name: 'Default', useClasspath: 'true', enabled: true)
+                }
+            }
+        }
+    }
+}
