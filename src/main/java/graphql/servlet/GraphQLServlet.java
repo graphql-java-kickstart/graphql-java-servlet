@@ -47,12 +47,14 @@ import static graphql.schema.GraphQLSchema.newSchema;
 
 @Slf4j
 @Component(property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"})
-public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean {
+public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean, GraphQLSchemaProvider {
 
     private List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
     private List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
 
+    @Getter
     GraphQLSchema schema;
+    @Getter
     GraphQLSchema readOnlySchema;
 
     protected void updateSchema() {
