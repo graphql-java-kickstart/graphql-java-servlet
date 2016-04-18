@@ -75,6 +75,7 @@ bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
     publications = ['MyPublication']
+    publish = true
     pkg {
         repo = 'maven'
         name = project.name
@@ -87,10 +88,6 @@ bintray {
 }
 
 dependencies {
-    // The production code uses the SLF4J logging API at compile time
-    compile 'org.slf4j:slf4j-api:1.7.18'
-    compile 'org.slf4j:slf4j-simple:1.7.18'
-
     // Useful utilities
     compile 'com.google.guava:guava:19.0'
 
