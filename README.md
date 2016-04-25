@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/yrashk/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/yrashk/graphql-java-servlet)
 [![Download](https://api.bintray.com/packages/yrashk/maven/graphql-java-servlet/images/download.svg)](https://bintray.com/yrashk/maven/graphql-java-servlet/_latestVersion)
 
 # GraphQL Servlet
