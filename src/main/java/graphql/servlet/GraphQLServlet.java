@@ -123,7 +123,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     }
 
     protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
-        return new GraphQLContext(req, resp);
+        return contextBuilder.build(req, resp);
     }
 
     @Override @SneakyThrows
