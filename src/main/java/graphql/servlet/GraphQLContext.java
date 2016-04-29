@@ -14,18 +14,22 @@
  */
 package graphql.servlet;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class GraphQLContext {
-    @Getter @Setter
+    @Getter @Setter @NonNull
     private Optional<HttpServletRequest> request;
-    @Getter @Setter
+    @Getter @Setter @NonNull
     private Optional<HttpServletResponse> response;
+    @Getter @Setter
+    private Optional<Subject> subject = Optional.empty();
 }

@@ -31,6 +31,7 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 
+import javax.security.auth.Subject;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -38,6 +39,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -165,23 +170,34 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     }
 
     private void query(String query, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        ExecutionResult result = new GraphQL(schema, new EnhancedExecutionStrategy()).execute(query, createContext(Optional.of(req), Optional.of(resp)), variables);
-        resp.setContentType("application/json");
-        if (result.getErrors().isEmpty()) {
-            Map<String, Object> dict = new HashMap<>();
-            dict.put("data", result.getData());
-            resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
+        GraphQLContext context = createContext(Optional.of(req), Optional.of(resp));
+        if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject().isPresent()) {
+            Subject.doAs(context.getSubject().get(), new PrivilegedAction<Void>() {
+                @Override @SneakyThrows
+                public Void run() {
+                    query(query, variables, schema, req, resp);
+                    return null;
+                }
+            });
         } else {
-            result.getErrors().stream().
-                    filter(error -> (error instanceof ExceptionWhileDataFetching)).
-                    forEachOrdered(err -> log.error("{}", ((ExceptionWhileDataFetching)err).getException()));
+            ExecutionResult result = new GraphQL(schema, new EnhancedExecutionStrategy()).execute(query, context, variables);
+            resp.setContentType("application/json");
+            if (result.getErrors().isEmpty()) {
+                Map<String, Object> dict = new HashMap<>();
+                dict.put("data", result.getData());
+                resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
+            } else {
+                result.getErrors().stream().
+                        filter(error -> (error instanceof ExceptionWhileDataFetching)).
+                        forEachOrdered(err -> log.error("{}", ((ExceptionWhileDataFetching) err).getException()));
 
-            resp.setStatus(500);
-            List<GraphQLError> errors = getGraphQLErrors(result);
-            Map<String, Object> dict = new HashMap<>();
-            dict.put("errors",errors);
+                resp.setStatus(500);
+                List<GraphQLError> errors = getGraphQLErrors(result);
+                Map<String, Object> dict = new HashMap<>();
+                dict.put("errors", errors);
 
-            resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
+                resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
+            }
         }
     }
 
