@@ -17,7 +17,6 @@ package graphql.servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import graphql.*;
-import graphql.annotations.EnhancedExecutionStrategy;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
@@ -118,6 +117,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     }
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
+    private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
 
     @Reference
     public void setContextProvider(GraphQLContextBuilder contextBuilder) {
@@ -125,6 +125,14 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     }
     public void unsetContextProvider(GraphQLContextBuilder contextBuilder) {
         this.contextBuilder = new DefaultGraphQLContextBuilder();
+    }
+
+    @Reference
+    public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
+        executionStrategyProvider = provider;
+    }
+    public void unsetExecutionStrategyProvider(ExecutionStrategyProvider provider) {
+        executionStrategyProvider = new EnhancedExecutionStrategyProvider();
     }
 
     protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
@@ -180,7 +188,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 }
             });
         } else {
-            ExecutionResult result = new GraphQL(schema, new EnhancedExecutionStrategy()).execute(query, context, variables);
+            ExecutionResult result = new GraphQL(schema, executionStrategyProvider.getExecutionStrategy()).execute(query, context, variables);
             resp.setContentType("application/json");
             if (result.getErrors().isEmpty()) {
                 Map<String, Object> dict = new HashMap<>();
