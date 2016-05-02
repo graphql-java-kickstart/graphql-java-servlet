@@ -18,10 +18,15 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -32,4 +37,7 @@ public class GraphQLContext {
     private Optional<HttpServletResponse> response;
     @Getter @Setter
     private Optional<Subject> subject = Optional.empty();
+
+    @Getter @Setter
+    private Optional<FileItemIterator> files = Optional.empty();
 }

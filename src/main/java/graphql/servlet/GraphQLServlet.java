@@ -25,6 +25,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.FileItemIterator;
+import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -37,11 +41,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -164,26 +167,49 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        GraphQLContext context = createContext(Optional.of(req), Optional.of(resp));
         if (req.getPathInfo().contentEquals("/schema.json")) {
-            query(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("introspectionQuery"))), new HashMap<>(), schema, req, resp);
+            query(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("introspectionQuery"))), new HashMap<>(), schema, req, resp, context);
         } else {
-            query(req.getParameter("q"), new HashMap<>(), readOnlySchema, req, resp);
+            query(req.getParameter("q"), new HashMap<>(), readOnlySchema, req, resp, context);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Request request = new ObjectMapper().readValue(req.getInputStream(), Request.class);
-        query(request.query, request.variables, schema, req, resp);
+        GraphQLContext context = createContext(Optional.of(req), Optional.of(resp));
+        InputStream inputStream = null;
+        if (ServletFileUpload.isMultipartContent(req)) {
+            ServletFileUpload upload = new ServletFileUpload();
+            try {
+                FileItemIterator it = upload.getItemIterator(req);
+                context.setFiles(Optional.of(it));
+                while (inputStream == null && it.hasNext()) {
+                    FileItemStream stream = it.next();
+                    if (stream.getFieldName().contentEquals("graphql")) {
+                        inputStream = stream.openStream();
+                    }
+                }
+                if (inputStream == null) {
+                    throw new ServletException("no query found");
+                }
+            } catch (FileUploadException e) {
+                throw new ServletException("no query found");
+            }
+        } else {
+            // this is not a multipart request
+            inputStream = req.getInputStream();
+        }
+        Request request = new ObjectMapper().readValue(inputStream, Request.class);
+        query(request.query, request.variables, schema, req, resp, context);
     }
 
-    private void query(String query, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        GraphQLContext context = createContext(Optional.of(req), Optional.of(resp));
+    private void query(String query, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
         if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject().isPresent()) {
             Subject.doAs(context.getSubject().get(), new PrivilegedAction<Void>() {
                 @Override @SneakyThrows
                 public Void run() {
-                    query(query, variables, schema, req, resp);
+                    query(query, variables, schema, req, resp, context);
                     return null;
                 }
             });

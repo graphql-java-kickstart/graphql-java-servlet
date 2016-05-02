@@ -27,3 +27,6 @@ The are a few important components this package provides:
   to define which "domain model" views and which mutations you are going to expose.
 * GraphQLServlet as an entry point servlet. Use `bindQueryProvider`/`bindMutationProvider` or automatically wire
 them in OSGi.
+
+Both GET and POST are supported. In POST, plain request body with a JSON is supported, as well as a multipart with a part
+called 'graphql'.
