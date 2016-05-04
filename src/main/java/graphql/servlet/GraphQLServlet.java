@@ -14,6 +14,8 @@
  */
 package graphql.servlet;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import graphql.*;
@@ -159,8 +161,14 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     public static class Request {
         @Getter @Setter
         private String query;
-        @Getter @Setter
+        @Getter
         private Map<String, Object> variables = new HashMap<>();
+
+        @SneakyThrows
+        public void setVariables(String variables) {
+            this.variables = new ObjectMapper().readValue(variables, new TypeReference<Map<String, Object>>() {});
+        }
+
         @Getter @Setter
         private String operationName;
     }
