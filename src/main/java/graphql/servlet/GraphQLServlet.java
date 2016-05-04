@@ -76,6 +76,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                     type(query).
                     staticValue(provider.context()).
                     name(provider.getName()).
+                    description(query.getDescription()).
                     build());
         }
 
