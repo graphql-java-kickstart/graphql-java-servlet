@@ -1,12 +1,14 @@
 buildscript {
     repositories {
         jcenter()
+        mavenCentral()
     }
     dependencies {
+        classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3"
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
         classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:3.1.0'
     }
 }
-
 plugins {
     id "com.github.hierynomus.license" version "0.12.1"
     id "com.jfrog.bintray" version "1.6"
@@ -23,8 +25,7 @@ release {
 afterReleaseBuild.dependsOn bintrayUpload
 
 repositories {
-    jcenter()
-    mavenLocal()
+    mavenCentral()
 }
 
 apply plugin: 'java'
@@ -35,6 +36,9 @@ apply plugin: 'biz.aQute.bnd.builder'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+
+apply plugin: 'io.codearte.nexus-staging'
+apply plugin: 'com.bmuschko.nexus'
 
 jar {
     manifest {
@@ -88,12 +92,15 @@ bintray {
 }
 
 dependencies {
+   compile 'org.slf4j:slf4j-api:1.7.21'
+   compile 'org.slf4j:slf4j-simple:1.7.21'
+
     // Useful utilities
     compile 'com.google.guava:guava:19.0'
 
     // Unit testing
     testCompile 'org.testng:testng:6.9.10'
-    testCompile "org.mockito:mockito-core:1.+"
+    testCompile "org.mockito:mockito-core:1.10.19"
 
     // Remove boilerplate
     compile 'org.projectlombok:lombok:1.16.8'
@@ -111,7 +118,7 @@ dependencies {
 
     // GraphQL
     compile 'com.graphql-java:graphql-java:2.0.0'
-    compile 'graphql-java-annotations:graphql-java-annotations:0.8.4'
+    compile 'com.graphql-java:graphql-java-annotations:0.9.0'
 
     // JSON
     compile 'com.fasterxml.jackson.core:jackson-core:2.7.3'
@@ -139,3 +146,39 @@ idea {
         }
     }
 }
+
+extraArchive {
+  sources false
+  javadoc false
+}
+
+modifyPom {
+     project {
+         name 'graphql-java-servlet'
+         description 'elay.js-compatible GraphQL servlet'
+         url 'https://github.com/graphql-java/graphql-java-servlet'
+         inceptionYear '2016'
+
+         scm {
+             url 'https://github.com/graphql-java/graphql-java-servlet'
+             connection 'scm:https://yrashk@github.com/graphql-java/graphql-java-servlet.git'
+             developerConnection 'scm:git://github.com/graphql-java/graphql-java-servlet.git'
+         }
+
+         licenses {
+             license {
+                 name 'The Apache Software License, Version 2.0'
+                 url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                 distribution 'repo'
+             }
+         }
+
+         developers {
+             developer {
+                 id 'yrashk'
+                 name 'Yurii Rashkovskii'
+                 email 'yrashk@gmail.com'
+             }
+         }
+     }
+ }
