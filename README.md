@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/yrashk/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/yrashk/graphql-java-servlet)
-[![Download](https://api.bintray.com/packages/yrashk/maven/graphql-java-servlet/images/download.svg)](https://bintray.com/yrashk/maven/graphql-java-servlet/_latestVersion)
+[![Maven Central](https://img.shields.io/maven-central/v/com.graphql-java/graphql-java-servlet.svg?maxAge=2592000)]()
 
 # GraphQL Servlet
 
@@ -11,11 +11,11 @@ You can download it from bintray (Gradle syntax):
 
 ```groovy
 repositories {
-  jcenter()
+  mavenCentral()
 }
 
 dependencies {
-  compile 'graphql-java-servlet:graphql-java-servlet:0.6.2'
+  compile 'graphql-java-servlet:graphql-java-servlet:0.6.3'
 }
 ```
 
