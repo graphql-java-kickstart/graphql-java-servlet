@@ -177,8 +177,12 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         GraphQLContext context = createContext(Optional.of(req), Optional.of(resp));
-        if (req.getPathInfo().contentEquals("/schema.json")) {
-            query(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("introspectionQuery"))), new HashMap<>(), schema, req, resp, context);
+        String path = req.getPathInfo();
+        if (path == null) {
+            path = req.getServletPath();
+        }
+        if (path.contentEquals("/schema.json")) {
+            query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), new HashMap<>(), schema, req, resp, context);
         } else {
             query(req.getParameter("q"), new HashMap<>(), readOnlySchema, req, resp, context);
         }
