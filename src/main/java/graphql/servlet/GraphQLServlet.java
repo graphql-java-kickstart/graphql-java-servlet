@@ -68,7 +68,6 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
 
     protected void updateSchema() {
         GraphQLObjectType.Builder object = newObject().name("query");
-        GraphQLObjectType.Builder mutationObject = newObject().name("mutation");
 
         for (GraphQLQueryProvider provider : queryProviders) {
             GraphQLObjectType query = provider.getQuery();
@@ -80,12 +79,19 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                     build());
         }
 
-        for (GraphQLMutationProvider provider : mutationProviders) {
-            provider.getMutations().forEach(mutationObject::field);
-        }
-
         readOnlySchema = newSchema().query(object.build()).build();
-        schema = newSchema().query(object.build()).mutation(mutationObject.build()).build();
+
+        if (mutationProviders.isEmpty()) {
+            schema = readOnlySchema;
+        } else {
+            GraphQLObjectType.Builder mutationObject = newObject().name("mutation");
+
+            for (GraphQLMutationProvider provider : mutationProviders) {
+                provider.getMutations().forEach(mutationObject::field);
+            }
+
+            schema = newSchema().query(object.build()).mutation(mutationObject.build()).build();
+        }
     }
 
     public GraphQLServlet() {
