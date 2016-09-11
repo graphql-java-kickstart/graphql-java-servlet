@@ -90,7 +90,7 @@ public class GraphQLServletTest {
         assertTrue(servlet.schema.getMutationType().getFieldDefinition("int").getType().equals(GraphQLInt));
         assertNull(servlet.readOnlySchema.getMutationType());
         servlet.unbindMutationProvider(mutationProvider);
-        assertTrue(servlet.schema.getMutationType().getFieldDefinitions().isEmpty());
+        assertNull(servlet.schema.getMutationType());
     }
 
     @Test @SneakyThrows
