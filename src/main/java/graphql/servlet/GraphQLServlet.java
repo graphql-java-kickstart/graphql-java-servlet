@@ -131,7 +131,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
     private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
 
-    @Reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     public void setContextProvider(GraphQLContextBuilder contextBuilder) {
         this.contextBuilder = contextBuilder;
     }
@@ -139,7 +139,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         this.contextBuilder = new DefaultGraphQLContextBuilder();
     }
 
-    @Reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
         executionStrategyProvider = provider;
     }
