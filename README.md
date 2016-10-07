@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-  compile 'com.graphql-java:graphql-java-servlet:0.6.3'
+  compile 'com.graphql-java:graphql-java-servlet:0.6.4'
 }
 ```
 
