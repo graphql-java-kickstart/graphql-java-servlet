@@ -168,14 +168,8 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     public static class Request {
         @Getter @Setter
         private String query;
-        @Getter
+        @Getter @Setter
         private Map<String, Object> variables = new HashMap<>();
-
-        @SneakyThrows
-        public void setVariables(String variables) {
-            this.variables = new ObjectMapper().readValue(variables, new TypeReference<Map<String, Object>>() {});
-        }
-
         @Getter @Setter
         private String operationName;
     }
@@ -190,7 +184,15 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         if (path.contentEquals("/schema.json")) {
             query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), new HashMap<>(), schema, req, resp, context);
         } else {
-            query(req.getParameter("q"), new HashMap<>(), readOnlySchema, req, resp, context);
+            if (req.getParameter("q") != null) {
+                query(req.getParameter("q"), new HashMap<>(), readOnlySchema, req, resp, context);
+            } else if (req.getParameter("query") != null) {
+                Map<String,Object> variables = new HashMap<>();
+                if (req.getParameter("variables") != null) {
+                    variables.putAll(new ObjectMapper().readValue(req.getParameter("variables"), new TypeReference<Map<String,Object>>() {}));
+                }
+                query(req.getParameter("query"), variables, readOnlySchema, req, resp, context);
+            }
         }
     }
 
@@ -220,7 +222,11 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
             inputStream = req.getInputStream();
         }
         Request request = new ObjectMapper().readValue(inputStream, Request.class);
-        query(request.query, request.variables, schema, req, resp, context);
+        Map<String,Object> variables = request.variables;
+        if (variables == null) {
+            variables = new HashMap<>();
+        }
+        query(request.query, variables, schema, req, resp, context);
     }
 
     private void query(String query, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
