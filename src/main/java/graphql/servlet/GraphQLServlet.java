@@ -182,16 +182,20 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
             path = req.getServletPath();
         }
         if (path.contentEquals("/schema.json")) {
-            query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), new HashMap<>(), schema, req, resp, context);
+            query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), null, new HashMap<>(), schema, req, resp, context);
         } else {
             if (req.getParameter("q") != null) {
-                query(req.getParameter("q"), new HashMap<>(), readOnlySchema, req, resp, context);
+                query(req.getParameter("q"), null, new HashMap<>(), readOnlySchema, req, resp, context);
             } else if (req.getParameter("query") != null) {
                 Map<String,Object> variables = new HashMap<>();
                 if (req.getParameter("variables") != null) {
                     variables.putAll(new ObjectMapper().readValue(req.getParameter("variables"), new TypeReference<Map<String,Object>>() {}));
                 }
-                query(req.getParameter("query"), variables, readOnlySchema, req, resp, context);
+                String operationName = null;
+                if (req.getParameter("operationName") != null) {
+                    operationName = req.getParameter("operationName");
+                }
+                query(req.getParameter("query"), operationName, variables, readOnlySchema, req, resp, context);
             }
         }
     }
@@ -226,20 +230,20 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         if (variables == null) {
             variables = new HashMap<>();
         }
-        query(request.query, variables, schema, req, resp, context);
+        query(request.query, request.operationName, variables, schema, req, resp, context);
     }
 
-    private void query(String query, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
+    private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
         if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject().isPresent()) {
             Subject.doAs(context.getSubject().get(), new PrivilegedAction<Void>() {
                 @Override @SneakyThrows
                 public Void run() {
-                    query(query, variables, schema, req, resp, context);
+                    query(query, operationName, variables, schema, req, resp, context);
                     return null;
                 }
             });
         } else {
-            ExecutionResult result = new GraphQL(schema, executionStrategyProvider.getExecutionStrategy()).execute(query, context, variables);
+            ExecutionResult result = new GraphQL(schema, executionStrategyProvider.getExecutionStrategy()).execute(query, operationName, context, variables);
             resp.setContentType("application/json");
             if (result.getErrors().isEmpty()) {
                 Map<String, Object> dict = new HashMap<>();
