@@ -31,10 +31,7 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.*;
 
 import javax.security.auth.Subject;
 import javax.servlet.Servlet;
@@ -131,7 +128,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
     private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
     public void setContextProvider(GraphQLContextBuilder contextBuilder) {
         this.contextBuilder = contextBuilder;
     }
