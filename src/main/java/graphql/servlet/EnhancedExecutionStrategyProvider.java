@@ -16,7 +16,9 @@ package graphql.servlet;
 
 import graphql.annotations.EnhancedExecutionStrategy;
 import graphql.execution.ExecutionStrategy;
+import org.osgi.service.component.annotations.Component;
 
+@Component(property = "type=enhanced")
 public class EnhancedExecutionStrategyProvider implements ExecutionStrategyProvider {
     @Override
     public ExecutionStrategy getExecutionStrategy() {
