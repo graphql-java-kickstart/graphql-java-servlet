@@ -14,9 +14,15 @@
  */
 package graphql.servlet;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.io.CharStreams;
 import graphql.*;
 import graphql.schema.GraphQLFieldDefinition;
@@ -162,23 +168,29 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         }
     }
 
+    private static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
+
+        @Override public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt)
+                throws IOException {
+            Object o = p.readValueAs(Object.class);
+            if (o instanceof Map) {
+                return (Map<String, Object>) o;
+            } else if (o instanceof String) {
+                return new ObjectMapper().readValue((String) o, new TypeReference<Map<String, Object>>() {});
+            } else {
+                throw new RuntimeJsonMappingException("variables should be either an object or a string");
+            }
+        }
+    }
+
     public static class Request {
         @Getter @Setter
         private String query;
-        @Getter
+        @Getter @Setter @JsonDeserialize(using = VariablesDeserializer.class)
         private Map<String, Object> variables = new HashMap<>();
         @Getter @Setter
         private String operationName;
 
-        @SneakyThrows @JsonProperty("variables")
-        public String getVariablesAsString() {
-            return new ObjectMapper().writeValueAsString(variables);
-        }
-
-        @SneakyThrows
-        public void setVariables(String variables) {
-            this.variables = new ObjectMapper().readValue(variables, new TypeReference<Map<String, Object>>() {});
-        }
     }
 
     @Override
