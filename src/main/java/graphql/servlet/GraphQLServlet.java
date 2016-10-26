@@ -14,9 +14,7 @@
  */
 package graphql.servlet;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -37,7 +35,10 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.osgi.service.component.annotations.*;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import javax.security.auth.Subject;
 import javax.servlet.Servlet;
@@ -93,7 +94,12 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 provider.getMutations().forEach(mutationObject::field);
             }
 
-            schema = newSchema().query(object.build()).mutation(mutationObject.build()).build();
+            GraphQLObjectType mutationType = mutationObject.build();
+            if (mutationType.getFieldDefinitions().size() == 0) {
+                schema = readOnlySchema;
+            } else {
+                schema = newSchema().query(object.build()).mutation(mutationType).build();
+            }
         }
     }
 
