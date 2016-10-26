@@ -107,7 +107,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         updateSchema();
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
     public void bindQueryProvider(GraphQLQueryProvider queryProvider) {
         queryProviders.add(queryProvider);
         updateSchema();
@@ -117,7 +117,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         updateSchema();
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
     public void bindMutationProvider(GraphQLMutationProvider mutationProvider) {
         mutationProviders.add(mutationProvider);
         updateSchema();
