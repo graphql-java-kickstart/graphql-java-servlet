@@ -106,10 +106,10 @@ dependencies {
     compile 'org.projectlombok:lombok:1.16.8'
 
     // OSGi
-    compile 'org.osgi:org.osgi.core:6.0.0'
-    compile 'org.osgi:org.osgi.service.cm:1.5.0'
-    compile 'org.osgi:org.osgi.service.component:1.3.0'
-    compile 'biz.aQute.bnd:biz.aQute.bndlib:3.1.0'
+    compileOnly 'org.osgi:org.osgi.core:6.0.0'
+    compileOnly 'org.osgi:org.osgi.service.cm:1.5.0'
+    compileOnly 'org.osgi:org.osgi.service.component:1.3.0'
+    compileOnly 'biz.aQute.bnd:biz.aQute.bndlib:3.1.0'
 
     // Servlet
     compile 'javax.servlet:javax.servlet-api:3.0.1'
