@@ -25,6 +25,7 @@ release {
 afterReleaseBuild.dependsOn bintrayUpload
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
