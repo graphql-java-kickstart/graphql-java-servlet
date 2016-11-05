@@ -160,6 +160,17 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         return contextBuilder.build(req, resp);
     }
 
+    private List<GraphQLOperationListener> operationListeners = new ArrayList<>();
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
+    public void bindOperationListener(GraphQLOperationListener listener) {
+        operationListeners.add(listener);
+    }
+
+    public void unbindOperationListener(GraphQLOperationListener listener) {
+        operationListeners.remove(listener);
+    }
+
     @Override @SneakyThrows
     public String executeQuery(String query) {
         try {
@@ -274,6 +285,8 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 Map<String, Object> dict = new HashMap<>();
                 dict.put("data", result.getData());
                 resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
+                operationListeners.forEach(l -> l.onGraphQLOperation(context, operationName, query, variables,
+                                                                     result.getData()));
             } else {
                 result.getErrors().stream().
                         filter(error -> (error instanceof ExceptionWhileDataFetching)).
@@ -285,6 +298,8 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 dict.put("errors", errors);
 
                 resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
+                operationListeners.forEach(l -> l.onFailedGraphQLOperation(context, operationName, query, variables,
+                                                                           result.getErrors()));
             }
         }
     }
