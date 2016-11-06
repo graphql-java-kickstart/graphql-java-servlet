@@ -79,4 +79,26 @@ public class GraphQLVariablesTest {
         assertEquals(((ComplexQueryProvider.Data)d).getField1(), "1");
         assertEquals(((ComplexQueryProvider.Data)d).getField2(), "2");
     }
+
+    private static final String NON_NULL_QUERY = "query Q($d: Data!) { data { echo(data: $d) { field1 field2 } } }";
+
+    @Test
+    public void nonNullvariableTyping() {
+        GraphQLServlet servlet = new GraphQLServlet();
+        ComplexQueryProvider queryProvider = new ComplexQueryProvider();
+        servlet.bindQueryProvider(queryProvider);
+        GraphQLSchema schema = servlet.getSchema();
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("field1", "1");
+        data.put("field2", "2");
+        HashMap<String, Object> vars = new HashMap<>();
+        vars.put("d", data);
+        GraphQLVariables variables = new GraphQLVariables(schema, NON_NULL_QUERY, vars);
+        Object d = variables.get("d");
+        System.out.println("d = " + d);
+        assertTrue(d instanceof ComplexQueryProvider.Data);
+        assertEquals(((ComplexQueryProvider.Data)d).getField1(), "1");
+        assertEquals(((ComplexQueryProvider.Data)d).getField2(), "2");
+    }
+
 }

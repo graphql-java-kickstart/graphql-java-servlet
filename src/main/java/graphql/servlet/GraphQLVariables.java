@@ -17,9 +17,7 @@ package graphql.servlet;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.annotations.GraphQLObjectTypeWrapper;
-import graphql.language.OperationDefinition;
-import graphql.language.TypeName;
-import graphql.language.VariableDefinition;
+import graphql.language.*;
 import graphql.parser.Parser;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
@@ -46,7 +44,16 @@ public class GraphQLVariables extends HashMap<String, Object> {
                     .forEach(new Consumer<VariableDefinition>() {
                         @SneakyThrows
                         @Override public void accept(VariableDefinition d) {
-                            GraphQLType type = schema.getType(((TypeName) (d.getType())).getName());
+                            GraphQLType type;
+                            Type t = d.getType();
+                            if (t instanceof TypeName) {
+                                type = schema.getType(((TypeName) t).getName());
+                            } else if (t instanceof NonNullType) {
+                                accept(new VariableDefinition(d.getName(), ((NonNullType) t).getType()));
+                                return;
+                            } else {
+                                type = null;
+                            }
                             if (type instanceof GraphQLObjectTypeWrapper) {
                                 String value = objectMapper.writeValueAsString(variables.get(d.getName()));
                                 Object val = objectMapper.readValue(value, ((GraphQLObjectTypeWrapper) type).getObjectClass());
