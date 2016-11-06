@@ -279,14 +279,14 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 }
             });
         } else {
-            ExecutionResult result = new GraphQL(schema, executionStrategyProvider.getExecutionStrategy()).execute(query, operationName, context, variables);
+            GraphQLVariables vars = new GraphQLVariables(schema, query, variables);
+            ExecutionResult result = new GraphQL(schema, executionStrategyProvider.getExecutionStrategy()).execute(query, operationName, context, vars);
             resp.setContentType("application/json");
             if (result.getErrors().isEmpty()) {
                 Map<String, Object> dict = new HashMap<>();
                 dict.put("data", result.getData());
                 resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
-                operationListeners.forEach(l -> l.onGraphQLOperation(context, operationName, query, variables,
-                                                                     result.getData()));
+                operationListeners.forEach(l -> l.onGraphQLOperation(context, operationName, query, vars, result.getData()));
             } else {
                 result.getErrors().stream().
                         filter(error -> (error instanceof ExceptionWhileDataFetching)).
@@ -298,7 +298,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 dict.put("errors", errors);
 
                 resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
-                operationListeners.forEach(l -> l.onFailedGraphQLOperation(context, operationName, query, variables,
+                operationListeners.forEach(l -> l.onFailedGraphQLOperation(context, operationName, query, vars,
                                                                            result.getErrors()));
             }
         }
