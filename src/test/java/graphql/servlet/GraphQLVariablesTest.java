@@ -95,7 +95,6 @@ public class GraphQLVariablesTest {
         vars.put("d", data);
         GraphQLVariables variables = new GraphQLVariables(schema, NON_NULL_QUERY, vars);
         Object d = variables.get("d");
-        System.out.println("d = " + d);
         assertTrue(d instanceof ComplexQueryProvider.Data);
         assertEquals(((ComplexQueryProvider.Data)d).getField1(), "1");
         assertEquals(((ComplexQueryProvider.Data)d).getField2(), "2");
