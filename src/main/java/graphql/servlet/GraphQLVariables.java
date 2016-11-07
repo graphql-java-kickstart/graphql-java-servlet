@@ -14,9 +14,9 @@
  */
 package graphql.servlet;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import graphql.annotations.GraphQLObjectTypeWrapper;
+import graphql.annotations.GraphQLObjectBackedByClass;
 import graphql.language.*;
 import graphql.parser.Parser;
 import graphql.schema.GraphQLSchema;
@@ -37,6 +37,8 @@ public class GraphQLVariables extends HashMap<String, Object> {
         this.schema = schema;
         this.query = query;
         ObjectMapper objectMapper = new ObjectMapper();
+        // this will help combating issues with unknown fields like clientMutationId
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         new Parser().parseDocument(query).getDefinitions().stream()
                     .filter(d -> d instanceof OperationDefinition)
                     .map(d -> (OperationDefinition) d)
@@ -54,9 +56,9 @@ public class GraphQLVariables extends HashMap<String, Object> {
                             } else {
                                 type = null;
                             }
-                            if (type instanceof GraphQLObjectTypeWrapper) {
+                            if (type instanceof GraphQLObjectBackedByClass) {
                                 String value = objectMapper.writeValueAsString(variables.get(d.getName()));
-                                Object val = objectMapper.readValue(value, ((GraphQLObjectTypeWrapper) type).getObjectClass());
+                                Object val = objectMapper.readValue(value, ((GraphQLObjectBackedByClass) type).getObjectClass());
                                 GraphQLVariables.this.put(d.getName(), val);
                             } else {
                                 GraphQLVariables.this.put(d.getName(), variables.get(d.getName()));
