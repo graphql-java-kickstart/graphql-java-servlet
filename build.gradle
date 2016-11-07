@@ -121,10 +121,10 @@ dependencies {
     compile 'com.graphql-java:graphql-java-annotations:0.13.1'
 
     // JSON
-    compile 'com.fasterxml.jackson.core:jackson-core:2.7.3'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.3'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.7.3'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.8,4'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.4'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.4'
 
 }
 
