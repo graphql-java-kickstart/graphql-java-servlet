@@ -281,7 +281,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         } else {
             GraphQLVariables vars = new GraphQLVariables(schema, query, variables);
             ExecutionResult result = new GraphQL(schema, executionStrategyProvider.getExecutionStrategy()).execute(query, operationName, context, vars);
-            resp.setContentType("application/json");
+            resp.setContentType("application/json;charset=utf-8");
             if (result.getErrors().isEmpty()) {
                 Map<String, Object> dict = new HashMap<>();
                 dict.put("data", result.getData());
