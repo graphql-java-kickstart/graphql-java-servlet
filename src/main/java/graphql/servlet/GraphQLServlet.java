@@ -26,6 +26,7 @@ import graphql.*;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.GraphQLType;
 import graphql.validation.ValidationError;
 import lombok.Getter;
 import lombok.Setter;
@@ -64,6 +65,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
 
     private List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
     private List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
+    private List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
 
     @Getter
     GraphQLSchema schema;
@@ -83,7 +85,12 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                     build());
         }
 
-        readOnlySchema = newSchema().query(object.build()).build();
+        Set<GraphQLType> types = new HashSet<>();
+        for (GraphQLTypesProvider typesProvider : typesProviders) {
+            types.addAll(typesProvider.getTypes());
+        }
+
+        readOnlySchema = newSchema().query(object.build()).build(types);
 
         if (mutationProviders.isEmpty()) {
             schema = readOnlySchema;
@@ -124,6 +131,16 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     }
     public void unbindMutationProvider(GraphQLMutationProvider mutationProvider) {
         mutationProviders.remove(mutationProvider);
+        updateSchema();
+    }
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
+    public void typesProviders(GraphQLTypesProvider typesProvider) {
+        typesProviders.add(typesProvider);
+        updateSchema();
+    }
+    public void unbindTypesProvider(GraphQLTypesProvider typesProvider) {
+        typesProviders.remove(typesProvider);
         updateSchema();
     }
 
