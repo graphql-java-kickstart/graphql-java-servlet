@@ -50,7 +50,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class AbstractGraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean, GraphQLSchemaProvider {
+public abstract class AbstractGraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean, GraphQLSchemaProvider {
 
     AbstractGraphQLServlet() {
         this(new DefaultGraphQLContextBuilder(), new EnhancedExecutionStrategyProvider(), new ArrayList<>());
