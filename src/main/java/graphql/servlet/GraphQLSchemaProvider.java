@@ -14,9 +14,27 @@
  */
 package graphql.servlet;
 
+import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
+import lombok.Getter;
 
-public interface GraphQLSchemaProvider {
-    GraphQLSchema getSchema();
-    GraphQLSchema getReadOnlySchema();
+import javax.validation.constraints.NotNull;
+import java.util.HashSet;
+
+public abstract class GraphQLSchemaProvider {
+
+    // Initialize with empty schema so schema and readOnlySchema are never null
+    private final GraphQLSchema emptySchema = GraphQLSchema.newSchema().query(GraphQLObjectType.newObject().name("query")).build(new HashSet<>());
+
+    @Getter
+    @NotNull
+    private GraphQLSchema schema = emptySchema;
+    @Getter
+    @NotNull
+    private GraphQLSchema readOnlySchema = emptySchema;
+
+    protected void updateSchema(@NotNull GraphQLSchema schema, @NotNull GraphQLSchema readOnlySchema) {
+        this.schema = schema;
+        this.readOnlySchema = readOnlySchema;
+    }
 }

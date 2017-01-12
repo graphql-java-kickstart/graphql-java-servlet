@@ -24,9 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.io.CharStreams;
 import graphql.*;
 import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLType;
 import graphql.validation.ValidationError;
 import lombok.Getter;
 import lombok.Setter;
@@ -55,107 +53,41 @@ import java.security.PrivilegedAction;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
-import static graphql.schema.GraphQLObjectType.newObject;
-import static graphql.schema.GraphQLSchema.newSchema;
-
 @Slf4j
 @Component(property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"})
-public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean, GraphQLSchemaProvider {
+public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean {
 
-    private List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
-    private List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
-    private List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
+    private GraphQLSchemaProvider schemaProvider = new EmptySchemaProvider();
 
-    @Getter
-    GraphQLSchema schema;
-    @Getter
-    GraphQLSchema readOnlySchema;
-
-    protected void updateSchema() {
-        GraphQLObjectType.Builder object = newObject().name("query");
-
-        for (GraphQLQueryProvider provider : queryProviders) {
-            GraphQLObjectType query = provider.getQuery();
-            object.field(newFieldDefinition().
-                    type(query).
-                    staticValue(provider.context()).
-                    name(provider.getName()).
-                    description(query.getDescription()).
-                    build());
-        }
-
-        Set<GraphQLType> types = new HashSet<>();
-        for (GraphQLTypesProvider typesProvider : typesProviders) {
-            types.addAll(typesProvider.getTypes());
-        }
-
-        readOnlySchema = newSchema().query(object.build()).build(types);
-
-        if (mutationProviders.isEmpty()) {
-            schema = readOnlySchema;
-        } else {
-            GraphQLObjectType.Builder mutationObject = newObject().name("mutation");
-
-            for (GraphQLMutationProvider provider : mutationProviders) {
-                provider.getMutations().forEach(mutationObject::field);
-            }
-
-            GraphQLObjectType mutationType = mutationObject.build();
-            if (mutationType.getFieldDefinitions().size() == 0) {
-                schema = readOnlySchema;
-            } else {
-                schema = newSchema().query(object.build()).mutation(mutationType).build();
-            }
-        }
+    public GraphQLSchema getSchema() {
+        return schemaProvider.getSchema();
     }
 
-    public GraphQLServlet() {
-        updateSchema();
+    public GraphQLSchema getReadOnlySchema() {
+        return schemaProvider.getReadOnlySchema();
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void bindQueryProvider(GraphQLQueryProvider queryProvider) {
-        queryProviders.add(queryProvider);
-        updateSchema();
+    @Reference(cardinality = ReferenceCardinality.MANDATORY, policyOption = ReferencePolicyOption.GREEDY)
+    public void setSchemaProvider(GraphQLSchemaProvider schemaProvider) {
+        this.schemaProvider = schemaProvider;
     }
-    public void unbindQueryProvider(GraphQLQueryProvider queryProvider) {
-        queryProviders.remove(queryProvider);
-        updateSchema();
-    }
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void bindMutationProvider(GraphQLMutationProvider mutationProvider) {
-        mutationProviders.add(mutationProvider);
-        updateSchema();
-    }
-    public void unbindMutationProvider(GraphQLMutationProvider mutationProvider) {
-        mutationProviders.remove(mutationProvider);
-        updateSchema();
-    }
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void typesProviders(GraphQLTypesProvider typesProvider) {
-        typesProviders.add(typesProvider);
-        updateSchema();
-    }
-    public void unbindTypesProvider(GraphQLTypesProvider typesProvider) {
-        typesProviders.remove(typesProvider);
-        updateSchema();
+    public void unsetSchemaProvider(GraphQLSchemaProvider schemaProvider) {
+        this.schemaProvider = new EmptySchemaProvider();
     }
 
     @Override
     public String[] getQueries() {
-        return schema.getQueryType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
+        return getSchema().getQueryType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
     }
 
     @Override
     public String[] getMutations() {
-        return schema.getMutationType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
+        return getSchema().getMutationType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
     }
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
     private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
+    private List<GraphQLOperationListener> operationListeners = new ArrayList<>();
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
     public void setContextProvider(GraphQLContextBuilder contextBuilder) {
@@ -177,8 +109,6 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         return contextBuilder.build(req, resp);
     }
 
-    private List<GraphQLOperationListener> operationListeners = new ArrayList<>();
-
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
     public void bindOperationListener(GraphQLOperationListener listener) {
         operationListeners.add(listener);
@@ -191,7 +121,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
     @Override @SneakyThrows
     public String executeQuery(String query) {
         try {
-            ExecutionResult result = new GraphQL(schema).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
+            ExecutionResult result = new GraphQL(getSchema()).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
             if (result.getErrors().isEmpty()) {
                 return new ObjectMapper().writeValueAsString(result.getData());
             } else {
@@ -235,10 +165,10 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
             path = req.getServletPath();
         }
         if (path.contentEquals("/schema.json")) {
-            query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), null, new HashMap<>(), schema, req, resp, context);
+            query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), null, new HashMap<>(), getSchema(), req, resp, context);
         } else {
             if (req.getParameter("q") != null) {
-                query(req.getParameter("q"), null, new HashMap<>(), readOnlySchema, req, resp, context);
+                query(req.getParameter("q"), null, new HashMap<>(), getReadOnlySchema(), req, resp, context);
             } else if (req.getParameter("query") != null) {
                 Map<String,Object> variables = new HashMap<>();
                 if (req.getParameter("variables") != null) {
@@ -248,7 +178,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 if (req.getParameter("operationName") != null) {
                     operationName = req.getParameter("operationName");
                 }
-                query(req.getParameter("query"), operationName, variables, readOnlySchema, req, resp, context);
+                query(req.getParameter("query"), operationName, variables, getReadOnlySchema(), req, resp, context);
             }
         }
     }
@@ -283,7 +213,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         if (variables == null) {
             variables = new HashMap<>();
         }
-        query(request.query, request.operationName, variables, schema, req, resp, context);
+        query(request.query, request.operationName, variables, getSchema(), req, resp, context);
     }
 
     private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
