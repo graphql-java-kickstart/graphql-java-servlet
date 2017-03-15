@@ -41,11 +41,19 @@ public class GraphQLVariablesTest {
             private String field2;
         }
 
+        @Value
+        public static class DataInput {
+            @GraphQLField
+            private String field1;
+            @GraphQLField
+            private String field2;
+        }
+
         @GraphQLName("data")
         public static class DataQuery {
             @GraphQLField
-            public Data echo(Data data) {
-                return data;
+            public Data echo(DataInput data) {
+                return new Data(data.getField1(), data.getField2());
             }
         }
 
