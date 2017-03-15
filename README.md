@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/graphql-java/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/graphql-java/graphql-java-servlet)
-[![Maven Central](https://img.shields.io/maven-central/v/com.graphql-java/graphql-java-servlet.svg?maxAge=2592000)]()
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet)
 
 # GraphQL Servlet
 
