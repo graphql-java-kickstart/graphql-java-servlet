@@ -7,16 +7,24 @@ This module implements a Relay.js-compatible GraphQL server. It also supports OS
 
 # Downloading
 
-You can download it from bintray (Gradle syntax):
+You can download it from maven central:
 
 ```groovy
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-  compile 'com.graphql-java:graphql-java-servlet:0.7.0'
+    compile 'com.graphql-java:graphql-java-servlet:0.10.0'
 }
+```
+
+```xml
+<dependency>
+  <groupId>com.graphql-java</groupId>
+  <artifactId>graphql-java-servlet</artifactId>
+  <version>0.10.0</version>
+</dependency>
 ```
 
 # Usage
