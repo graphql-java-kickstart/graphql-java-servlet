@@ -21,9 +21,9 @@ dependencies {
 
 ```xml
 <dependency>
-  <groupId>com.graphql-java</groupId>
-  <artifactId>graphql-java-servlet</artifactId>
-  <version>0.10.0</version>
+    <groupId>com.graphql-java</groupId>
+    <artifactId>graphql-java-servlet</artifactId>
+    <version>0.10.0</version>
 </dependency>
 ```
 
