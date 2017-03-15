@@ -69,7 +69,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 publishing {
     publications {
-        MyPublication(MavenPublication) {
+        maven(MavenPublication) {
             from components.java
             groupId 'com.graphql-java'
             artifactId project.name
@@ -77,6 +77,43 @@ publishing {
 
             artifact sourcesJar
             artifact javadocJar
+
+            pom.withXml {
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name 'graphql-java-servlet'
+                    description 'relay.js-compatible GraphQL servlet'
+                    url 'https://github.com/graphql-java/graphql-java-servlet'
+                    inceptionYear '2016'
+
+                    scm {
+                        url 'https://github.com/graphql-java/graphql-java-servlet'
+                        connection 'scm:https://yrashk@github.com/graphql-java/graphql-java-servlet.git'
+                        developerConnection 'scm:git://github.com/graphql-java/graphql-java-servlet.git'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'yrashk'
+                            name 'Yurii Rashkovskii'
+                            email 'yrashk@gmail.com'
+                        }
+                        developer {
+                            id 'apottere'
+                            name 'Andrew Potter'
+                            email 'apottere@gmail.com'
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -84,13 +121,13 @@ publishing {
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
-    publications = ['MyPublication']
+    publications = ['maven']
     publish = true
     pkg {
         repo = 'maven'
         name = project.name
         licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/yrashk/graphql-java-servlet'
+        vcsUrl = 'https://github.com/graphql-java/graphql-java-servlet'
         version {
             name = project.version
         }
