@@ -3,7 +3,7 @@
 
 # GraphQL Servlet
 
-This module implements a Relay.js-compatible GraphQL server. It also supports OSGi out of the box.
+This module implements a GraphQL Java Servlet. It also supports Relay.js and OSGi out of the box.
 
 # Downloading
 
