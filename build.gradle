@@ -142,7 +142,8 @@ dependencies {
 
     // Unit testing
     testCompile 'org.testng:testng:6.9.10'
-    testCompile "org.mockito:mockito-core:1.10.19"
+    testCompile 'org.mockito:mockito-core:1.10.19'
+    testCompile 'org.slf4j:slf4j-simple:1.7.24'
 
     // Remove boilerplate
     compile 'org.projectlombok:lombok:1.16.8'
@@ -160,14 +161,16 @@ dependencies {
 
     // GraphQL
     compile 'com.graphql-java:graphql-java:2.3.0'
-    compile 'com.graphql-java:graphql-java-annotations:0.13.1'
+
+    // Optional, but used for testing... not sure if there's a better way.
+    compileOnly 'com.graphql-java:graphql-java-annotations:0.13.1'
+    testCompile 'com.graphql-java:graphql-java-annotations:0.13.1'
 
     // JSON
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.8.4'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.4'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.4'
-
 }
 
 test.useTestNG()
