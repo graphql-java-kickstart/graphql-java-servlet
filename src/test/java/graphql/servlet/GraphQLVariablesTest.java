@@ -74,7 +74,10 @@ public class GraphQLVariablesTest {
     public void variableTyping() {
         GraphQLServlet servlet = new GraphQLServlet();
         ComplexQueryProvider queryProvider = new ComplexQueryProvider();
-        servlet.bindQueryProvider(queryProvider);
+        OsgiSchemaProvider schemaProvider = new OsgiSchemaProvider();
+        servlet.setSchemaProvider(schemaProvider);
+
+        schemaProvider.bindQueryProvider(queryProvider);
         GraphQLSchema schema = servlet.getSchema();
         HashMap<String, Object> data = new HashMap<>();
         data.put("field1", "1");
@@ -94,7 +97,10 @@ public class GraphQLVariablesTest {
     public void nonNullvariableTyping() {
         GraphQLServlet servlet = new GraphQLServlet();
         ComplexQueryProvider queryProvider = new ComplexQueryProvider();
-        servlet.bindQueryProvider(queryProvider);
+        OsgiSchemaProvider schemaProvider = new OsgiSchemaProvider();
+        servlet.setSchemaProvider(schemaProvider);
+
+        schemaProvider.bindQueryProvider(queryProvider);
         GraphQLSchema schema = servlet.getSchema();
         HashMap<String, Object> data = new HashMap<>();
         data.put("field1", "1");
