@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface GraphQLOperationListener {
-    void onGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables,
-                            Object data);
-    void onFailedGraphQLOperation(GraphQLContext context, String operationName, String query,
-                                  Map<String, Object> variables, List<GraphQLError> errors);
+    void beforeGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables);
+    void onSuccessfulGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data);
+    void onFailedGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, List<GraphQLError> errors);
 }

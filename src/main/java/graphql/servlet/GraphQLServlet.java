@@ -11,8 +11,7 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- */
-package graphql.servlet;
+ */ package graphql.servlet;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -22,11 +21,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.io.CharStreams;
-import graphql.*;
+import graphql.ExceptionWhileDataFetching;
+import graphql.ExecutionResult;
+import graphql.GraphQL;
+import graphql.GraphQLError;
+import graphql.InvalidSyntaxError;
+import graphql.execution.ExecutionStrategy;
 import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLType;
 import graphql.validation.ValidationError;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,10 +38,6 @@ import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 import javax.security.auth.Subject;
 import javax.servlet.Servlet;
@@ -52,146 +50,48 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
-import static graphql.schema.GraphQLObjectType.newObject;
-import static graphql.schema.GraphQLSchema.newSchema;
-
+/**
+ * @author Andrew Potter
+ */
 @Slf4j
-@Component(property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"})
-public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean, GraphQLSchemaProvider {
+public abstract class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean, GraphQLSchemaProvider {
 
-    private List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
-    private List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
-    private List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
+    protected abstract GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
+    protected abstract ExecutionStrategy getExecutionStrategy();
+    protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
 
-    @Getter
-    GraphQLSchema schema;
-    @Getter
-    GraphQLSchema readOnlySchema;
 
-    protected void updateSchema() {
-        GraphQLObjectType.Builder object = newObject().name("query");
+    private List<GraphQLOperationListener> operationListeners = new ArrayList<>();
 
-        for (GraphQLQueryProvider provider : queryProviders) {
-            GraphQLObjectType query = provider.getQuery();
-            object.field(newFieldDefinition().
-                    type(query).
-                    staticValue(provider.context()).
-                    name(provider.getName()).
-                    description(query.getDescription()).
-                    build());
-        }
-
-        Set<GraphQLType> types = new HashSet<>();
-        for (GraphQLTypesProvider typesProvider : typesProviders) {
-            types.addAll(typesProvider.getTypes());
-        }
-
-        readOnlySchema = newSchema().query(object.build()).build(types);
-
-        if (mutationProviders.isEmpty()) {
-            schema = readOnlySchema;
-        } else {
-            GraphQLObjectType.Builder mutationObject = newObject().name("mutation");
-
-            for (GraphQLMutationProvider provider : mutationProviders) {
-                provider.getMutations().forEach(mutationObject::field);
-            }
-
-            GraphQLObjectType mutationType = mutationObject.build();
-            if (mutationType.getFieldDefinitions().size() == 0) {
-                schema = readOnlySchema;
-            } else {
-                schema = newSchema().query(object.build()).mutation(mutationType).build();
-            }
-        }
+    public void addOperationListener(GraphQLOperationListener operationListener) {
+        operationListeners.add(operationListener);
     }
 
-    public GraphQLServlet() {
-        updateSchema();
-    }
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void bindQueryProvider(GraphQLQueryProvider queryProvider) {
-        queryProviders.add(queryProvider);
-        updateSchema();
-    }
-    public void unbindQueryProvider(GraphQLQueryProvider queryProvider) {
-        queryProviders.remove(queryProvider);
-        updateSchema();
-    }
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void bindMutationProvider(GraphQLMutationProvider mutationProvider) {
-        mutationProviders.add(mutationProvider);
-        updateSchema();
-    }
-    public void unbindMutationProvider(GraphQLMutationProvider mutationProvider) {
-        mutationProviders.remove(mutationProvider);
-        updateSchema();
-    }
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void typesProviders(GraphQLTypesProvider typesProvider) {
-        typesProviders.add(typesProvider);
-        updateSchema();
-    }
-    public void unbindTypesProvider(GraphQLTypesProvider typesProvider) {
-        typesProviders.remove(typesProvider);
-        updateSchema();
+    public void removeOperationListener(GraphQLOperationListener operationListener) {
+        operationListeners.remove(operationListener);
     }
 
     @Override
     public String[] getQueries() {
-        return schema.getQueryType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
+        return getSchema().getQueryType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
     }
 
     @Override
     public String[] getMutations() {
-        return schema.getMutationType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
-    }
-
-    private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
-    private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
-
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
-    public void setContextProvider(GraphQLContextBuilder contextBuilder) {
-        this.contextBuilder = contextBuilder;
-    }
-    public void unsetContextProvider(GraphQLContextBuilder contextBuilder) {
-        this.contextBuilder = new DefaultGraphQLContextBuilder();
-    }
-
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
-    public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
-        executionStrategyProvider = provider;
-    }
-    public void unsetExecutionStrategyProvider(ExecutionStrategyProvider provider) {
-        executionStrategyProvider = new EnhancedExecutionStrategyProvider();
-    }
-
-    protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
-        return contextBuilder.build(req, resp);
-    }
-
-    private List<GraphQLOperationListener> operationListeners = new ArrayList<>();
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void bindOperationListener(GraphQLOperationListener listener) {
-        operationListeners.add(listener);
-    }
-
-    public void unbindOperationListener(GraphQLOperationListener listener) {
-        operationListeners.remove(listener);
+        return getSchema().getMutationType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
     }
 
     @Override @SneakyThrows
     public String executeQuery(String query) {
         try {
-            ExecutionResult result = new GraphQL(schema).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
+            ExecutionResult result = new GraphQL(getSchema()).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
             if (result.getErrors().isEmpty()) {
                 return new ObjectMapper().writeValueAsString(result.getData());
             } else {
@@ -202,31 +102,6 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         }
     }
 
-    private static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
-
-        @Override public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt)
-                throws IOException {
-            Object o = p.readValueAs(Object.class);
-            if (o instanceof Map) {
-                return (Map<String, Object>) o;
-            } else if (o instanceof String) {
-                return new ObjectMapper().readValue((String) o, new TypeReference<Map<String, Object>>() {});
-            } else {
-                throw new RuntimeJsonMappingException("variables should be either an object or a string");
-            }
-        }
-    }
-
-    public static class Request {
-        @Getter @Setter
-        private String query;
-        @Getter @Setter @JsonDeserialize(using = VariablesDeserializer.class)
-        private Map<String, Object> variables = new HashMap<>();
-        @Getter @Setter
-        private String operationName;
-
-    }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         GraphQLContext context = createContext(Optional.of(req), Optional.of(resp));
@@ -235,10 +110,10 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
             path = req.getServletPath();
         }
         if (path.contentEquals("/schema.json")) {
-            query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), null, new HashMap<>(), schema, req, resp, context);
+            query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), null, new HashMap<>(), getSchema(), req, resp, context);
         } else {
             if (req.getParameter("q") != null) {
-                query(req.getParameter("q"), null, new HashMap<>(), readOnlySchema, req, resp, context);
+                query(req.getParameter("q"), null, new HashMap<>(), getReadOnlySchema(), req, resp, context);
             } else if (req.getParameter("query") != null) {
                 Map<String,Object> variables = new HashMap<>();
                 if (req.getParameter("variables") != null) {
@@ -248,7 +123,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 if (req.getParameter("operationName") != null) {
                     operationName = req.getParameter("operationName");
                 }
-                query(req.getParameter("query"), operationName, variables, readOnlySchema, req, resp, context);
+                query(req.getParameter("query"), operationName, variables, getReadOnlySchema(), req, resp, context);
             }
         }
     }
@@ -283,7 +158,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         if (variables == null) {
             variables = new HashMap<>();
         }
-        query(request.query, request.operationName, variables, schema, req, resp, context);
+        query(request.query, request.operationName, variables, getSchema(), req, resp, context);
     }
 
     private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
@@ -296,14 +171,16 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 }
             });
         } else {
-            GraphQLVariables vars = new GraphQLVariables(schema, query, variables);
-            ExecutionResult result = new GraphQL(schema, executionStrategyProvider.getExecutionStrategy()).execute(query, operationName, context, vars);
+            Map<String, Object> vars = transformVariables(schema, query, variables);
+            operationListeners.forEach(l -> l.beforeGraphQLOperation(context, operationName, query, vars));
+
+            ExecutionResult result = new GraphQL(schema, getExecutionStrategy()).execute(query, operationName, context, vars);
             resp.setContentType("application/json;charset=utf-8");
             if (result.getErrors().isEmpty()) {
                 Map<String, Object> dict = new HashMap<>();
                 dict.put("data", result.getData());
                 resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
-                operationListeners.forEach(l -> l.onGraphQLOperation(context, operationName, query, vars, result.getData()));
+                operationListeners.forEach(l -> l.onSuccessfulGraphQLOperation(context, operationName, query, vars, result.getData()));
             } else {
                 result.getErrors().stream().
                         filter(error -> (error instanceof ExceptionWhileDataFetching)).
@@ -315,8 +192,7 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
                 dict.put("errors", errors);
 
                 resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
-                operationListeners.forEach(l -> l.onFailedGraphQLOperation(context, operationName, query, vars,
-                                                                           result.getErrors()));
+                operationListeners.forEach(l -> l.onFailedGraphQLOperation(context, operationName, query, vars, result.getErrors()));
             }
         }
     }
@@ -325,5 +201,29 @@ public class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean
         return result.getErrors().stream().
                 filter(error -> error instanceof InvalidSyntaxError || error instanceof ValidationError).
                 collect(Collectors.toList());
+    }
+
+    protected static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
+        @Override
+        public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            Object o = p.readValueAs(Object.class);
+            if (o instanceof Map) {
+                return (Map<String, Object>) o;
+            } else if (o instanceof String) {
+                return new ObjectMapper().readValue((String) o, new TypeReference<Map<String, Object>>() {});
+            } else {
+                throw new RuntimeJsonMappingException("variables should be either an object or a string");
+            }
+        }
+    }
+
+    public static class Request {
+        @Getter
+        @Setter
+        private String query;
+        @Getter @Setter @JsonDeserialize(using = GraphQLServlet.VariablesDeserializer.class)
+        private Map<String, Object> variables = new HashMap<>();
+        @Getter @Setter
+        private String operationName;
     }
 }

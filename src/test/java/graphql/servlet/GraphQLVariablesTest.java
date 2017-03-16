@@ -32,7 +32,6 @@ public class GraphQLVariablesTest {
 
     public static class ComplexQueryProvider implements GraphQLQueryProvider {
 
-
         @Value
         public static class Data {
             @GraphQLField
@@ -72,7 +71,7 @@ public class GraphQLVariablesTest {
 
     @Test
     public void variableTyping() {
-        GraphQLServlet servlet = new GraphQLServlet();
+        OsgiGraphQLServlet servlet = new OsgiGraphQLServlet();
         ComplexQueryProvider queryProvider = new ComplexQueryProvider();
         servlet.bindQueryProvider(queryProvider);
         GraphQLSchema schema = servlet.getSchema();
@@ -92,7 +91,7 @@ public class GraphQLVariablesTest {
 
     @Test
     public void nonNullvariableTyping() {
-        GraphQLServlet servlet = new GraphQLServlet();
+        OsgiGraphQLServlet servlet = new OsgiGraphQLServlet();
         ComplexQueryProvider queryProvider = new ComplexQueryProvider();
         servlet.bindQueryProvider(queryProvider);
         GraphQLSchema schema = servlet.getSchema();
@@ -107,5 +106,4 @@ public class GraphQLVariablesTest {
         assertEquals(((ComplexQueryProvider.Data)d).getField1(), "1");
         assertEquals(((ComplexQueryProvider.Data)d).getField2(), "2");
     }
-
 }
