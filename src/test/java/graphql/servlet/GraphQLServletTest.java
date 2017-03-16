@@ -62,16 +62,16 @@ public class GraphQLServletTest {
 
     @Test
     public void queryProvider() {
-        GraphQLServlet servlet = new GraphQLServlet();
+        OsgiGraphQLServlet servlet = new OsgiGraphQLServlet();
         TestQueryProvider queryProvider = new TestQueryProvider();
         servlet.bindQueryProvider(queryProvider);
-        GraphQLFieldDefinition query = servlet.schema.getQueryType().getFieldDefinition("query");
+        GraphQLFieldDefinition query = servlet.getSchema().getQueryType().getFieldDefinition("query");
         assertEquals(query.getType().getName(), "query");
-        query = servlet.readOnlySchema.getQueryType().getFieldDefinition("query");
+        query = servlet.getReadOnlySchema().getQueryType().getFieldDefinition("query");
         assertEquals(query.getType().getName(), "query");
         servlet.unbindQueryProvider(queryProvider);
-        assertTrue(servlet.schema.getQueryType().getFieldDefinitions().isEmpty());
-        assertTrue(servlet.readOnlySchema.getQueryType().getFieldDefinitions().isEmpty());
+        assertTrue(servlet.getSchema().getQueryType().getFieldDefinitions().isEmpty());
+        assertTrue(servlet.getReadOnlySchema().getQueryType().getFieldDefinitions().isEmpty());
     }
 
     public static class TestMutationProvider implements GraphQLMutationProvider {
@@ -84,18 +84,18 @@ public class GraphQLServletTest {
 
     @Test
     public void mutationProvider() {
-        GraphQLServlet servlet = new GraphQLServlet();
+        OsgiGraphQLServlet servlet = new OsgiGraphQLServlet();
         TestMutationProvider mutationProvider = new TestMutationProvider();
         servlet.bindMutationProvider(mutationProvider);
-        assertTrue(servlet.schema.getMutationType().getFieldDefinition("int").getType().equals(GraphQLInt));
-        assertNull(servlet.readOnlySchema.getMutationType());
+        assertTrue(servlet.getSchema().getMutationType().getFieldDefinition("int").getType().equals(GraphQLInt));
+        assertNull(servlet.getReadOnlySchema().getMutationType());
         servlet.unbindMutationProvider(mutationProvider);
-        assertNull(servlet.schema.getMutationType());
+        assertNull(servlet.getSchema().getMutationType());
     }
 
     @Test @SneakyThrows
     public void schema() {
-        GraphQLServlet servlet = new GraphQLServlet();
+        OsgiGraphQLServlet servlet = new OsgiGraphQLServlet();
 
         HttpServletRequest req = mock(HttpServletRequest.class);
         when(req.getPathInfo()).thenReturn("/schema.json");
