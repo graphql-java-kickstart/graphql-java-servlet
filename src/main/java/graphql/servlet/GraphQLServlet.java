@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.io.CharStreams;
-import graphql.ExceptionWhileDataFetching;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
@@ -182,10 +181,6 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                 resp.getWriter().write(new ObjectMapper().writeValueAsString(dict));
                 operationListeners.forEach(l -> l.onSuccessfulGraphQLOperation(context, operationName, query, vars, result.getData()));
             } else {
-                result.getErrors().stream().
-                        filter(error -> (error instanceof ExceptionWhileDataFetching)).
-                        forEachOrdered(err -> log.error("{}", ((ExceptionWhileDataFetching) err).getException()));
-
                 resp.setStatus(500);
                 List<GraphQLError> errors = getGraphQLErrors(result);
                 Map<String, Object> dict = new HashMap<>();
