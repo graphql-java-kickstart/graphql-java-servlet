@@ -68,6 +68,7 @@ servlet.addOperationListener(new GraphQLOperationListener() {
 
 Relay.js support is provided by the [EnhancedExecutionStrategy](https://github.com/graphql-java/graphql-java-annotations/blob/master/src/main/java/graphql/annotations/EnhancedExecutionStrategy.java) of [graphql-java-annotations](https://github.com/graphql-java/graphql-java-annotations).
 You **MUST** pass this execution strategy to the servlet for Relay.js support.
+
 This is the default execution strategy for the `OsgiGraphQLServlet`, and must be added as a dependency when using that servlet.
 
 ## Spring Framework support
