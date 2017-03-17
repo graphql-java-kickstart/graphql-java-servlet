@@ -7,7 +7,7 @@ This module implements a GraphQL Java Servlet. It also supports Relay.js and OSG
 
 # Downloading
 
-You can download it from maven central:
+You can download releases from maven central:
 
 ```groovy
 repositories {
@@ -29,12 +29,62 @@ dependencies {
 
 # Usage
 
-The are a few important components this package provides:
+The servlet supports both GET and POST.
+In POST, plain request body containing JSON is supported, as well as a multipart upload with a part called 'graphql'.
 
-* GraphQLQueryProvider/GraphQLMutationProvider interfaces. These will allow you
-  to define which "domain model" views and which mutations you are going to expose.
-* GraphQLServlet as an entry point servlet. Use `bindQueryProvider`/`bindMutationProvider` or automatically wire
-them in OSGi.
+## Standalone servlet
 
-Both GET and POST are supported. In POST, plain request body with a JSON is supported, as well as a multipart with a part
-called 'graphql'.
+The simplest form of the servlet takes a graphql-java `GraphQLSchema` and an `ExecutionStrategy`:
+```java
+GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy);
+
+// or
+
+GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy, operationListeners);
+```
+
+You can also add [listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLOperationListener.java) to an existing servlet.
+These listeners provide hooks into query execution - before, on success, and on failure:
+```java
+servlet.addOperationListener(new GraphQLOperationListener() {
+    @Override
+    public void beforeGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {
+
+    }
+
+    @Override
+    public void onSuccessfulGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
+
+    }
+
+    @Override
+    public void onFailedGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, List<GraphQLError> errors) {
+
+    }
+});
+```
+
+## Relay.js support
+
+Relay.js support is provided by the [EnhancedExecutionStrategy](https://github.com/graphql-java/graphql-java-annotations/blob/master/src/main/java/graphql/annotations/EnhancedExecutionStrategy.java) of [graphql-java-annotations](https://github.com/graphql-java/graphql-java-annotations).
+You **MUST** pass this execution strategy to the servlet for Relay.js support.
+This is the default execution strategy for the `OsgiGraphQLServlet`, and must be added as a dependency when using that servlet.
+
+## Spring Framework support
+
+To use the servlet with Spring Framework, simply define a `ServletRegistrationBean` bean in a web app:
+```java
+@Bean
+ServletRegistrationBean graphQLServletRegistrationBean(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners) {
+    return new ServletRegistrationBean(new SimpleGraphQLServlet(schema, executionStrategy, operationListeners), "/graphql");
+}
+```
+
+## OSGI support
+
+The [OsgiGraphQLServlet](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/OsgiGraphQLServlet.java) uses a "provider" model to supply the servlet with the required objects:
+* [GraphQLQueryProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLQueryProvider.java): Provides query objects to the GraphQL schema.
+* [GraphQLMutationProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLMutationProvider.java): Provides mutation objects to the GraphQL schema.
+* [GraphQLTypesProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLTypesProvider.java): Provides type information to the GraphQL schema.
+* [ExecutionStrategyProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/ExecutionStrategyProvider.java): Provides an execution strategy for running each query.
+* [GraphQLContextBuilder](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLContextBuilder.java): Builds a context for running each query.
