@@ -19,6 +19,8 @@ import graphql.schema.GraphQLSchema;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -28,6 +30,12 @@ import java.util.Optional;
 public class SimpleGraphQLServlet extends GraphQLServlet {
 
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy) {
+        this(schema, executionStrategy, new ArrayList<>());
+    }
+
+    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners) {
+        super(operationListeners);
+
         this.schema = schema;
         this.readOnlySchema = new GraphQLSchema(schema.getQueryType(), null, schema.getDictionary());
 

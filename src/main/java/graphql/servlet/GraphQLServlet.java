@@ -66,8 +66,15 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected abstract ExecutionStrategy getExecutionStrategy();
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
 
+    private List<GraphQLOperationListener> operationListeners;
 
-    private List<GraphQLOperationListener> operationListeners = new ArrayList<>();
+    public GraphQLServlet() {
+        this(new ArrayList<>());
+    }
+
+    public GraphQLServlet(List<GraphQLOperationListener> operationListeners) {
+        this.operationListeners = new ArrayList<>(operationListeners);
+    }
 
     public void addOperationListener(GraphQLOperationListener operationListener) {
         operationListeners.add(operationListener);
