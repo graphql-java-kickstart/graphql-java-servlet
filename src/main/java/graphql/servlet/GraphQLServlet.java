@@ -93,6 +93,14 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         operationListeners.remove(operationListener);
     }
 
+    public void addServletListener(GraphQLServletListener servletListener) {
+        servletListeners.add(servletListener);
+    }
+
+    public void removeServletListener(GraphQLServletListener servletListener) {
+        servletListeners.remove(servletListener);
+    }
+
     @Override
     public String[] getQueries() {
         return getSchema().getQueryType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
