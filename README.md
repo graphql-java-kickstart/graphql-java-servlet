@@ -30,7 +30,9 @@ dependencies {
 # Usage
 
 The servlet supports both GET and POST.  For GET requests, query parameters are read.
-In POST, plain request body containing JSON is supported, as well as a multipart upload with a part called 'graphql' containing JSON.  All methods expect the following fields:
+In POST, plain request body containing JSON is supported, as well as a multipart upload with a part called 'graphql' containing JSON.
+
+All methods expect the following fields:
 * query
 * variables (optional)
 * operationName (optional)
@@ -43,7 +45,7 @@ GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy);
 
 // or
 
-GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy, operationListeners);
+GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy, operationListeners, servletListeners);
 ```
 
 You can also add [operation listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLOperationListener.java) and [servlet listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLServletListener.java) to an existing servlet.
