@@ -49,7 +49,7 @@ GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy, ope
 ```
 
 You can also add [operation listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLOperationListener.java) and [servlet listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLServletListener.java) to an existing servlet.
-These listeners provide hooks into query execution - before, on success, and on failure:
+These listeners provide hooks into query execution (before, on success, and on failure) and servlet execution (before, on error, and finally):
 ```java
 servlet.addOperationListener(new GraphQLOperationListener() {
     @Override
