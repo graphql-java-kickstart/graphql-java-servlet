@@ -15,6 +15,7 @@
 package graphql.servlet;
 
 import graphql.execution.ExecutionStrategy;
+import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,15 +30,22 @@ import java.util.Optional;
  */
 public class SimpleGraphQLServlet extends GraphQLServlet {
 
+    /**
+     * Workaround for https://github.com/graphql-java/graphql-java/issues/345
+     */
+    public static final GraphQLObjectType EMPTY_MUTATION_TYPE = GraphQLObjectType.newObject()
+        .name("Mutation")
+        .build();
+
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy) {
-        this(schema, executionStrategy, new ArrayList<>());
+        this(schema, executionStrategy, null, null);
     }
 
-    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners) {
-        super(operationListeners);
+    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners) {
+        super(operationListeners, servletListeners);
 
         this.schema = schema;
-        this.readOnlySchema = new GraphQLSchema(schema.getQueryType(), null, schema.getDictionary());
+        this.readOnlySchema = new GraphQLSchema(schema.getQueryType(), EMPTY_MUTATION_TYPE, schema.getDictionary());
 
         this.executionStrategy = executionStrategy;
     }

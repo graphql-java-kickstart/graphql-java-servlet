@@ -14,13 +14,38 @@
  */
 package graphql.servlet;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import graphql.ErrorType;
 import graphql.GraphQLError;
+import graphql.language.SourceLocation;
 
 import java.util.List;
-import java.util.Map;
 
-public interface GraphQLOperationListener {
-    default void beforeGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {}
-    default void onSuccessfulGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {}
-    default void onFailedGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data, List<GraphQLError> errors) {}
+/**
+ * @author Andrew Potter
+ */
+public class GenericGraphQLError implements GraphQLError {
+
+    private final String message;
+
+    public GenericGraphQLError(String message) {
+        this.message = message;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
+    }
+
+    @Override
+    @JsonIgnore
+    public List<SourceLocation> getLocations() {
+        return null;
+    }
+
+    @Override
+    @JsonIgnore
+    public ErrorType getErrorType() {
+        return null;
+    }
 }

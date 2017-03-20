@@ -37,6 +37,8 @@ dependencies {
     testRuntime "cglib:cglib-nodep:3.2.4"
     testRuntime "org.objenesis:objenesis:2.5.1"
     testCompile 'org.slf4j:slf4j-simple:1.7.24'
+    testCompile 'org.springframework:spring-test:4.3.7.RELEASE' // MockHttpServletRequest, MockHttpServletResponse
+    testRuntime 'org.springframework:spring-web:4.3.7.RELEASE'
 
     // Remove boilerplate
     compile 'org.projectlombok:lombok:1.16.8'

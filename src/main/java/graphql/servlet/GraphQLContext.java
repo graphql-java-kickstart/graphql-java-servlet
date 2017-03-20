@@ -25,7 +25,10 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,5 +42,5 @@ public class GraphQLContext {
     private Optional<Subject> subject = Optional.empty();
 
     @Getter @Setter
-    private Optional<FileItemIterator> files = Optional.empty();
+    private Optional<Collection<Part>> parts = Optional.empty();
 }

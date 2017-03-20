@@ -94,31 +94,4 @@ class OsgiGraphQLServletSpec extends Specification {
         then:
             servlet.getSchema().getMutationType() == null
     }
-
-//    @Test
-//    @SneakyThrows
-//    public void schema() {
-//        OsgiGraphQLServlet servlet = new OsgiGraphQLServlet();
-//
-//        HttpServletRequest req = mock(HttpServletRequest.class);
-//        when(req.getPathInfo()).thenReturn("/schema.json");
-//        HttpServletResponse resp = mock(HttpServletResponse.class);
-//
-//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//        PrintWriter writer = new PrintWriter(outputStream, true);
-//        when(resp.getWriter()).thenReturn(writer);
-//
-//        verify(resp, times(0)).setStatus(anyInt());
-//
-//        servlet.bindQueryProvider(new TestQueryProvider());
-//        servlet.doGet(req, resp);
-//
-//        writer.flush();
-//
-//        Map<String, Object> response = new ObjectMapper().readValue(outputStream.toByteArray(), new TypeReference<Map<String, Object>>() {
-//        });
-//        assertTrue(response.containsKey("data"));
-//        assertFalse(response.containsKey("errors"));
-//    }
-
 }
