@@ -2,19 +2,14 @@ package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
-import graphql.execution.ExecutionStrategy
 import graphql.execution.SimpleExecutionStrategy
 import graphql.schema.DataFetcher
 import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLSchema
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import spock.lang.Shared
 import spock.lang.Specification
-
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 /**
  * @author Andrew Potter
