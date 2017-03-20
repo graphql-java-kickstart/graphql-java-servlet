@@ -29,8 +29,11 @@ dependencies {
 
 # Usage
 
-The servlet supports both GET and POST.
-In POST, plain request body containing JSON is supported, as well as a multipart upload with a part called 'graphql'.
+The servlet supports both GET and POST.  For GET requests, query parameters are read.
+In POST, plain request body containing JSON is supported, as well as a multipart upload with a part called 'graphql' containing JSON.  All methods expect the following fields:
+* query
+* variables (optional)
+* operationName (optional)
 
 ## Standalone servlet
 
