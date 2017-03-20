@@ -43,25 +43,42 @@ GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy);
 GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy, operationListeners);
 ```
 
-You can also add [listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLOperationListener.java) to an existing servlet.
+You can also add [operation listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLOperationListener.java) and [servlet listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLServletListener.java) to an existing servlet.
 These listeners provide hooks into query execution - before, on success, and on failure:
 ```java
 servlet.addOperationListener(new GraphQLOperationListener() {
     @Override
-    public void beforeGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {
+    void beforeGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {
 
     }
 
     @Override
-    public void onSuccessfulGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
+    void onSuccessfulGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
 
     }
 
     @Override
-    public void onFailedGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, List<GraphQLError> errors) {
+    void onFailedGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data, List<GraphQLError> errors) {
 
     }
-});
+})
+
+servlet.addServletListener(new GraphQLServletListener() {
+    @Override
+    void onStart(HttpServletRequest request, HttpServletResponse response) {
+
+    }
+
+    @Override
+    void onError(HttpServletRequest request, HttpServletResponse response, Throwable throwable) {
+
+    }
+
+    @Override
+    void onFinally(HttpServletRequest request, HttpServletResponse response) {
+
+    }
+})
 ```
 
 ## Relay.js support
