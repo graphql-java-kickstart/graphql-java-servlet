@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/graphql-java/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/graphql-java/graphql-java-servlet)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet)
-[![Chat on Gitter](https://img.shields.io/gitter/room/graphql-java/graphql-java.svg)](https://gitter.im/graphql-java/graphql-java)
+[![Chat on Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/graphql-java/graphql-java)
 
 # GraphQL Servlet
 
