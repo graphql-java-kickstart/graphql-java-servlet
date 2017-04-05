@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -42,5 +43,5 @@ public class GraphQLContext {
     private Optional<Subject> subject = Optional.empty();
 
     @Getter @Setter
-    private Optional<Collection<Part>> parts = Optional.empty();
+    private Optional<Map<String, List<FileItem>>> files = Optional.empty();
 }

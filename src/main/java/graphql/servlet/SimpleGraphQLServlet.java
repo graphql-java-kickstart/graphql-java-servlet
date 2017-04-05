@@ -42,7 +42,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners) {
-        super(operationListeners, servletListeners);
+        super(operationListeners, servletListeners, null);
 
         this.schema = schema;
         this.readOnlySchema = new GraphQLSchema(schema.getQueryType(), EMPTY_MUTATION_TYPE, schema.getDictionary());

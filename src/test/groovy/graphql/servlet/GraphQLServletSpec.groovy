@@ -22,6 +22,8 @@ import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLSchema
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -213,13 +215,14 @@ class GraphQLServletSpec extends Specification {
             getResponseContent().data.echoTwo == "test-two"
     }
 
-    def "query over HTTP POST multipart returns data"() {
+    def "query over HTTP POST multipart named 'graphql' returns data"() {
         setup:
-            request.setContentType("multipart/graphql, boundary=Test")
+            request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.addPart(new TestMultipartPart(name: 'graphql', content: mapper.writeValueAsString([
-                query: 'query { echo(arg:"test") }'
-            ])))
+
+            request.setContent(new TestMultipartContentBuilder()
+                .addPart('graphql', mapper.writeValueAsString([query: 'query { echo(arg:"test") }']))
+                .build())
 
         when:
             servlet.doPost(request, response)
@@ -230,14 +233,13 @@ class GraphQLServletSpec extends Specification {
             getResponseContent().data.echo == "test"
     }
 
-    def "query over HTTP POST multipart with variables returns data"() {
+    def "query over HTTP POST multipart named 'query' returns data"() {
         setup:
-            request.setContentType("multipart/graphql")
+            request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.addPart(new TestMultipartPart(name: 'graphql', content: mapper.writeValueAsString([
-                query: 'query Echo($arg: String) { echo(arg:$arg) }',
-                variables: '{"arg": "test"}'
-            ])))
+            request.setContent(new TestMultipartContentBuilder()
+                .addPart('query', 'query { echo(arg:"test") }')
+                .build())
 
         when:
             servlet.doPost(request, response)
@@ -248,14 +250,14 @@ class GraphQLServletSpec extends Specification {
             getResponseContent().data.echo == "test"
     }
 
-    def "query over HTTP POST multipart with operationName returns data"() {
+    def "query over HTTP POST multipart named 'query' with operationName returns data"() {
         setup:
-            request.setContentType("multipart/graphql")
+            request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.addPart(new TestMultipartPart(name: 'graphql', content: mapper.writeValueAsString([
-                query: 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }',
-                operationName: 'two'
-            ])))
+            request.setContent(new TestMultipartContentBuilder()
+                .addPart('query', 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }')
+                .addPart('operationName', 'two')
+                .build())
 
         when:
             servlet.doPost(request, response)
@@ -265,6 +267,24 @@ class GraphQLServletSpec extends Specification {
             response.getContentType() == CONTENT_TYPE_JSON_UTF8
             getResponseContent().data.echoOne == null
             getResponseContent().data.echoTwo == "test-two"
+    }
+
+    def "query over HTTP POST multipart named 'query' with variables returns data"() {
+        setup:
+            request.setContentType("multipart/form-data, boundary=test")
+            request.setMethod("POST")
+            request.setContent(new TestMultipartContentBuilder()
+                .addPart('query', 'query Echo($arg: String) { echo(arg:$arg) }')
+                .addPart('variables', '{"arg": "test"}')
+                .build())
+
+        when:
+            servlet.doPost(request, response)
+
+        then:
+            response.getStatus() == STATUS_OK
+            response.getContentType() == CONTENT_TYPE_JSON_UTF8
+            getResponseContent().data.echo == "test"
     }
 
     def "mutation over HTTP POST body returns data"() {
@@ -331,5 +351,9 @@ class GraphQLServletSpec extends Specification {
             resp.containsKey("data")
             resp.data == null
             resp.errors != null
+    }
+
+    private byte[] createContent(String data) {
+        data.split('\\n').collect { it.replaceAll('^\\s+', '') }.join('\n').getBytes()
     }
 }

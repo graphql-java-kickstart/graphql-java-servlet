@@ -34,6 +34,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import javax.security.auth.Subject;
@@ -42,7 +45,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -75,14 +77,113 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private final List<GraphQLOperationListener> operationListeners;
     private final List<GraphQLServletListener> servletListeners;
+    private final ServletFileUpload fileUpload;
+
+    private final RequestHandler getHandler;
+    private final RequestHandler postHandler;
 
     public GraphQLServlet() {
-        this(null, null);
+        this(null, null, null);
     }
 
-    public GraphQLServlet(List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners) {
+    public GraphQLServlet(List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners, FileItemFactory fileItemFactory) {
         this.operationListeners = operationListeners != null ? new ArrayList<>(operationListeners) : new ArrayList<>();
         this.servletListeners = servletListeners != null ? new ArrayList<>(servletListeners) : new ArrayList<>();
+        this.fileUpload = new ServletFileUpload(fileItemFactory != null ? fileItemFactory : new DiskFileItemFactory());
+
+        this.getHandler = (request, response) -> {
+            GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
+            String path = request.getPathInfo();
+            if (path == null) {
+                path = request.getServletPath();
+            }
+            if (path.contentEquals("/schema.json")) {
+                query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), null, new HashMap<>(), getSchema(), request, response, context);
+            } else {
+                if (request.getParameter("query") != null) {
+                    Map<String, Object> variables = new HashMap<>();
+                    if (request.getParameter("variables") != null) {
+                        variables.putAll(mapper.readValue(request.getParameter("variables"), new TypeReference<Map<String, Object>>() { }));
+                    }
+                    String operationName = null;
+                    if (request.getParameter("operationName") != null) {
+                        operationName = request.getParameter("operationName");
+                    }
+                    query(request.getParameter("query"), operationName, variables, getReadOnlySchema(), request, response, context);
+                } else {
+                    response.setStatus(STATUS_BAD_REQUEST);
+                    log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
+                }
+            }
+        };
+
+        this.postHandler = (request, response) -> {
+            GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
+            GraphQLRequest graphQLRequest = null;
+
+            try {
+                InputStream inputStream = null;
+
+                if (ServletFileUpload.isMultipartContent(request)) {
+                    Map<String, List<FileItem>> fileItems = fileUpload.parseParameterMap(request);
+
+                    if (fileItems.containsKey("graphql")) {
+                        Optional<FileItem> graphqlItem = getFileItem(fileItems, "graphql");
+                        if(graphqlItem.isPresent()) {
+                            inputStream = graphqlItem.get().getInputStream();
+                        }
+
+                    } else if(fileItems.containsKey("query")) {
+                        Optional<FileItem> queryItem = getFileItem(fileItems, "query");
+                        if(queryItem.isPresent()) {
+                            graphQLRequest = new GraphQLRequest();
+                            graphQLRequest.setQuery(new String(queryItem.get().get()));
+
+                            Optional<FileItem> operationNameItem = getFileItem(fileItems, "operationName");
+                            if(operationNameItem.isPresent()) {
+                                graphQLRequest.setOperationName(new String(operationNameItem.get().get()).trim());
+                            }
+
+                            Optional<FileItem> variablesItem = getFileItem(fileItems, "variables");
+                            if(variablesItem.isPresent()) {
+                                String variables = new String(variablesItem.get().get());
+                                if(!variables.isEmpty()) {
+                                    graphQLRequest.setVariables((Map<String, Object>) mapper.readValue(variables, Map.class));
+                                }
+                            }
+                        }
+                    }
+
+                    if(inputStream == null && graphQLRequest == null) {
+                        response.setStatus(STATUS_BAD_REQUEST);
+                        log.info("Bad POST multipart request: no part named \"graphql\" or \"query\"");
+                        return;
+                    }
+
+                    context.setFiles(Optional.of(fileItems));
+
+                } else {
+                    // this is not a multipart request
+                    inputStream = request.getInputStream();
+                }
+
+                if(graphQLRequest == null) {
+                    graphQLRequest = mapper.readValue(inputStream, GraphQLRequest.class);
+                }
+
+            } catch (Exception e) {
+                log.info("Bad POST request: parsing failed", e);
+                response.setStatus(STATUS_BAD_REQUEST);
+                return;
+            }
+
+            Map<String,Object> variables = graphQLRequest.getVariables();
+            if (variables == null) {
+                variables = new HashMap<>();
+            }
+
+            query(graphQLRequest.getQuery(), graphQLRequest.getOperationName(), variables, getSchema(), request, response, context);
+        };
     }
 
     public void addOperationListener(GraphQLOperationListener operationListener) {
@@ -121,71 +222,6 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         }
     }
 
-    private final RequestHandler getHandler = (request, response) -> {
-        GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
-        String path = request.getPathInfo();
-        if (path == null) {
-            path = request.getServletPath();
-        }
-        if (path.contentEquals("/schema.json")) {
-            query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), null, new HashMap<>(), getSchema(), request, response, context);
-        } else {
-            if (request.getParameter("query") != null) {
-                Map<String, Object> variables = new HashMap<>();
-                if (request.getParameter("variables") != null) {
-                    variables.putAll(mapper.readValue(request.getParameter("variables"), new TypeReference<Map<String, Object>>() { }));
-                }
-                String operationName = null;
-                if (request.getParameter("operationName") != null) {
-                    operationName = request.getParameter("operationName");
-                }
-                query(request.getParameter("query"), operationName, variables, getReadOnlySchema(), request, response, context);
-            } else {
-                response.setStatus(STATUS_BAD_REQUEST);
-                log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
-            }
-        }
-    };
-
-    private final RequestHandler postHandler = (request, response) -> {
-        GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
-        InputStream inputStream = null;
-
-        if (ServletFileUpload.isMultipartContent(request)) {
-            Part part = request.getPart("graphql");
-            if(part != null) {
-                inputStream = part.getInputStream();
-            }
-
-            if (inputStream == null) {
-                response.setStatus(STATUS_BAD_REQUEST);
-                log.info("Bad POST multipart request: no part named \"graphql\"");
-                return;
-            }
-
-            context.setParts(Optional.of(request.getParts()));
-
-        } else {
-            // this is not a multipart request
-            inputStream = request.getInputStream();
-        }
-
-        GraphQLRequest graphQLRequest;
-        try {
-            graphQLRequest = mapper.readValue(inputStream, GraphQLRequest.class);
-        } catch (Exception e) {
-            log.info("Bad POST request: deserialization failed", e);
-            response.setStatus(STATUS_BAD_REQUEST);
-            return;
-        }
-
-        Map<String,Object> variables = graphQLRequest.variables;
-        if (variables == null) {
-            variables = new HashMap<>();
-        }
-        query(graphQLRequest.query, graphQLRequest.operationName, variables, getSchema(), request, response, context);
-    };
-
     private void doRequest(HttpServletRequest request, HttpServletResponse response, RequestHandler handler) {
         try {
             runListeners(servletListeners, l -> l.onStart(request, response));
@@ -209,6 +245,16 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doRequest(req, resp, postHandler);
     }
+
+    private Optional<FileItem> getFileItem(Map<String, List<FileItem>> fileItems, String name) {
+        List<FileItem> items = fileItems.get(name);
+        if(items == null || items.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return items.stream().findFirst();
+    }
+
 
     private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
         if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject().isPresent()) {

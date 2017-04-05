@@ -13,54 +13,37 @@
  * See the License for the specific language governing permissions and
  */
 package graphql.servlet
-
-import javax.servlet.http.Part
-
 /**
  * @author Andrew Potter
  */
-class TestMultipartPart implements Part {
+class TestMultipartContentBuilder {
 
-    String name
-    String content
+    private StringBuilder content = new StringBuilder()
+    private String boundary = "--test"
 
-    @Override
-    InputStream getInputStream() throws IOException {
-        new ByteArrayInputStream(content.getBytes())
+    TestMultipartContentBuilder nline() {
+        content.append('\r\n')
+
+        this
     }
 
-    @Override
-    String getContentType() {
-        return null
+    TestMultipartContentBuilder addPart(String name, String part) {
+        content.append(boundary)
+        nline()
+        content.append("Content-Disposition: form-data; name=\"$name\"")
+        nline()
+        nline()
+        content.append(part)
+        nline()
+
+        this
     }
 
-    @Override
-    long getSize() {
-        content.getBytes().length
-    }
-
-    @Override
-    void write(String fileName) throws IOException {
-
-    }
-
-    @Override
-    void delete() throws IOException {
-
-    }
-
-    @Override
-    String getHeader(String name) {
-        return null
-    }
-
-    @Override
-    Collection<String> getHeaders(String name) {
-        return null
-    }
-
-    @Override
-    Collection<String> getHeaderNames() {
-        return null
+    byte[] build() {
+        nline()
+        content.append(boundary)
+        content.append('--')
+        nline()
+        content.toString().getBytes()
     }
 }
