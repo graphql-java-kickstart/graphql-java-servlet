@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.graphql-java:graphql-java-servlet:2.0.0'
+    compile 'com.graphql-java:graphql-java-servlet:2.1.0'
 }
 ```
 
@@ -24,19 +24,26 @@ dependencies {
 <dependency>
     <groupId>com.graphql-java</groupId>
     <artifactId>graphql-java-servlet</artifactId>
-    <version>2.0.0</version>
+    <version>2.1.0</version>
 </dependency>
 ```
 
 # Usage
 
-The servlet supports both GET and POST.  For GET requests, query parameters are read.
-In POST, plain request body containing JSON is supported, as well as a multipart upload with a part called 'graphql' containing JSON.
-
-All methods expect the following fields:
-* query
-* variables (optional)
-* operationName (optional)
+The servlet supports the following request formats:
+* GET request with query parameters:
+    * query
+    * operationName (optional)
+    * variables (optional)
+* POST body JSON object with fields:
+    * query
+    * operationName (optional)
+    * variables (optional)
+* POST multipart part named "graphql" containing JSON object with fields:
+    * query
+    * operationName (optional)
+    * variables (optional)
+* POST multipart parts named "query", "operationName" (optional), and "variables" (optional)
 
 ## Standalone servlet
 
