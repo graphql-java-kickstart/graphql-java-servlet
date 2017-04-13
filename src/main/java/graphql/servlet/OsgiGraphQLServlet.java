@@ -38,7 +38,10 @@ import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
 @Slf4j
-@Component(property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"})
+@Component(
+        service=javax.servlet.http.HttpServlet.class,
+        property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"}
+)
 public class OsgiGraphQLServlet extends GraphQLServlet {
 
     private List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
