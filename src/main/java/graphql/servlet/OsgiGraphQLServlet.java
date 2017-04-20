@@ -55,8 +55,8 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         GraphQLObjectType.Builder object = newObject().name("Query").description("Root query type");
 
         for (GraphQLQueryProvider provider : queryProviders) {
-            if (provider.getQueryFieldDefinitions() != null && provider.getQueryFieldDefinitions().size() > 0) {
-                for (GraphQLFieldDefinition graphQLFieldDefinition : provider.getQueryFieldDefinitions()) {
+            if (provider.getQueries() != null && provider.getQueries().size() > 0) {
+                for (GraphQLFieldDefinition graphQLFieldDefinition : provider.getQueries()) {
                     object.field(graphQLFieldDefinition);
                 }
             }

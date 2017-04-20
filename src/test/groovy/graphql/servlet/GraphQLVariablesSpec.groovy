@@ -30,7 +30,7 @@ class GraphQLVariablesSpec extends Specification {
     static class ComplexQueryProvider implements GraphQLQueryProvider {
 
         @Override
-        Collection<GraphQLFieldDefinition> getQueryFieldDefinitions() {
+        Collection<GraphQLFieldDefinition> getQueries() {
             List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<>();
             fieldDefinitions.add(newFieldDefinition()
                     .name("data")

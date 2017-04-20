@@ -30,7 +30,7 @@ class OsgiGraphQLServletSpec extends Specification {
     static class TestQueryProvider implements GraphQLQueryProvider {
 
         @Override
-        Collection<GraphQLFieldDefinition> getQueryFieldDefinitions() {
+        Collection<GraphQLFieldDefinition> getQueries() {
             List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<>();
             fieldDefinitions.add(newFieldDefinition()
                     .name("query")
