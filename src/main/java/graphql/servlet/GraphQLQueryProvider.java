@@ -25,10 +25,9 @@ import java.util.Collection;
 public interface GraphQLQueryProvider {
 
     /**
-     * @return a collection of field definitions that will be added to the root query type. It is allowed to return null
-     * or an empty array (for example for migration purposes from the old API to this one).
+     * @return a collection of field definitions that will be added to the root query type.
      */
-    Collection<GraphQLFieldDefinition> getQueryFieldDefinitions();
+    default Collection<GraphQLFieldDefinition> getQueryFieldDefinitions() { return null; }
 
     /**
      * @deprecated use query field definitions instead
