@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
@@ -56,15 +55,6 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         GraphQLObjectType.Builder object = newObject().name("Query").description("Root query type");
 
         for (GraphQLQueryProvider provider : queryProviders) {
-            GraphQLObjectType query = provider.getQuery();
-            if (query != null) {
-                object.field(newFieldDefinition().
-                        type(query).
-                        staticValue(provider.context()).
-                        name(provider.getName()).
-                        description(query.getDescription()).
-                        build());
-            }
             if (provider.getQueryFieldDefinitions() != null && provider.getQueryFieldDefinitions().size() > 0) {
                 for (GraphQLFieldDefinition graphQLFieldDefinition : provider.getQueryFieldDefinitions()) {
                     object.field(graphQLFieldDefinition);

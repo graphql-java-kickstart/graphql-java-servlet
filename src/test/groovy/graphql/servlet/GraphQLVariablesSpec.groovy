@@ -17,14 +17,28 @@ package graphql.servlet
 import graphql.annotations.GraphQLAnnotations
 import graphql.annotations.GraphQLField
 import graphql.annotations.GraphQLName
+import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLSchema
 import lombok.SneakyThrows
 import spock.lang.Specification
 
+import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition
+
 class GraphQLVariablesSpec extends Specification {
 
     static class ComplexQueryProvider implements GraphQLQueryProvider {
+
+        @Override
+        Collection<GraphQLFieldDefinition> getQueryFieldDefinitions() {
+            List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<>();
+            fieldDefinitions.add(newFieldDefinition()
+                    .name("data")
+                    .type(GraphQLAnnotations.object(DataQuery.class))
+                    .staticValue(new DataQuery())
+                    .build());
+            return fieldDefinitions;
+        }
 
         static class Data {
             @GraphQLField
@@ -48,16 +62,6 @@ class GraphQLVariablesSpec extends Specification {
             }
         }
 
-        @Override
-        @SneakyThrows
-        GraphQLObjectType getQuery() {
-            return GraphQLAnnotations.object(DataQuery.class)
-        }
-
-        @Override
-        Object context() {
-            return new DataQuery()
-        }
     }
 
     GraphQLSchema schema
