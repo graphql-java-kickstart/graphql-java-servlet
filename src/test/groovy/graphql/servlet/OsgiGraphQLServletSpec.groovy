@@ -29,22 +29,23 @@ class OsgiGraphQLServletSpec extends Specification {
 
     static class TestQueryProvider implements GraphQLQueryProvider {
 
+        @Override
+        Collection<GraphQLFieldDefinition> getQueries() {
+            List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<>();
+            fieldDefinitions.add(newFieldDefinition()
+                    .name("query")
+                    .type(GraphQLAnnotations.object(Query.class))
+                    .staticValue(new Query())
+                    .build());
+            return fieldDefinitions;
+        }
+
         @GraphQLName("query")
         static class Query {
             @GraphQLField
             public String field;
         }
 
-        @Override
-        @SneakyThrows
-        GraphQLObjectType getQuery() {
-            return GraphQLAnnotations.object(Query.class);
-        }
-
-        @Override
-        Object context() {
-            return new Query();
-        }
     }
 
     def "query provider adds query objects"() {

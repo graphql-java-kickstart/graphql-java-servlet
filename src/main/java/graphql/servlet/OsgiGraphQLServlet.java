@@ -15,6 +15,7 @@
 package graphql.servlet;
 
 import graphql.execution.ExecutionStrategy;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
@@ -33,7 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
@@ -52,16 +52,14 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     private GraphQLSchema readOnlySchema;
 
     protected void updateSchema() {
-        GraphQLObjectType.Builder object = newObject().name("query");
+        GraphQLObjectType.Builder object = newObject().name("Query").description("Root query type");
 
         for (GraphQLQueryProvider provider : queryProviders) {
-            GraphQLObjectType query = provider.getQuery();
-            object.field(newFieldDefinition().
-                    type(query).
-                    staticValue(provider.context()).
-                    name(provider.getName()).
-                    description(query.getDescription()).
-                    build());
+            if (provider.getQueries() != null && provider.getQueries().size() > 0) {
+                for (GraphQLFieldDefinition graphQLFieldDefinition : provider.getQueries()) {
+                    object.field(graphQLFieldDefinition);
+                }
+            }
         }
 
         Set<GraphQLType> types = new HashSet<>();
@@ -74,7 +72,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         if (mutationProviders.isEmpty()) {
             schema = readOnlySchema;
         } else {
-            GraphQLObjectType.Builder mutationObject = newObject().name("mutation");
+            GraphQLObjectType.Builder mutationObject = newObject().name("Mutation").description("Root mutation type");
 
             for (GraphQLMutationProvider provider : mutationProviders) {
                 provider.getMutations().forEach(mutationObject::field);

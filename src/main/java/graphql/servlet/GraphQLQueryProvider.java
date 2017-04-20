@@ -14,12 +14,18 @@
  */
 package graphql.servlet;
 
-import graphql.schema.GraphQLObjectType;
+import graphql.schema.GraphQLFieldDefinition;
 
+import java.util.Collection;
+
+/**
+ * This interface is used by OSGi bundles to plugin new field into the root query type
+ */
 public interface GraphQLQueryProvider {
-    GraphQLObjectType getQuery();
-    Object context();
-    default String getName() {
-        return getQuery().getName();
-    }
+
+    /**
+     * @return a collection of field definitions that will be added to the root query type.
+     */
+    Collection<GraphQLFieldDefinition> getQueries();
+
 }
