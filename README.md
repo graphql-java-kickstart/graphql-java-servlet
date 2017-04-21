@@ -119,3 +119,154 @@ The [OsgiGraphQLServlet](https://github.com/graphql-java/graphql-java-servlet/bl
 * [GraphQLTypesProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLTypesProvider.java): Provides type information to the GraphQL schema.
 * [ExecutionStrategyProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/ExecutionStrategyProvider.java): Provides an execution strategy for running each query.
 * [GraphQLContextBuilder](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLContextBuilder.java): Builds a context for running each query.
+
+### Deploying using an Apache Karaf feature
+
+You can use the graphql-java-servlet as part of an Apache Karaf feature, which makes it easy to setup all the proper 
+dependencies. Here's an example pom.xml file to setup the Karaf feature:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>feature</packaging>
+
+    <artifactId>graphql-java-servlet-features</artifactId>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.8.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.8.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.8.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>2.8.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>4.5.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.graphql-java</groupId>
+            <artifactId>graphql-java-servlet</artifactId>
+            <version>${graphql.java.servlet.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.graphql-java</groupId>
+            <artifactId>graphql-java</artifactId>
+            <version>${graphql.java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.graphql-java</groupId>
+            <artifactId>graphql-java-annotations</artifactId>
+            <version>0.13.1</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.karaf.tooling</groupId>
+                <artifactId>karaf-maven-plugin</artifactId>
+                <version>4.0.8</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <startLevel>80</startLevel>
+                    <addTransitiveFeatures>true</addTransitiveFeatures>
+                    <includeTransitiveDependency>true</includeTransitiveDependency>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+</project>
+```
+
+And here is a sample src/main/feature/feature.xml file to add some dependencies on other features:
+
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="cxs-graphql-api-features">
+    <feature name="graphql-java-servlet" description="GraphQL Java Servlet Feature" version="1.0.0.SNAPSHOT">
+        <feature prerequisite="true" dependency="false">scr</feature>
+        <feature prerequisite="true" dependency="false">war</feature>
+    </feature>
+</features>
+```
+
+### Example GraphQL provider implementation
+
+Here's an example of a GraphQL provider that implements three interfaces at the same time.
+
+```java
+package org.oasis_open.contextserver.graphql;
+
+import graphql.schema.*;
+import org.osgi.service.component.annotations.Component;
+
+import graphql.servlet.GraphQLQueryProvider;
+import graphql.servlet.GraphQLTypesProvider;
+
+import java.util.*;
+
+import static graphql.Scalars.GraphQLID;
+import static graphql.Scalars.GraphQLString;
+import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
+import static graphql.schema.GraphQLObjectType.newObject;
+
+@Component(
+        name="ExampleGraphQLProvider"
+)
+public class ExampleGraphQLProvider implements GraphQLQueryProvider, GraphQLMutationProvider, GraphQLTypesProvider {
+
+    public Collection<GraphQLFieldDefinition> getQueries() {
+        List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<GraphQLFieldDefinition>();
+        fieldDefinitions.add(newFieldDefinition()
+                .type(GraphQLString)
+                .name("hello")
+                .staticValue("world")
+                .build());
+        return fieldDefinitions;
+    }
+
+    public Collection<GraphQLFieldDefinition> getMutations() {
+        return null;
+    }
+
+    public Collection<GraphQLType> getTypes() {
+
+        List<GraphQLType> types = new ArrayList<GraphQLType>();
+        return types;
+    }
+
+}
+```
