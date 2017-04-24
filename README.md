@@ -103,7 +103,7 @@ This is the default execution strategy for the `OsgiGraphQLServlet`, and must be
 
 ## Spring Framework support
 
-To use the servlet with Spring Framework, simply define a `ServletRegistrationBean` bean in a web app:
+To use the servlet with Spring Framework, either use the [Spring Boot starter](https://github.com/graphql-java/graphql-spring-boot) or simply define a `ServletRegistrationBean` in a web app:
 ```java
 @Bean
 ServletRegistrationBean graphQLServletRegistrationBean(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners) {
