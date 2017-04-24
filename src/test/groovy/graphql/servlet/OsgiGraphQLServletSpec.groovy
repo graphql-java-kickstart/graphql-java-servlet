@@ -18,8 +18,6 @@ import graphql.annotations.GraphQLAnnotations
 import graphql.annotations.GraphQLField
 import graphql.annotations.GraphQLName
 import graphql.schema.GraphQLFieldDefinition
-import graphql.schema.GraphQLObjectType
-import lombok.SneakyThrows
 import spock.lang.Specification
 
 import static graphql.Scalars.GraphQLInt

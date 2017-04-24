@@ -17,12 +17,16 @@ package graphql.servlet;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.annotations.GraphQLObjectBackedByClass;
-import graphql.language.*;
+import graphql.language.NonNullType;
+import graphql.language.OperationDefinition;
+import graphql.language.Type;
+import graphql.language.TypeName;
+import graphql.language.VariableDefinition;
 import graphql.parser.Parser;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
-import lombok.SneakyThrows;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -44,7 +48,6 @@ public class GraphQLVariables extends HashMap<String, Object> {
                     .map(d -> (OperationDefinition) d)
                     .flatMap(d -> d.getVariableDefinitions().stream())
                     .forEach(new Consumer<VariableDefinition>() {
-                        @SneakyThrows
                         @Override public void accept(VariableDefinition d) {
                             GraphQLType type;
                             Type t = d.getType();
@@ -57,8 +60,14 @@ public class GraphQLVariables extends HashMap<String, Object> {
                                 type = null;
                             }
                             if (type instanceof GraphQLObjectBackedByClass) {
-                                String value = objectMapper.writeValueAsString(variables.get(d.getName()));
-                                Object val = objectMapper.readValue(value, ((GraphQLObjectBackedByClass) type).getObjectClass());
+                                String value;
+                                Object val;
+                                try {
+                                    value = objectMapper.writeValueAsString(variables.get(d.getName()));
+                                    val = objectMapper.readValue(value, ((GraphQLObjectBackedByClass) type).getObjectClass());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 GraphQLVariables.this.put(d.getName(), val);
                             } else {
                                 GraphQLVariables.this.put(d.getName(), variables.get(d.getName()));

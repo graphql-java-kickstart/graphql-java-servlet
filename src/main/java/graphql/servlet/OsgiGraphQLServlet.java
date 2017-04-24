@@ -19,7 +19,6 @@ import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
-import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -37,7 +36,6 @@ import java.util.Set;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
-@Slf4j
 @Component(
         service={javax.servlet.http.HttpServlet.class,javax.servlet.Servlet.class},
         property = {"osgi.http.whiteboard.servlet.pattern=/graphql/*", "jmx.objectname=graphql.servlet:type=graphql"}

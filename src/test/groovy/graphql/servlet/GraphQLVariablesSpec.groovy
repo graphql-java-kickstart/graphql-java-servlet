@@ -18,9 +18,7 @@ import graphql.annotations.GraphQLAnnotations
 import graphql.annotations.GraphQLField
 import graphql.annotations.GraphQLName
 import graphql.schema.GraphQLFieldDefinition
-import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLSchema
-import lombok.SneakyThrows
 import spock.lang.Specification
 
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition

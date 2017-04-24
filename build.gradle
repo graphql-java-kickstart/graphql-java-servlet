@@ -25,6 +25,10 @@ repositories {
     mavenCentral()
 }
 
+configurations.all {
+    exclude group:"org.projectlombok", module: "lombok"
+}
+
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.21'
 
@@ -40,9 +44,6 @@ dependencies {
     testCompile 'org.springframework:spring-test:4.3.7.RELEASE' // MockHttpServletRequest, MockHttpServletResponse
     testRuntime 'org.springframework:spring-web:4.3.7.RELEASE'
 
-    // Remove boilerplate
-    compile 'org.projectlombok:lombok:1.16.8'
-
     // OSGi
     compileOnly 'org.osgi:org.osgi.core:6.0.0'
     compileOnly 'org.osgi:org.osgi.service.cm:1.5.0'
@@ -57,7 +58,6 @@ dependencies {
     // GraphQL
     compile 'com.graphql-java:graphql-java:2.4.0'
 
-    // Optional, but used for testing... not sure if there's a better way.
     compileOnly 'com.graphql-java:graphql-java-annotations:0.13.1'
     testCompile 'com.graphql-java:graphql-java-annotations:0.13.1'
 
@@ -175,15 +175,5 @@ idea {
     project {
         languageLevel = '1.8'
         vcs = 'Git'
-        ipr.withXml { xmlFile ->
-            // enable 'Annotation Processors'
-            xmlFile.asNode().component.find {
-                it.@name == 'CompilerConfiguration'
-            }['annotationProcessing'][0].replaceNode {
-                annotationProcessing {
-                    profile(default: true, name: 'Default', useClasspath: 'true', enabled: true)
-                }
-            }
-        }
     }
 }

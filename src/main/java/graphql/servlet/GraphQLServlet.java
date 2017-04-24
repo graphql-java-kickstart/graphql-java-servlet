@@ -30,14 +30,12 @@ import graphql.execution.ExecutionStrategy;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
 import graphql.validation.ValidationError;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import javax.servlet.Servlet;
@@ -62,8 +60,9 @@ import java.util.stream.Collectors;
 /**
  * @author Andrew Potter
  */
-@Slf4j
 public abstract class GraphQLServlet extends HttpServlet implements Servlet, GraphQLMBean, GraphQLSchemaProvider {
+
+    public static final Logger log = LoggerFactory.getLogger(GraphQLServlet.class);
 
     public static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
     public static final int STATUS_OK = 200;
@@ -212,7 +211,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         return getSchema().getMutationType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
     }
 
-    @Override @SneakyThrows
+    @Override
     public String executeQuery(String query) {
         try {
             final ExecutionResult result = new GraphQL(getSchema()).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
@@ -258,12 +257,13 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
         if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject().isPresent()) {
-            Subject.doAs(context.getSubject().get(), new PrivilegedAction<Void>() {
-                @Override @SneakyThrows
-                public Void run() {
+            Subject.doAs(context.getSubject().get(), (PrivilegedAction<Void>) () -> {
+                try {
                     query(query, operationName, variables, schema, req, resp, context);
-                    return null;
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
+                return null;
             });
         } else {
             runListeners(operationListeners, l -> runListener(l, it -> it.beforeGraphQLOperation(context, operationName, query, variables)));
@@ -345,13 +345,34 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     }
 
     protected static class GraphQLRequest {
-        @Getter
-        @Setter
         private String query;
-        @Getter @Setter @JsonDeserialize(using = GraphQLServlet.VariablesDeserializer.class)
+        @JsonDeserialize(using = GraphQLServlet.VariablesDeserializer.class)
         private Map<String, Object> variables = new HashMap<>();
-        @Getter @Setter
         private String operationName;
+
+        public String getQuery() {
+            return query;
+        }
+
+        public void setQuery(String query) {
+            this.query = query;
+        }
+
+        public Map<String, Object> getVariables() {
+            return variables;
+        }
+
+        public void setVariables(Map<String, Object> variables) {
+            this.variables = variables;
+        }
+
+        public String getOperationName() {
+            return operationName;
+        }
+
+        public void setOperationName(String operationName) {
+            this.operationName = operationName;
+        }
     }
 
     protected interface RequestHandler extends BiConsumer<HttpServletRequest, HttpServletResponse> {

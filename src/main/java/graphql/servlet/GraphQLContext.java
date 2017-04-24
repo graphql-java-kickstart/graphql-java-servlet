@@ -14,34 +14,56 @@
  */
 package graphql.servlet;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemIterator;
-import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 public class GraphQLContext {
-    @Getter @Setter @NonNull
     private Optional<HttpServletRequest> request;
-    @Getter @Setter @NonNull
     private Optional<HttpServletResponse> response;
-    @Getter @Setter
-    private Optional<Subject> subject = Optional.empty();
 
-    @Getter @Setter
+    private Optional<Subject> subject = Optional.empty();
     private Optional<Map<String, List<FileItem>>> files = Optional.empty();
+
+    public GraphQLContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
+        this.request = request;
+        this.response = response;
+    }
+
+    public Optional<HttpServletRequest> getRequest() {
+        return request;
+    }
+
+    public void setRequest(Optional<HttpServletRequest> request) {
+        this.request = request;
+    }
+
+    public Optional<HttpServletResponse> getResponse() {
+        return response;
+    }
+
+    public void setResponse(Optional<HttpServletResponse> response) {
+        this.response = response;
+    }
+
+    public Optional<Subject> getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Optional<Subject> subject) {
+        this.subject = subject;
+    }
+
+    public Optional<Map<String, List<FileItem>>> getFiles() {
+        return files;
+    }
+
+    public void setFiles(Optional<Map<String, List<FileItem>>> files) {
+        this.files = files;
+    }
 }
