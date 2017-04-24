@@ -38,7 +38,7 @@ import static graphql.schema.GraphQLSchema.newSchema;
 
 @Component(
         service={javax.servlet.http.HttpServlet.class,javax.servlet.Servlet.class},
-        property = {"osgi.http.whiteboard.servlet.pattern=/graphql/*", "jmx.objectname=graphql.servlet:type=graphql"}
+        property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"}
 )
 public class OsgiGraphQLServlet extends GraphQLServlet {
 
