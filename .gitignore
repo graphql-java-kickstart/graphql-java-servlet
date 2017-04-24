@@ -4,4 +4,4 @@ build
 *.ipr
 *.iws
 .idea/
-target
+target/
