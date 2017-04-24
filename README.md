@@ -120,153 +120,52 @@ The [OsgiGraphQLServlet](https://github.com/graphql-java/graphql-java-servlet/bl
 * [ExecutionStrategyProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/ExecutionStrategyProvider.java): Provides an execution strategy for running each query.
 * [GraphQLContextBuilder](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLContextBuilder.java): Builds a context for running each query.
 
-### Deploying using an Apache Karaf feature
+## Examples
 
-You can use the graphql-java-servlet as part of an Apache Karaf feature, which makes it easy to setup all the proper 
-dependencies. Here's an example pom.xml file to setup the Karaf feature:
+You can now find some example on how to use graphql-java-servlet.
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <packaging>feature</packaging>
+### OSGi Examples
 
-    <artifactId>graphql-java-servlet-features</artifactId>
+#### Requirements
 
-    <dependencies>
+The OSGi examples use Maven as a build tool because it requires plugins that are not (yet) available for Gradle.
+Therefore you will need Maven 3.2+.
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>2.8.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>2.8.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.8.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-            <version>2.8.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>20.0</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-runtime</artifactId>
-            <version>4.5.1</version>
-        </dependency>
+#### Building & running the OSGi examples
 
-        <dependency>
-            <groupId>com.graphql-java</groupId>
-            <artifactId>graphql-java-servlet</artifactId>
-            <version>${graphql.java.servlet.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.graphql-java</groupId>
-            <artifactId>graphql-java</artifactId>
-            <version>${graphql.java.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.graphql-java</groupId>
-            <artifactId>graphql-java-annotations</artifactId>
-            <version>0.13.1</version>
-        </dependency>
+You can build the OSGi examples sub-projects by simply executing the following command from the examples/osgi directory:
 
-    </dependencies>
+    mvn clean install
+     
+This will generate a complete Apache Karaf distribution in the following files:
+     
+     examples/osgi/apache-karaf-package/target/graphql-java-servlet-osgi-examples-apache-karaf-package-VERSION.tar.gz(.zip)
+     
+You can simply uncompress this file and launch the OSGi server using the command from the uncompressed directory:
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.karaf.tooling</groupId>
-                <artifactId>karaf-maven-plugin</artifactId>
-                <version>4.0.8</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <startLevel>80</startLevel>
-                    <addTransitiveFeatures>true</addTransitiveFeatures>
-                    <includeTransitiveDependency>true</includeTransitiveDependency>
-                </configuration>
-            </plugin>
-        </plugins>
+    bin/karaf
+    
+You should then be able to access the GraphQL endpoint at the following URL once the server is started:
 
-    </build>
+    http://localhost:8181/graphql/schema.json
+    
+If you see the JSON result of an introspection query, then all is ok. If not, check the data/log/karaf.log file for 
+any errors.
+    
+We also provide a script file to do all of the building and running at once (only for Linux / MacOS ):
 
-</project>
-```
+    ./buildAndRun.sh
+
+#### Deploying inside Apache Karaf server
+
+You can use the graphql-java-servlet as part of an Apache Karaf feature, as you can see in the example project here:
+* [pom.xml](https://github.com/graphql-java/graphql-java-servlet/blob/master/examples/osgi/apache-karaf-feature/pom.xml)
 
 And here is a sample src/main/feature/feature.xml file to add some dependencies on other features:
+* [feature.xml](https://github.com/graphql-java/graphql-java-servlet/blob/master/examples/osgi/apache-karaf-feature/src/main/feature/feature.xml)
 
-```xml
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="cxs-graphql-api-features">
-    <feature name="graphql-java-servlet" description="GraphQL Java Servlet Feature" version="1.0.0.SNAPSHOT">
-        <feature prerequisite="true" dependency="false">scr</feature>
-        <feature prerequisite="true" dependency="false">war</feature>
-    </feature>
-</features>
-```
-
-### Example GraphQL provider implementation
+#### Example GraphQL provider implementation
 
 Here's an example of a GraphQL provider that implements three interfaces at the same time.
 
-```java
-package org.oasis_open.contextserver.graphql;
-
-import graphql.schema.*;
-import org.osgi.service.component.annotations.Component;
-
-import graphql.servlet.GraphQLQueryProvider;
-import graphql.servlet.GraphQLTypesProvider;
-
-import java.util.*;
-
-import static graphql.Scalars.GraphQLID;
-import static graphql.Scalars.GraphQLString;
-import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
-import static graphql.schema.GraphQLObjectType.newObject;
-
-@Component(
-        name="ExampleGraphQLProvider"
-)
-public class ExampleGraphQLProvider implements GraphQLQueryProvider, GraphQLMutationProvider, GraphQLTypesProvider {
-
-    public Collection<GraphQLFieldDefinition> getQueries() {
-        List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<GraphQLFieldDefinition>();
-        fieldDefinitions.add(newFieldDefinition()
-                .type(GraphQLString)
-                .name("hello")
-                .staticValue("world")
-                .build());
-        return fieldDefinitions;
-    }
-
-    public Collection<GraphQLFieldDefinition> getMutations() {
-        return null;
-    }
-
-    public Collection<GraphQLType> getTypes() {
-
-        List<GraphQLType> types = new ArrayList<GraphQLType>();
-        return types;
-    }
-
-}
-```
+* [ExampleGraphQLProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/examples/osgi/providers/src/main/java/graphql/servlet/examples/osgi/ExampleGraphQLProvider.java)
