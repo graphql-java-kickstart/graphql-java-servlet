@@ -92,7 +92,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         this.fileUpload = new ServletFileUpload(fileItemFactory != null ? fileItemFactory : new DiskFileItemFactory());
 
         this.getHandler = (request, response) -> {
-            GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
+            final GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
             String path = request.getPathInfo();
             if (path == null) {
                 path = request.getServletPath();
@@ -101,7 +101,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                 query(CharStreams.toString(new InputStreamReader(GraphQLServlet.class.getResourceAsStream("introspectionQuery"))), null, new HashMap<>(), getSchema(), request, response, context);
             } else {
                 if (request.getParameter("query") != null) {
-                    Map<String, Object> variables = new HashMap<>();
+                    final Map<String, Object> variables = new HashMap<>();
                     if (request.getParameter("variables") != null) {
                         variables.putAll(mapper.readValue(request.getParameter("variables"), new TypeReference<Map<String, Object>>() { }));
                     }
@@ -118,43 +118,43 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         };
 
         this.postHandler = (request, response) -> {
-            GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
+            final GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
             GraphQLRequest graphQLRequest = null;
 
             try {
                 InputStream inputStream = null;
 
                 if (ServletFileUpload.isMultipartContent(request)) {
-                    Map<String, List<FileItem>> fileItems = fileUpload.parseParameterMap(request);
+                    final Map<String, List<FileItem>> fileItems = fileUpload.parseParameterMap(request);
 
                     if (fileItems.containsKey("graphql")) {
-                        Optional<FileItem> graphqlItem = getFileItem(fileItems, "graphql");
-                        if(graphqlItem.isPresent()) {
+                        final Optional<FileItem> graphqlItem = getFileItem(fileItems, "graphql");
+                        if (graphqlItem.isPresent()) {
                             inputStream = graphqlItem.get().getInputStream();
                         }
 
-                    } else if(fileItems.containsKey("query")) {
-                        Optional<FileItem> queryItem = getFileItem(fileItems, "query");
-                        if(queryItem.isPresent()) {
+                    } else if (fileItems.containsKey("query")) {
+                        final Optional<FileItem> queryItem = getFileItem(fileItems, "query");
+                        if (queryItem.isPresent()) {
                             graphQLRequest = new GraphQLRequest();
                             graphQLRequest.setQuery(new String(queryItem.get().get()));
 
-                            Optional<FileItem> operationNameItem = getFileItem(fileItems, "operationName");
-                            if(operationNameItem.isPresent()) {
+                            final Optional<FileItem> operationNameItem = getFileItem(fileItems, "operationName");
+                            if (operationNameItem.isPresent()) {
                                 graphQLRequest.setOperationName(new String(operationNameItem.get().get()).trim());
                             }
 
-                            Optional<FileItem> variablesItem = getFileItem(fileItems, "variables");
-                            if(variablesItem.isPresent()) {
+                            final Optional<FileItem> variablesItem = getFileItem(fileItems, "variables");
+                            if (variablesItem.isPresent()) {
                                 String variables = new String(variablesItem.get().get());
-                                if(!variables.isEmpty()) {
+                                if (!variables.isEmpty()) {
                                     graphQLRequest.setVariables((Map<String, Object>) mapper.readValue(variables, Map.class));
                                 }
                             }
                         }
                     }
 
-                    if(inputStream == null && graphQLRequest == null) {
+                    if (inputStream == null && graphQLRequest == null) {
                         response.setStatus(STATUS_BAD_REQUEST);
                         log.info("Bad POST multipart request: no part named \"graphql\" or \"query\"");
                         return;
@@ -167,7 +167,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                     inputStream = request.getInputStream();
                 }
 
-                if(graphQLRequest == null) {
+                if (graphQLRequest == null) {
                     graphQLRequest = mapper.readValue(inputStream, GraphQLRequest.class);
                 }
 
@@ -215,7 +215,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     @Override @SneakyThrows
     public String executeQuery(String query) {
         try {
-            ExecutionResult result = new GraphQL(getSchema()).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
+            final ExecutionResult result = new GraphQL(getSchema()).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
             return mapper.writeValueAsString(createResultFromDataAndErrors(result.getData(), result.getErrors()));
         } catch (Exception e) {
             return e.getMessage();
@@ -268,11 +268,11 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         } else {
             runListeners(operationListeners, l -> runListener(l, it -> it.beforeGraphQLOperation(context, operationName, query, variables)));
 
-            ExecutionResult executionResult = new GraphQL(schema, getExecutionStrategy()).execute(query, operationName, context, transformVariables(schema, query, variables));
-            List<GraphQLError> errors = executionResult.getErrors();
-            Object data = executionResult.getData();
+            final ExecutionResult executionResult = new GraphQL(schema, getExecutionStrategy()).execute(query, operationName, context, transformVariables(schema, query, variables));
+            final List<GraphQLError> errors = executionResult.getErrors();
+            final Object data = executionResult.getData();
 
-            String response = mapper.writeValueAsString(createResultFromDataAndErrors(data, errors));
+            final String response = mapper.writeValueAsString(createResultFromDataAndErrors(data, errors));
 
             resp.setContentType(APPLICATION_JSON_UTF8);
             resp.setStatus(STATUS_OK);
@@ -288,12 +288,12 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private Map<String, Object> createResultFromDataAndErrors(Object data, List<GraphQLError> errors) {
 
-        Map<String, Object> result = new HashMap<>();
+        final Map<String, Object> result = new HashMap<>();
         result.put("data", data);
 
         if (errorsPresent(errors)) {
-            List<GraphQLError> clientErrors = filterGraphQLErrors(errors);
-            if(clientErrors.size() < errors.size()) {
+            final List<GraphQLError> clientErrors = filterGraphQLErrors(errors);
+            if (clientErrors.size() < errors.size()) {
                 // Some errors were filtered out to hide implementation - put a generic error in place.
                 clientErrors.add(new GenericGraphQLError("Internal Server Error(s) while executing query"));
             }
@@ -314,7 +314,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     }
 
     private <T> void runListeners(List<T> listeners, Consumer<? super T> action) {
-        if(listeners != null) {
+        if (listeners != null) {
             listeners.forEach(l -> runListener(l, action));
         }
     }
@@ -333,7 +333,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
         @Override
         public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            Object o = p.readValueAs(Object.class);
+            final Object o = p.readValueAs(Object.class);
             if (o instanceof Map) {
                 return (Map<String, Object>) o;
             } else if (o instanceof String) {
