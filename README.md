@@ -159,13 +159,13 @@ We also provide a script file to do all of the building and running at once (onl
 #### Deploying inside Apache Karaf server
 
 You can use the graphql-java-servlet as part of an Apache Karaf feature, as you can see in the example project here:
-* [pom.xml](https://github.com/graphql-java/graphql-java-servlet/blob/master/examples/osgi/apache-karaf-feature/pom.xml)
+* [pom.xml](examples/osgi/apache-karaf-feature/pom.xml)
 
 And here is a sample src/main/feature/feature.xml file to add some dependencies on other features:
-* [feature.xml](https://github.com/graphql-java/graphql-java-servlet/blob/master/examples/osgi/apache-karaf-feature/src/main/feature/feature.xml)
+* [feature.xml](examples/osgi/apache-karaf-feature/src/main/feature/feature.xml)
 
 #### Example GraphQL provider implementation
 
 Here's an example of a GraphQL provider that implements three interfaces at the same time.
 
-* [ExampleGraphQLProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/examples/osgi/providers/src/main/java/graphql/servlet/examples/osgi/ExampleGraphQLProvider.java)
+* [ExampleGraphQLProvider](examples/osgi/providers/src/main/java/graphql/servlet/examples/osgi/ExampleGraphQLProvider.java)
