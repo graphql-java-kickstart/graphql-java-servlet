@@ -15,6 +15,8 @@
 package graphql.servlet;
 
 import graphql.execution.ExecutionStrategy;
+import graphql.execution.instrumentation.Instrumentation;
+import graphql.execution.instrumentation.NoOpInstrumentation;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 
@@ -67,6 +69,11 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     @Override
     protected GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
         return new GraphQLContext(request, response);
+    }
+
+    @Override
+    protected Instrumentation getInstrumentation() {
+        return NoOpInstrumentation.INSTANCE;
     }
 
     @Override
