@@ -272,7 +272,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         } else {
             runListeners(operationListeners, l -> runListener(l, it -> it.beforeGraphQLOperation(context, operationName, query, variables)));
 
-            final ExecutionResult executionResult = new GraphQL(schema, getExecutionStrategy()).execute(query, operationName, context, transformVariables(schema, query, variables));
+            final ExecutionResult executionResult = newGraphQL(schema).queryExecutionStrategy(getExecutionStrategy()).instrumentation(getInstrumentation()).build().execute(query, operationName, context, transformVariables(schema, query, variables));
             final List<GraphQLError> errors = executionResult.getErrors();
             final Object data = executionResult.getData();
 

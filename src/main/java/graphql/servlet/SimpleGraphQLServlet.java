@@ -40,21 +40,28 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         .build();
 
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy) {
-        this(schema, executionStrategy, null, null);
+        this(schema, executionStrategy, null, null, null);
     }
 
-    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners) {
+    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners, Instrumentation instrumentation) {
         super(operationListeners, servletListeners, null);
 
         this.schema = schema;
         this.readOnlySchema = new GraphQLSchema(schema.getQueryType(), EMPTY_MUTATION_TYPE, schema.getDictionary());
 
         this.executionStrategy = executionStrategy;
+
+        if (instrumentation == null) {
+            this.instrumentation = NoOpInstrumentation.INSTANCE;
+        } else {
+            this.instrumentation = instrumentation;
+        }
     }
 
     private final GraphQLSchema schema;
     private final GraphQLSchema readOnlySchema;
     private final ExecutionStrategy executionStrategy;
+    private final Instrumentation instrumentation;
 
     @Override
     public GraphQLSchema getSchema() {
@@ -72,13 +79,13 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     @Override
-    protected Instrumentation getInstrumentation() {
-        return NoOpInstrumentation.INSTANCE;
+    protected ExecutionStrategy getExecutionStrategy() {
+        return executionStrategy;
     }
 
     @Override
-    protected ExecutionStrategy getExecutionStrategy() {
-        return executionStrategy;
+    protected Instrumentation getInstrumentation() {
+        return instrumentation;
     }
 
     @Override
