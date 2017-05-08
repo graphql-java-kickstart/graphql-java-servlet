@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.io.CharStreams;
 import graphql.ExecutionResult;
-import graphql.GraphQL;
 import graphql.GraphQLError;
 import graphql.InvalidSyntaxError;
 import graphql.execution.ExecutionStrategy;

@@ -49,7 +49,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
     private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
-    private InstrumentationProvider instrumentationProvider = new NoopInstrumentationProvider();
+    private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
 
     private GraphQLSchema schema;
     private GraphQLSchema readOnlySchema;
@@ -145,7 +145,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         instrumentationProvider = provider;
     }
     public void unsetInstrumentationProvider(ExecutionStrategyProvider provider) {
-        instrumentationProvider = new NoopInstrumentationProvider();
+        instrumentationProvider = new NoOpInstrumentationProvider();
     }
 
     protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
