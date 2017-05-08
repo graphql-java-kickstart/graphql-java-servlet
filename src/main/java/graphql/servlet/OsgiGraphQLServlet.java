@@ -15,6 +15,7 @@
 package graphql.servlet;
 
 import graphql.execution.ExecutionStrategy;
+import graphql.execution.instrumentation.Instrumentation;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
@@ -48,7 +49,8 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
     private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
-    
+    private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
+
     private GraphQLSchema schema;
     private GraphQLSchema readOnlySchema;
 
@@ -138,6 +140,14 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         executionStrategyProvider = new EnhancedExecutionStrategyProvider();
     }
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    public void setInstrumentationProvider(InstrumentationProvider provider) {
+        instrumentationProvider = provider;
+    }
+    public void unsetInstrumentationProvider(ExecutionStrategyProvider provider) {
+        instrumentationProvider = new NoOpInstrumentationProvider();
+    }
+
     protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
         return contextBuilder.build(req, resp);
     }
@@ -145,6 +155,11 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     @Override
     protected ExecutionStrategy getExecutionStrategy() {
         return executionStrategyProvider.getExecutionStrategy();
+    }
+
+    @Override
+    protected Instrumentation getInstrumentation() {
+        return instrumentationProvider.getInstrumentation();
     }
 
     @Override

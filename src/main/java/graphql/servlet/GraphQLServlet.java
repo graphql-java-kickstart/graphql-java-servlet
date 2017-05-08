@@ -23,10 +23,10 @@ import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.io.CharStreams;
 import graphql.ExecutionResult;
-import graphql.GraphQL;
 import graphql.GraphQLError;
 import graphql.InvalidSyntaxError;
 import graphql.execution.ExecutionStrategy;
+import graphql.execution.instrumentation.Instrumentation;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
 import graphql.validation.ValidationError;
@@ -57,6 +57,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static graphql.GraphQL.newGraphQL;
+
 /**
  * @author Andrew Potter
  */
@@ -72,6 +74,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     protected abstract GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
     protected abstract ExecutionStrategy getExecutionStrategy();
+    protected abstract Instrumentation getInstrumentation();
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
 
     private final List<GraphQLOperationListener> operationListeners;
@@ -214,7 +217,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     @Override
     public String executeQuery(String query) {
         try {
-            final ExecutionResult result = new GraphQL(getSchema()).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
+            final ExecutionResult result = newGraphQL(getSchema()).instrumentation(getInstrumentation()).build().execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
             return mapper.writeValueAsString(createResultFromDataAndErrors(result.getData(), result.getErrors()));
         } catch (Exception e) {
             return e.getMessage();
@@ -268,7 +271,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         } else {
             runListeners(operationListeners, l -> runListener(l, it -> it.beforeGraphQLOperation(context, operationName, query, variables)));
 
-            final ExecutionResult executionResult = new GraphQL(schema, getExecutionStrategy()).execute(query, operationName, context, transformVariables(schema, query, variables));
+            final ExecutionResult executionResult = newGraphQL(schema).queryExecutionStrategy(getExecutionStrategy()).instrumentation(getInstrumentation()).build().execute(query, operationName, context, transformVariables(schema, query, variables));
             final List<GraphQLError> errors = executionResult.getErrors();
             final Object data = executionResult.getData();
 
