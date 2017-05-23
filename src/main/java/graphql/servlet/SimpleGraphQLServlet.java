@@ -40,15 +40,15 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy) {
-        this(schema, queryExecutionStrategy, mutationExecutionStrategy, null, null, null);
+        this(schema, queryExecutionStrategy, mutationExecutionStrategy, null, null);
     }
 
-    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners, Instrumentation instrumentation) {
-        this(new DefaultGraphQLSchemaProvider(schema), queryExecutionStrategy, mutationExecutionStrategy, operationListeners, servletListeners, instrumentation);
+    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, List<GraphQLServletListener> listeners, Instrumentation instrumentation) {
+        this(new DefaultGraphQLSchemaProvider(schema), queryExecutionStrategy, mutationExecutionStrategy, listeners, instrumentation);
     }
 
-    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners, Instrumentation instrumentation) {
-        super(operationListeners, servletListeners, null);
+    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, List<GraphQLServletListener> listeners, Instrumentation instrumentation) {
+        super(listeners, null);
 
         this.schemaProvider = schemaProvider;
         this.queryExecutionStrategy = queryExecutionStrategy;
