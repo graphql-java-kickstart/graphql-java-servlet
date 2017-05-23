@@ -32,27 +32,26 @@ import java.util.Optional;
 public class SimpleGraphQLServlet extends GraphQLServlet {
 
     public SimpleGraphQLServlet(GraphQLSchema schema) {
-        this(schema, new SimpleExecutionStrategy());
+        this(schema, new DefaultExecutionStrategyProvider());
     }
 
-    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy) {
-        this(schema, queryExecutionStrategy, queryExecutionStrategy);
+    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy) {
+        this(schema, new DefaultExecutionStrategyProvider(executionStrategy));
     }
 
-    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy) {
-        this(schema, queryExecutionStrategy, mutationExecutionStrategy, null, null);
+    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider) {
+        this(schema, executionStrategyProvider, null, null);
     }
 
-    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, List<GraphQLServletListener> listeners, Instrumentation instrumentation) {
-        this(new DefaultGraphQLSchemaProvider(schema), queryExecutionStrategy, mutationExecutionStrategy, listeners, instrumentation);
+    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation) {
+        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, listeners, instrumentation);
     }
 
-    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, List<GraphQLServletListener> listeners, Instrumentation instrumentation) {
+    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation) {
         super(listeners, null);
 
         this.schemaProvider = schemaProvider;
-        this.queryExecutionStrategy = queryExecutionStrategy;
-        this.mutationExecutionStrategy = mutationExecutionStrategy;
+        this.executionStrategyProvider = executionStrategyProvider;
 
         if (instrumentation == null) {
             this.instrumentation = NoOpInstrumentation.INSTANCE;
@@ -62,8 +61,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     private final GraphQLSchemaProvider schemaProvider;
-    private final ExecutionStrategy queryExecutionStrategy;
-    private final ExecutionStrategy mutationExecutionStrategy;
+    private final ExecutionStrategyProvider executionStrategyProvider;
     private final Instrumentation instrumentation;
 
     @Override
@@ -77,13 +75,8 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     @Override
-    protected ExecutionStrategy getQueryExecutionStrategy() {
-        return queryExecutionStrategy;
-    }
-
-    @Override
-    protected ExecutionStrategy getMutationExecutionStrategy() {
-        return mutationExecutionStrategy;
+    protected ExecutionStrategyProvider getExecutionStrategyProvider() {
+        return executionStrategyProvider;
     }
 
     @Override

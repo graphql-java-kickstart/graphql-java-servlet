@@ -25,18 +25,20 @@ public interface GraphQLSchemaProvider {
     }
 
     /**
-     * return a schema based on the request (auth, etc).  Optional is empty when called from an mbean.
+     * @param request the http request
+     * @return a schema based on the request (auth, etc).  Optional is empty when called from an mbean.
      */
     GraphQLSchema getSchema(HttpServletRequest request);
 
 
     /**
-     * return a schema for handling mbean calls.
+     * @return a schema for handling mbean calls.
      */
     GraphQLSchema getSchema();
 
     /**
-     * return a read-only schema based on the request (auth, etc).  Should return the same schema as {@link #getSchema(HttpServletRequest)} for a given request.
+     * @param request the http request
+     * @return a read-only schema based on the request (auth, etc).  Should return the same schema as {@link #getSchema(HttpServletRequest)} for a given request.
      */
     GraphQLSchema getReadOnlySchema(HttpServletRequest request);
 }

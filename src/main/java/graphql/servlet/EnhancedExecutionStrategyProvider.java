@@ -20,8 +20,19 @@ import org.osgi.service.component.annotations.Component;
 
 @Component(property = "type=enhanced")
 public class EnhancedExecutionStrategyProvider implements ExecutionStrategyProvider {
+
     @Override
-    public ExecutionStrategy getExecutionStrategy() {
+    public ExecutionStrategy getQueryExecutionStrategy() {
+        return new EnhancedExecutionStrategy();
+    }
+
+    @Override
+    public ExecutionStrategy getMutationExecutionStrategy() {
+        return new EnhancedExecutionStrategy();
+    }
+
+    @Override
+    public ExecutionStrategy getSubscriptionExecutionStrategy() {
         return new EnhancedExecutionStrategy();
     }
 }

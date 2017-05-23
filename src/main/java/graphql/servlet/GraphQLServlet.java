@@ -75,8 +75,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     protected abstract GraphQLSchemaProvider getSchemaProvider();
     protected abstract GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
-    protected abstract ExecutionStrategy getQueryExecutionStrategy();
-    protected abstract ExecutionStrategy getMutationExecutionStrategy();
+    protected abstract ExecutionStrategyProvider getExecutionStrategyProvider();
     protected abstract Instrumentation getInstrumentation();
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
 
@@ -253,9 +252,11 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     }
 
     private GraphQL newGraphQL(GraphQLSchema schema) {
+        ExecutionStrategyProvider executionStrategyProvider = getExecutionStrategyProvider();
         return GraphQL.newGraphQL(schema)
-            .queryExecutionStrategy(getQueryExecutionStrategy())
-            .mutationExecutionStrategy(getMutationExecutionStrategy())
+            .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
+            .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
+            .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
             .instrumentation(getInstrumentation())
             .build();
     }

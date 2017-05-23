@@ -138,7 +138,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     public void setInstrumentationProvider(InstrumentationProvider provider) {
         instrumentationProvider = provider;
     }
-    public void unsetInstrumentationProvider(ExecutionStrategyProvider provider) {
+    public void unsetInstrumentationProvider(InstrumentationProvider provider) {
         instrumentationProvider = new NoOpInstrumentationProvider();
     }
 
@@ -152,13 +152,8 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     }
 
     @Override
-    protected ExecutionStrategy getQueryExecutionStrategy() {
-        return executionStrategyProvider.getExecutionStrategy();
-    }
-
-    @Override
-    protected ExecutionStrategy getMutationExecutionStrategy() {
-        return getQueryExecutionStrategy();
+    protected ExecutionStrategyProvider getExecutionStrategyProvider() {
+        return executionStrategyProvider;
     }
 
     @Override
