@@ -15,6 +15,7 @@
 package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import graphql.GraphQLError
 import graphql.Scalars
 import graphql.execution.SimpleExecutionStrategy
 import graphql.schema.DataFetcher
@@ -24,6 +25,9 @@ import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
 import spock.lang.Specification
+
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 /**
  * @author Andrew Potter

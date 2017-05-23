@@ -49,12 +49,15 @@ import java.io.InputStream;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -77,20 +80,18 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected abstract Instrumentation getInstrumentation();
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
 
-    private final List<GraphQLOperationListener> operationListeners;
-    private final List<GraphQLServletListener> servletListeners;
+    private final List<GraphQLServletListener> listeners;
     private final ServletFileUpload fileUpload;
 
     private final RequestHandler getHandler;
     private final RequestHandler postHandler;
 
     public GraphQLServlet() {
-        this(null, null, null);
+        this(null, null);
     }
 
-    public GraphQLServlet(List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners, FileItemFactory fileItemFactory) {
-        this.operationListeners = operationListeners != null ? new ArrayList<>(operationListeners) : new ArrayList<>();
-        this.servletListeners = servletListeners != null ? new ArrayList<>(servletListeners) : new ArrayList<>();
+    public GraphQLServlet(List<GraphQLServletListener> listeners, FileItemFactory fileItemFactory) {
+        this.listeners = listeners != null ? new ArrayList<>(listeners) : new ArrayList<>();
         this.fileUpload = new ServletFileUpload(fileItemFactory != null ? fileItemFactory : new DiskFileItemFactory());
 
         this.getHandler = (request, response) -> {
@@ -188,20 +189,12 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         };
     }
 
-    public void addOperationListener(GraphQLOperationListener operationListener) {
-        operationListeners.add(operationListener);
+    public void addListener(GraphQLServletListener servletListener) {
+        listeners.add(servletListener);
     }
 
-    public void removeOperationListener(GraphQLOperationListener operationListener) {
-        operationListeners.remove(operationListener);
-    }
-
-    public void addServletListener(GraphQLServletListener servletListener) {
-        servletListeners.add(servletListener);
-    }
-
-    public void removeServletListener(GraphQLServletListener servletListener) {
-        servletListeners.remove(servletListener);
+    public void removeListener(GraphQLServletListener servletListener) {
+        listeners.remove(servletListener);
     }
 
     @Override
@@ -225,16 +218,18 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     }
 
     private void doRequest(HttpServletRequest request, HttpServletResponse response, RequestHandler handler) {
-        try {
-            runListeners(servletListeners, l -> l.onStart(request, response));
-            handler.handle(request, response);
 
+        List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(l -> l.onRequest(request, response));
+
+        try {
+            handler.handle(request, response);
+            runCallbacks(requestCallbacks, c -> c.onSuccess(request, response));
         } catch (Throwable t) {
             response.setStatus(500);
             log.error("Error executing GraphQL request!", t);
-            runListeners(servletListeners, l -> l.onError(request, response, t));
+            runCallbacks(requestCallbacks, c -> c.onError(request, response, t));
         } finally {
-            runListeners(servletListeners, l -> l.onFinally(request, response));
+            runCallbacks(requestCallbacks, c -> c.onFinally(request, response));
         }
     }
 
@@ -276,7 +271,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                 return null;
             });
         } else {
-            runListeners(operationListeners, l -> runListener(l, it -> it.beforeGraphQLOperation(context, operationName, query, variables)));
+            List<GraphQLServletListener.OperationCallback> operationCallbacks = runListeners(l -> l.onOperation(context, operationName, query, variables));
 
             final ExecutionResult executionResult = newGraphQL(schema).execute(query, operationName, context, transformVariables(schema, query, variables));
             final List<GraphQLError> errors = executionResult.getErrors();
@@ -289,10 +284,12 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             resp.getWriter().write(response);
 
             if(errorsPresent(errors)) {
-                runListeners(operationListeners, l -> l.onFailedGraphQLOperation(context, operationName, query, variables, data, errors));
+                runCallbacks(operationCallbacks, c -> c.onError(context, operationName, query, variables, data, errors));
             } else {
-                runListeners(operationListeners, l -> l.onSuccessfulGraphQLOperation(context, operationName, query, variables, data));
+                runCallbacks(operationCallbacks, c -> c.onSuccess(context, operationName, query, variables, data));
             }
+
+            runCallbacks(operationCallbacks, c -> c.onFinally(context, operationName, query, variables, data));
         }
     }
 
@@ -333,21 +330,38 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         return error instanceof InvalidSyntaxError || error instanceof ValidationError;
     }
 
-    private <T> void runListeners(List<T> listeners, Consumer<? super T> action) {
-        if (listeners != null) {
-            listeners.forEach(l -> runListener(l, action));
+    private <R> List<R> runListeners(Function<? super GraphQLServletListener, R> action) {
+        if (listeners == null) {
+            return Collections.emptyList();
         }
+
+        return listeners.stream()
+            .map(listener -> {
+                try {
+                    return action.apply(listener);
+                } catch (Throwable t) {
+                    log.error("Error running listener: {}", listener, t);
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    }
+
+    private <T> void runCallbacks(List<T> callbacks, Consumer<T> action) {
+        callbacks.forEach(callback -> {
+            try {
+                action.accept(callback);
+            } catch (Throwable t) {
+                log.error("Error running callback: {}", callback, t);
+            }
+        });
     }
 
     /**
      * Don't let listener errors escape to the client.
      */
-    private <T> void runListener(T listener, Consumer<? super T> action) {
-        try {
-            action.accept(listener);
-        } catch (Throwable t) {
-            log.error("Error running listener: {}", listener.getClass().getName(), t);
-        }
+    private <T, R> void runListener(T listener, Function<? super T, ? super R> action) {
     }
 
     protected static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {

@@ -56,42 +56,52 @@ GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy);
 GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy, operationListeners, servletListeners);
 ```
 
-## Operation and Servlet Listeners
+## Servlet Listeners
 
-You can also add [operation listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLOperationListener.java) and [servlet listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLServletListener.java) to an existing servlet.
-These listeners provide hooks into query execution (before, on success, and on failure) and servlet execution (before, on error, and finally):
+You can also add [servlet listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLServletListener.java) to an existing servlet.
+These listeners provide hooks into query execution (before, success, failure, and finally) and servlet execution (before, success, error, and finally):
 ```java
-servlet.addOperationListener(new GraphQLOperationListener() {
+servlet.addListener(new GraphQLServletListener() {
     @Override
-    void beforeGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {
+    GraphQLServletListener.RequestCallback onRequest(HttpServletRequest request, HttpServletResponse response) {
 
+        return new GraphQLServletListener.RequestCallback() {
+            @Override
+            void onSuccess(HttpServletRequest request, HttpServletResponse response) {
+
+            }
+
+            @Override
+            void onError(HttpServletRequest request, HttpServletResponse response, Throwable throwable) {
+
+            }
+
+            @Override
+            void onFinally(HttpServletRequest request, HttpServletResponse response) {
+
+            }
+        }
     }
 
     @Override
-    void onSuccessfulGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
+    GraphQLServletListener.OperationCallback onOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {
 
-    }
+        return new GraphQLServletListener.OperationCallback() {
+            @Override
+            void onSuccess(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
 
-    @Override
-    void onFailedGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data, List<GraphQLError> errors) {
+            }
 
-    }
-})
+            @Override
+            void onError(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data, List<GraphQLError> errors) {
 
-servlet.addServletListener(new GraphQLServletListener() {
-    @Override
-    void onStart(HttpServletRequest request, HttpServletResponse response) {
+            }
 
-    }
+            @Override
+            void onFinally(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
 
-    @Override
-    void onError(HttpServletRequest request, HttpServletResponse response, Throwable throwable) {
-
-    }
-
-    @Override
-    void onFinally(HttpServletRequest request, HttpServletResponse response) {
-
+            }
+        }
     }
 })
 ```

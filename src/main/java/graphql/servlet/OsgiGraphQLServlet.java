@@ -170,13 +170,4 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     protected Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables) {
         return new GraphQLVariables(schema, query, variables);
     }
-
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void bindOperationListener(GraphQLOperationListener listener) {
-        addOperationListener(listener);
-    }
-
-    public void unbindOperationListener(GraphQLOperationListener listener) {
-        removeOperationListener(listener);
-    }
 }
