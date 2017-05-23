@@ -68,7 +68,7 @@ class GraphQLVariablesSpec extends Specification {
         OsgiGraphQLServlet servlet = new OsgiGraphQLServlet()
         ComplexQueryProvider queryProvider = new ComplexQueryProvider()
         servlet.bindQueryProvider(queryProvider)
-        schema = servlet.getSchema()
+        schema = servlet.getSchemaProvider().getSchema()
     }
 
     private static final String QUERY = 'query Q($d: Data) { data { echo(data: $d) { field1 field2 } } }'

@@ -75,7 +75,7 @@ class GraphQLServletSpec extends Specification {
         }
         .build()
 
-        return new SimpleGraphQLServlet(new GraphQLSchema(query, mutation, [query, mutation].toSet()), new SimpleExecutionStrategy())
+        return new SimpleGraphQLServlet(new GraphQLSchema(query, mutation, [query, mutation].toSet()))
     }
 
     Map<String, Object> getResponseContent() {
@@ -302,9 +302,9 @@ class GraphQLServletSpec extends Specification {
 
     def "errors before graphql schema execution return internal server error"() {
         setup:
-            servlet = new SimpleGraphQLServlet(servlet.schema, servlet.executionStrategy) {
+            servlet = new SimpleGraphQLServlet(servlet.getSchemaProvider().getSchema()) {
                 @Override
-                GraphQLSchema getSchema() {
+                GraphQLSchemaProvider getSchemaProvider() {
                     throw new TestException()
                 }
             }

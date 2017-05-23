@@ -54,43 +54,43 @@ class OsgiGraphQLServletSpec extends Specification {
             GraphQLFieldDefinition query
 
         when:
-            query = servlet.getSchema().getQueryType().getFieldDefinition("query")
+            query = servlet.getSchemaProvider().getSchema().getQueryType().getFieldDefinition("query")
         then:
             query.getType().getName() == "query"
 
         when:
-            query = servlet.getReadOnlySchema().getQueryType().getFieldDefinition("query")
+            query = servlet.getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinition("query")
         then:
             query.getType().getName() == "query"
 
         when:
             servlet.unbindQueryProvider(queryProvider)
         then:
-            servlet.getSchema().getQueryType().getFieldDefinitions().isEmpty()
-            servlet.getReadOnlySchema().getQueryType().getFieldDefinitions().isEmpty()
+            servlet.getSchemaProvider().getSchema().getQueryType().getFieldDefinitions().isEmpty()
+            servlet.getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinitions().isEmpty()
     }
 
     static class TestMutationProvider implements GraphQLMutationProvider {
         @Override
         Collection<GraphQLFieldDefinition> getMutations() {
-            return Collections.singletonList(newFieldDefinition().name("int").type(GraphQLInt).staticValue(1).build());
+            return Collections.singletonList(newFieldDefinition().name("int").type(GraphQLInt).staticValue(1).build())
         }
     }
 
     def "mutation provider adds mutation objects"() {
         setup:
-            OsgiGraphQLServlet servlet = new OsgiGraphQLServlet();
-            TestMutationProvider mutationProvider = new TestMutationProvider();
+            OsgiGraphQLServlet servlet = new OsgiGraphQLServlet()
+            TestMutationProvider mutationProvider = new TestMutationProvider()
 
         when:
             servlet.bindMutationProvider(mutationProvider)
         then:
-            servlet.getSchema().getMutationType().getFieldDefinition("int").getType() == GraphQLInt
-            servlet.getReadOnlySchema().getMutationType() == null
+            servlet.getSchemaProvider().getSchema().getMutationType().getFieldDefinition("int").getType() == GraphQLInt
+            servlet.getSchemaProvider().getReadOnlySchema(null).getMutationType() == null
 
         when:
             servlet.unbindMutationProvider(mutationProvider)
         then:
-            servlet.getSchema().getMutationType() == null
+            servlet.getSchemaProvider().getSchema().getMutationType() == null
     }
 }

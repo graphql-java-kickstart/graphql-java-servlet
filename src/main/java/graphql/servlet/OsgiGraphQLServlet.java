@@ -51,17 +51,14 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
 
-    private GraphQLSchema schema;
-    private GraphQLSchema readOnlySchema;
+    private GraphQLSchemaProvider schemaProvider;
 
     protected void updateSchema() {
-        final GraphQLObjectType.Builder object = newObject().name("Query").description("Root query type");
+        final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query").description("Root query type");
 
         for (GraphQLQueryProvider provider : queryProviders) {
             if (provider.getQueries() != null && !provider.getQueries().isEmpty()) {
-                for (GraphQLFieldDefinition graphQLFieldDefinition : provider.getQueries()) {
-                    object.field(graphQLFieldDefinition);
-                }
+                provider.getQueries().forEach(queryTypeBuilder::field);
             }
         }
 
@@ -70,24 +67,21 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
             types.addAll(typesProvider.getTypes());
         }
 
-        readOnlySchema = newSchema().query(object.build()).build(types);
+        GraphQLObjectType mutationType = null;
 
-        if (mutationProviders.isEmpty()) {
-            schema = readOnlySchema;
-        } else {
-            final GraphQLObjectType.Builder mutationObject = newObject().name("Mutation").description("Root mutation type");
+        if (!mutationProviders.isEmpty()) {
+            final GraphQLObjectType.Builder mutationTypeBuilder = newObject().name("Mutation").description("Root mutation type");
 
             for (GraphQLMutationProvider provider : mutationProviders) {
-                provider.getMutations().forEach(mutationObject::field);
+                provider.getMutations().forEach(mutationTypeBuilder::field);
             }
 
-            final GraphQLObjectType mutationType = mutationObject.build();
-            if (mutationType.getFieldDefinitions().isEmpty()) {
-                schema = readOnlySchema;
-            } else {
-                schema = newSchema().query(object.build()).mutation(mutationType).build();
+            if (!mutationTypeBuilder.build().getFieldDefinitions().isEmpty()) {
+                mutationType = mutationTypeBuilder.build();
             }
         }
+
+        this.schemaProvider = new DefaultGraphQLSchemaProvider(newSchema().query(queryTypeBuilder.build()).mutation(mutationType).build(types));
     }
 
     public OsgiGraphQLServlet() {
@@ -148,13 +142,23 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         instrumentationProvider = new NoOpInstrumentationProvider();
     }
 
+    @Override
+    protected GraphQLSchemaProvider getSchemaProvider() {
+        return schemaProvider;
+    }
+
     protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
         return contextBuilder.build(req, resp);
     }
 
     @Override
-    protected ExecutionStrategy getExecutionStrategy() {
+    protected ExecutionStrategy getQueryExecutionStrategy() {
         return executionStrategyProvider.getExecutionStrategy();
+    }
+
+    @Override
+    protected ExecutionStrategy getMutationExecutionStrategy() {
+        return getQueryExecutionStrategy();
     }
 
     @Override
@@ -174,15 +178,5 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
 
     public void unbindOperationListener(GraphQLOperationListener listener) {
         removeOperationListener(listener);
-    }
-
-    @Override
-    public GraphQLSchema getSchema() {
-        return schema;
-    }
-
-    @Override
-    public GraphQLSchema getReadOnlySchema() {
-        return readOnlySchema;
     }
 }

@@ -15,14 +15,13 @@
 package graphql.servlet;
 
 import graphql.execution.ExecutionStrategy;
+import graphql.execution.SimpleExecutionStrategy;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.NoOpInstrumentation;
-import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,24 +31,28 @@ import java.util.Optional;
  */
 public class SimpleGraphQLServlet extends GraphQLServlet {
 
-    /**
-     * Workaround for https://github.com/graphql-java/graphql-java/issues/345
-     */
-    public static final GraphQLObjectType EMPTY_MUTATION_TYPE = GraphQLObjectType.newObject()
-        .name("Mutation")
-        .build();
-
-    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy) {
-        this(schema, executionStrategy, null, null, null);
+    public SimpleGraphQLServlet(GraphQLSchema schema) {
+        this(schema, new SimpleExecutionStrategy());
     }
 
-    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners, Instrumentation instrumentation) {
+    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy) {
+        this(schema, queryExecutionStrategy, queryExecutionStrategy);
+    }
+
+    public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy) {
+        this(schema, queryExecutionStrategy, mutationExecutionStrategy, null, null, null);
+    }
+
+    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners, Instrumentation instrumentation) {
+        this(new DefaultGraphQLSchemaProvider(schema), queryExecutionStrategy, mutationExecutionStrategy, operationListeners, servletListeners, instrumentation);
+    }
+
+    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, List<GraphQLOperationListener> operationListeners, List<GraphQLServletListener> servletListeners, Instrumentation instrumentation) {
         super(operationListeners, servletListeners, null);
 
-        this.schema = schema;
-        this.readOnlySchema = new GraphQLSchema(schema.getQueryType(), EMPTY_MUTATION_TYPE, schema.getDictionary());
-
-        this.executionStrategy = executionStrategy;
+        this.schemaProvider = schemaProvider;
+        this.queryExecutionStrategy = queryExecutionStrategy;
+        this.mutationExecutionStrategy = mutationExecutionStrategy;
 
         if (instrumentation == null) {
             this.instrumentation = NoOpInstrumentation.INSTANCE;
@@ -58,19 +61,14 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         }
     }
 
-    private final GraphQLSchema schema;
-    private final GraphQLSchema readOnlySchema;
-    private final ExecutionStrategy executionStrategy;
+    private final GraphQLSchemaProvider schemaProvider;
+    private final ExecutionStrategy queryExecutionStrategy;
+    private final ExecutionStrategy mutationExecutionStrategy;
     private final Instrumentation instrumentation;
 
     @Override
-    public GraphQLSchema getSchema() {
-        return schema;
-    }
-
-    @Override
-    public GraphQLSchema getReadOnlySchema() {
-        return readOnlySchema;
+    protected GraphQLSchemaProvider getSchemaProvider() {
+        return schemaProvider;
     }
 
     @Override
@@ -79,8 +77,13 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     @Override
-    protected ExecutionStrategy getExecutionStrategy() {
-        return executionStrategy;
+    protected ExecutionStrategy getQueryExecutionStrategy() {
+        return queryExecutionStrategy;
+    }
+
+    @Override
+    protected ExecutionStrategy getMutationExecutionStrategy() {
+        return mutationExecutionStrategy;
     }
 
     @Override
