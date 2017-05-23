@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import graphql.ExceptionWhileDataFetching;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
@@ -306,6 +307,12 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             if (clientErrors.size() < errors.size()) {
                 // Some errors were filtered out to hide implementation - put a generic error in place.
                 clientErrors.add(new GenericGraphQLError("Internal Server Error(s) while executing query"));
+
+                errors.stream()
+                    .filter(error -> !isClientError(error))
+                    .forEach(error -> {
+                        log.error("Error executing query ({}): {}", error.getClass().getSimpleName(), error.getMessage());
+                    });
             }
             result.put("errors", clientErrors);
         }
@@ -318,9 +325,13 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     }
 
     protected List<GraphQLError> filterGraphQLErrors(List<GraphQLError> errors) {
-        return errors.stream().
-                filter(error -> error instanceof InvalidSyntaxError || error instanceof ValidationError).
-                collect(Collectors.toList());
+        return errors.stream()
+            .filter(this::isClientError)
+            .collect(Collectors.toList());
+    }
+
+    protected boolean isClientError(GraphQLError error) {
+        return error instanceof InvalidSyntaxError || error instanceof ValidationError;
     }
 
     private <T> void runListeners(List<T> listeners, Consumer<? super T> action) {
