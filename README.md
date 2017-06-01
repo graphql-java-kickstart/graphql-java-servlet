@@ -31,7 +31,8 @@ dependencies {
 # Usage
 
 The servlet supports the following request formats:
-* GET request with query parameters:
+* GET request to `../schema.json`: Get the result of an introspection query.
+* GET request with query parameters (query only, no mutation):
     * query
     * operationName (optional)
     * variables (optional)
