@@ -89,6 +89,32 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
+    public void bindProvider(GraphQLProvider provider) {
+        if (provider instanceof GraphQLQueryProvider) {
+            queryProviders.add((GraphQLQueryProvider) provider);
+        }
+        if (provider instanceof GraphQLMutationProvider) {
+            mutationProviders.add((GraphQLMutationProvider) provider);
+        }
+        if (provider instanceof GraphQLTypesProvider) {
+            typesProviders.add((GraphQLTypesProvider) provider);
+        }
+        updateSchema();
+    }
+    public void unbindProvider(GraphQLProvider provider) {
+        if (provider instanceof GraphQLQueryProvider) {
+            queryProviders.remove((GraphQLQueryProvider) provider);
+        }
+        if (provider instanceof GraphQLMutationProvider) {
+            mutationProviders.remove((GraphQLMutationProvider) provider);
+        }
+        if (provider instanceof GraphQLTypesProvider) {
+            typesProviders.remove((GraphQLTypesProvider) provider);
+        }
+        updateSchema();
+    }
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
     public void bindQueryProvider(GraphQLQueryProvider queryProvider) {
         queryProviders.add(queryProvider);
         updateSchema();
