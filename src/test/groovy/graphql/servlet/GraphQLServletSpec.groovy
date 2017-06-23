@@ -148,6 +148,19 @@ class GraphQLServletSpec extends Specification {
 
     }
 
+    def "query over HTTP GET with empty non-null operationName returns data"() {
+        when:
+        response = new MockHttpServletResponse()
+        request.addParameter('query', 'query echo{ echo: echo(arg:"test") }')
+        request.addParameter('operationName', '')
+        servlet.doGet(request, response)
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+
+    }
+
     def "mutation over HTTP GET returns errors"() {
         setup:
             request.addParameter('query', 'mutation { echo(arg:"test") }')
@@ -217,6 +230,22 @@ class GraphQLServletSpec extends Specification {
             getResponseContent().data.echoTwo == "test-two"
     }
 
+    def "query over HTTP POST body with empty non-null operationName returns data"() {
+        setup:
+        request.setContent(mapper.writeValueAsBytes([
+                query: 'query echo{ echo: echo(arg:"test") }',
+                operationName: ''
+        ]))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+    }
+
     def "query over HTTP POST multipart named 'graphql' returns data"() {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
@@ -269,6 +298,24 @@ class GraphQLServletSpec extends Specification {
             response.getContentType() == CONTENT_TYPE_JSON_UTF8
             getResponseContent().data.echoOne == null
             getResponseContent().data.echoTwo == "test-two"
+    }
+
+    def "query over HTTP POST multipart named 'query' with empty non-null operationName returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.setContent(new TestMultipartContentBuilder()
+                .addPart('query', 'query echo{ echo: echo(arg:"test") }')
+                .addPart('operationName', '')
+                .build())
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP POST multipart named 'query' with variables returns data"() {
