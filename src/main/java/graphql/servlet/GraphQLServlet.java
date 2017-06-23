@@ -264,8 +264,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
         if (operationName != null && operationName.isEmpty()) {
             query(query, null, variables, schema, req, resp, context);
-        } else
-            if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject().isPresent()) {
+        } else if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject().isPresent()) {
             Subject.doAs(context.getSubject().get(), (PrivilegedAction<Void>) () -> {
                 try {
                     query(query, operationName, variables, schema, req, resp, context);
