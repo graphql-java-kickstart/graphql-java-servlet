@@ -15,7 +15,6 @@
 package graphql.servlet;
 
 import graphql.execution.ExecutionStrategy;
-import graphql.execution.SimpleExecutionStrategy;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.NoOpInstrumentation;
 import graphql.schema.GraphQLSchema;
@@ -40,14 +39,14 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider) {
-        this(schema, executionStrategyProvider, null, null);
+        this(schema, executionStrategyProvider, null, null, null);
     }
 
-    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation) {
-        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, listeners, instrumentation);
+    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler) {
+        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, listeners, instrumentation, errorHandler);
     }
 
-    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation) {
+    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler) {
         super(listeners, null);
 
         this.schemaProvider = schemaProvider;
@@ -58,11 +57,18 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         } else {
             this.instrumentation = instrumentation;
         }
+
+        if(errorHandler == null) {
+            this.errorHandler = new DefaultGraphQLErrorHandler();
+        } else {
+            this.errorHandler = errorHandler;
+        }
     }
 
     private final GraphQLSchemaProvider schemaProvider;
     private final ExecutionStrategyProvider executionStrategyProvider;
     private final Instrumentation instrumentation;
+    private final GraphQLErrorHandler errorHandler;
 
     @Override
     protected GraphQLSchemaProvider getSchemaProvider() {
@@ -87,5 +93,10 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     @Override
     protected Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables) {
         return variables;
+    }
+
+    @Override
+    protected GraphQLErrorHandler getGraphQLErrorHandler() {
+        return errorHandler;
     }
 }

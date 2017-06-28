@@ -48,6 +48,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
     private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
+    private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
 
     private GraphQLSchemaProvider schemaProvider;
 
@@ -174,6 +175,14 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         instrumentationProvider = new NoOpInstrumentationProvider();
     }
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    public void setErrorHandler(GraphQLErrorHandler errorHandler) {
+        this.errorHandler = errorHandler;
+    }
+    public void unsetErrorHandler(GraphQLErrorHandler errorHandler) {
+        this.errorHandler = new DefaultGraphQLErrorHandler();
+    }
+
     @Override
     protected GraphQLSchemaProvider getSchemaProvider() {
         return schemaProvider;
@@ -196,5 +205,10 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     @Override
     protected Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables) {
         return new GraphQLVariables(schema, query, variables);
+    }
+
+    @Override
+    protected GraphQLErrorHandler getGraphQLErrorHandler() {
+        return errorHandler;
     }
 }

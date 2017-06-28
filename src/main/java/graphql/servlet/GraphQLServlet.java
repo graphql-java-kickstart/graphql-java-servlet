@@ -78,6 +78,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected abstract ExecutionStrategyProvider getExecutionStrategyProvider();
     protected abstract Instrumentation getInstrumentation();
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
+    protected abstract GraphQLErrorHandler getGraphQLErrorHandler();
 
     private final List<GraphQLServletListener> listeners;
     private final ServletFileUpload fileUpload;
@@ -286,7 +287,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             resp.setStatus(STATUS_OK);
             resp.getWriter().write(response);
 
-            if(errorsPresent(errors)) {
+            if(getGraphQLErrorHandler().errorsPresent(errors)) {
                 runCallbacks(operationCallbacks, c -> c.onError(context, operationName, query, variables, data, errors));
             } else {
                 runCallbacks(operationCallbacks, c -> c.onSuccess(context, operationName, query, variables, data));
@@ -301,36 +302,11 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         final Map<String, Object> result = new HashMap<>();
         result.put("data", data);
 
-        if (errorsPresent(errors)) {
-            final List<GraphQLError> clientErrors = filterGraphQLErrors(errors);
-            if (clientErrors.size() < errors.size()) {
-                // Some errors were filtered out to hide implementation - put a generic error in place.
-                clientErrors.add(new GenericGraphQLError("Internal Server Error(s) while executing query"));
-
-                errors.stream()
-                    .filter(error -> !isClientError(error))
-                    .forEach(error -> {
-                        log.error("Error executing query ({}): {}", error.getClass().getSimpleName(), error.getMessage());
-                    });
-            }
-            result.put("errors", clientErrors);
+        if (getGraphQLErrorHandler().errorsPresent(errors)) {
+            result.put("errors", getGraphQLErrorHandler().processErrors(errors));
         }
 
         return result;
-    }
-
-    private boolean errorsPresent(List<GraphQLError> errors) {
-        return errors != null && !errors.isEmpty();
-    }
-
-    protected List<GraphQLError> filterGraphQLErrors(List<GraphQLError> errors) {
-        return errors.stream()
-            .filter(this::isClientError)
-            .collect(Collectors.toList());
-    }
-
-    protected boolean isClientError(GraphQLError error) {
-        return error instanceof InvalidSyntaxError || error instanceof ValidationError;
     }
 
     private <R> List<R> runListeners(Function<? super GraphQLServletListener, R> action) {
