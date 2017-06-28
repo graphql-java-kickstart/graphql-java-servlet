@@ -14,9 +14,7 @@
  */
 package graphql.servlet;
 
-import graphql.execution.ExecutionStrategy;
 import graphql.execution.instrumentation.Instrumentation;
-import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
@@ -103,13 +101,13 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     }
     public void unbindProvider(GraphQLProvider provider) {
         if (provider instanceof GraphQLQueryProvider) {
-            queryProviders.remove((GraphQLQueryProvider) provider);
+            queryProviders.remove(provider);
         }
         if (provider instanceof GraphQLMutationProvider) {
-            mutationProviders.remove((GraphQLMutationProvider) provider);
+            mutationProviders.remove(provider);
         }
         if (provider instanceof GraphQLTypesProvider) {
-            typesProviders.remove((GraphQLTypesProvider) provider);
+            typesProviders.remove(provider);
         }
         updateSchema();
     }
@@ -142,6 +140,14 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     public void unbindTypesProvider(GraphQLTypesProvider typesProvider) {
         typesProviders.remove(typesProvider);
         updateSchema();
+    }
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
+    public void bindServletListener(GraphQLServletListener listener) {
+        this.addListener(listener);
+    }
+    public void unbindServletListener(GraphQLServletListener listener) {
+        this.removeListener(listener);
     }
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)

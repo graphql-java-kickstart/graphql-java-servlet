@@ -361,12 +361,6 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         });
     }
 
-    /**
-     * Don't let listener errors escape to the client.
-     */
-    private <T, R> void runListener(T listener, Function<? super T, ? super R> action) {
-    }
-
     protected static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
         @Override
         public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
