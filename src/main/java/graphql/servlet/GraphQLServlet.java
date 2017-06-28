@@ -24,13 +24,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
-import graphql.InvalidSyntaxError;
-import graphql.execution.ExecutionStrategy;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
-import graphql.validation.ValidationError;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -106,7 +103,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                 if (request.getParameter("query") != null) {
                     final Map<String, Object> variables = new HashMap<>();
                     if (request.getParameter("variables") != null) {
-                        variables.putAll(mapper.readValue(request.getParameter("variables"), new TypeReference<Map<String, Object>>() { }));
+                        variables.putAll(deserializeVariables(request.getParameter("variables")));
                     }
                     String operationName = null;
                     if (request.getParameter("operationName") != null) {
@@ -151,7 +148,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                             if (variablesItem.isPresent()) {
                                 String variables = new String(variablesItem.get().get());
                                 if (!variables.isEmpty()) {
-                                    graphQLRequest.setVariables((Map<String, Object>) mapper.readValue(variables, Map.class));
+                                    graphQLRequest.setVariables(deserializeVariables(variables));
                                 }
                             }
                         }
@@ -340,14 +337,31 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
         @Override
         public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            final Object o = p.readValueAs(Object.class);
-            if (o instanceof Map) {
-                return (Map<String, Object>) o;
-            } else if (o instanceof String) {
-                return mapper.readValue((String) o, new TypeReference<Map<String, Object>>() {});
-            } else {
-                throw new RuntimeJsonMappingException("variables should be either an object or a string");
+            return deserializeVariablesObject(p.readValueAs(Object.class));
+        }
+    }
+
+    private static Map<String, Object> deserializeVariables(String variables) {
+        try {
+            return deserializeVariablesObject(mapper.readValue(variables, Object.class));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Map<String, Object> deserializeVariablesObject(Object variables) {
+        if (variables instanceof Map) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> genericVariables = (Map<String, Object>) variables;
+            return genericVariables;
+        } else if (variables instanceof String) {
+            try {
+                return mapper.readValue((String) variables, new TypeReference<Map<String, Object>>() {});
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
+        } else {
+            throw new RuntimeException("variables should be either an object or a string");
         }
     }
 

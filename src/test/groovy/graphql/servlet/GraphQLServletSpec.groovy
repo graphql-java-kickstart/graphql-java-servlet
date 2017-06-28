@@ -134,6 +134,20 @@ class GraphQLServletSpec extends Specification {
             getResponseContent().data.echo == "test"
     }
 
+    def "query over HTTP GET with variables as string returns data"() {
+        setup:
+            request.addParameter('query', 'query Echo($arg: String) { echo(arg:$arg) }')
+            request.addParameter('variables', '"{\\"arg\\": \\"test\\"}"')
+
+        when:
+            servlet.doGet(request, response)
+
+        then:
+            response.getStatus() == STATUS_OK
+            response.getContentType() == CONTENT_TYPE_JSON_UTF8
+            getResponseContent().data.echo == "test"
+    }
+
     def "query over HTTP GET with operationName returns data"() {
         when:
             response = new MockHttpServletResponse()
