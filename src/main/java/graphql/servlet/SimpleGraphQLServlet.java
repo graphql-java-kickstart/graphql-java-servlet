@@ -39,14 +39,14 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider) {
-        this(schema, executionStrategyProvider, null, null, null);
+        this(schema, executionStrategyProvider, null, null, null, null);
     }
 
-    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler) {
-        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, listeners, instrumentation, errorHandler);
+    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder) {
+        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, listeners, instrumentation, errorHandler, contextBuilder);
     }
 
-    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler) {
+    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder) {
         super(listeners, null);
 
         this.schemaProvider = schemaProvider;
@@ -63,12 +63,19 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         } else {
             this.errorHandler = errorHandler;
         }
+
+        if(contextBuilder == null) {
+            this.contextBuilder = new DefaultGraphQLContextBuilder();
+        } else {
+            this.contextBuilder = contextBuilder;
+        }
     }
 
     private final GraphQLSchemaProvider schemaProvider;
     private final ExecutionStrategyProvider executionStrategyProvider;
     private final Instrumentation instrumentation;
     private final GraphQLErrorHandler errorHandler;
+    private final GraphQLContextBuilder contextBuilder;
 
     @Override
     protected GraphQLSchemaProvider getSchemaProvider() {
@@ -77,7 +84,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
 
     @Override
     protected GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
-        return new GraphQLContext(request, response);
+        return this.contextBuilder.build(request, response);
     }
 
     @Override
