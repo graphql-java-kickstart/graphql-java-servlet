@@ -14,16 +14,23 @@
  */
 package graphql.servlet;
 
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
+import graphql.execution.TypeInfo;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
@@ -68,7 +75,16 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     public static final int STATUS_OK = 200;
     public static final int STATUS_BAD_REQUEST = 400;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).registerModule(new SimpleModule().addSerializer(TypeInfo.class, new JsonSerializer<TypeInfo>() {
+        @Override
+        public void serialize(TypeInfo value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeStartObject();
+            serializers.defaultSerializeField("type", value.type(), gen);
+            serializers.defaultSerializeField("parentTypeInfo", value.parentTypeInfo(), gen);
+            serializers.defaultSerializeField("typeIsNonNull", value.typeIsNonNull(), gen);
+            gen.writeEndObject();
+        }
+    }));
 
     protected abstract GraphQLSchemaProvider getSchemaProvider();
     protected abstract GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);

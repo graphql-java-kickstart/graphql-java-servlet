@@ -15,19 +15,17 @@
 package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import graphql.GraphQLError
 import graphql.Scalars
-import graphql.execution.SimpleExecutionStrategy
+import graphql.execution.TypeInfo
 import graphql.schema.DataFetcher
+import graphql.schema.GraphQLFieldDefinition
+import graphql.schema.GraphQLNonNull
 import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLSchema
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
 import spock.lang.Specification
-
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 
 /**
  * @author Andrew Potter
@@ -55,29 +53,34 @@ class GraphQLServletSpec extends Specification {
     def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg }, DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
         GraphQLObjectType query = GraphQLObjectType.newObject()
             .name("Query")
-            .field { field ->
-            field.name("echo")
-            field.type(Scalars.GraphQLString)
-            field.argument { argument ->
-                argument.name("arg")
-                argument.type(Scalars.GraphQLString)
+            .field { GraphQLFieldDefinition.Builder field ->
+                field.name("echo")
+                field.type(Scalars.GraphQLString)
+                field.argument { argument ->
+                    argument.name("arg")
+                    argument.type(Scalars.GraphQLString)
+                }
+                field.dataFetcher(queryDataFetcher)
             }
-            field.dataFetcher(queryDataFetcher)
-        }
-        .build()
+            .field { GraphQLFieldDefinition.Builder field ->
+                field.name("returnsNullIncorrectly")
+                field.type(new GraphQLNonNull(Scalars.GraphQLString))
+                field.dataFetcher({env -> null})
+            }
+            .build()
 
         GraphQLObjectType mutation = GraphQLObjectType.newObject()
             .name("Mutation")
             .field { field ->
-            field.name("echo")
-            field.type(Scalars.GraphQLString)
-            field.argument { argument ->
-                argument.name("arg")
-                argument.type(Scalars.GraphQLString)
+                field.name("echo")
+                field.type(Scalars.GraphQLString)
+                field.argument { argument ->
+                    argument.name("arg")
+                    argument.type(Scalars.GraphQLString)
+                }
+                field.dataFetcher(mutationDataFetcher)
             }
-            field.dataFetcher(mutationDataFetcher)
-        }
-        .build()
+            .build()
 
         return new SimpleGraphQLServlet(new GraphQLSchema(query, mutation, [query, mutation].toSet()))
     }
@@ -416,7 +419,25 @@ class GraphQLServletSpec extends Specification {
             resp.errors != null
     }
 
-    private byte[] createContent(String data) {
-        data.split('\\n').collect { it.replaceAll('^\\s+', '') }.join('\n').getBytes()
+    def "NonNullableFieldWasNullException is masked by default"() {
+        setup:
+            request.addParameter('query', 'query { returnsNullIncorrectly }')
+
+        when:
+            servlet.doGet(request, response)
+
+        then:
+            response.getStatus() == STATUS_OK
+            response.getContentType() == CONTENT_TYPE_JSON_UTF8
+            def resp = getResponseContent()
+            resp.containsKey("data")
+            resp.data == null
+            resp.errors != null
+            resp.errors.first().message.contains('Internal Server Error')
+    }
+
+    def "typeInfo is serialized correctly"() {
+        expect:
+            GraphQLServlet.mapper.writeValueAsString(TypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
     }
 }
