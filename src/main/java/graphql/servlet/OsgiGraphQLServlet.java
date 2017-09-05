@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Yurii Rashkovskii
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
 @Component(
-        service={javax.servlet.http.HttpServlet.class,javax.servlet.Servlet.class},
+        service = {javax.servlet.http.HttpServlet.class, javax.servlet.Servlet.class},
         property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"}
 )
 public class OsgiGraphQLServlet extends GraphQLServlet {
@@ -100,6 +100,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         }
         updateSchema();
     }
+
     public void unbindProvider(GraphQLProvider provider) {
         if (provider instanceof GraphQLQueryProvider) {
             queryProviders.remove(provider);
@@ -118,6 +119,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         queryProviders.add(queryProvider);
         updateSchema();
     }
+
     public void unbindQueryProvider(GraphQLQueryProvider queryProvider) {
         queryProviders.remove(queryProvider);
         updateSchema();
@@ -128,6 +130,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         mutationProviders.add(mutationProvider);
         updateSchema();
     }
+
     public void unbindMutationProvider(GraphQLMutationProvider mutationProvider) {
         mutationProviders.remove(mutationProvider);
         updateSchema();
@@ -138,6 +141,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         typesProviders.add(typesProvider);
         updateSchema();
     }
+
     public void unbindTypesProvider(GraphQLTypesProvider typesProvider) {
         typesProviders.remove(typesProvider);
         updateSchema();
@@ -147,6 +151,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     public void bindServletListener(GraphQLServletListener listener) {
         this.addListener(listener);
     }
+
     public void unbindServletListener(GraphQLServletListener listener) {
         this.removeListener(listener);
     }
@@ -155,6 +160,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     public void setContextProvider(GraphQLContextBuilder contextBuilder) {
         this.contextBuilder = contextBuilder;
     }
+
     public void unsetContextProvider(GraphQLContextBuilder contextBuilder) {
         this.contextBuilder = new DefaultGraphQLContextBuilder();
     }
@@ -163,14 +169,16 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
         executionStrategyProvider = provider;
     }
+
     public void unsetExecutionStrategyProvider(ExecutionStrategyProvider provider) {
-        executionStrategyProvider = new EnhancedExecutionStrategyProvider();
+        executionStrategyProvider = new DefaultExecutionStrategyProvider();
     }
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     public void setInstrumentationProvider(InstrumentationProvider provider) {
         instrumentationProvider = provider;
     }
+
     public void unsetInstrumentationProvider(InstrumentationProvider provider) {
         instrumentationProvider = new NoOpInstrumentationProvider();
     }
@@ -179,6 +187,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     public void setErrorHandler(GraphQLErrorHandler errorHandler) {
         this.errorHandler = errorHandler;
     }
+
     public void unsetErrorHandler(GraphQLErrorHandler errorHandler) {
         this.errorHandler = new DefaultGraphQLErrorHandler();
     }

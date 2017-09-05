@@ -1,12 +1,12 @@
 /**
  * Copyright 2016 Yurii Rashkovskii
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,13 +16,11 @@ package graphql.servlet;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -30,7 +28,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
-import graphql.execution.TypeInfo;
+import graphql.execution.ExecutionTypeInfo;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
@@ -75,22 +73,27 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     public static final int STATUS_OK = 200;
     public static final int STATUS_BAD_REQUEST = 400;
 
-    private static final ObjectMapper mapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).registerModule(new SimpleModule().addSerializer(TypeInfo.class, new JsonSerializer<TypeInfo>() {
+    private static final ObjectMapper mapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).registerModule(new SimpleModule().addSerializer(ExecutionTypeInfo.class, new JsonSerializer<ExecutionTypeInfo>() {
         @Override
-        public void serialize(TypeInfo value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        public void serialize(ExecutionTypeInfo value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             gen.writeStartObject();
-            serializers.defaultSerializeField("type", value.type(), gen);
-            serializers.defaultSerializeField("parentTypeInfo", value.parentTypeInfo(), gen);
-            serializers.defaultSerializeField("typeIsNonNull", value.typeIsNonNull(), gen);
+            serializers.defaultSerializeField("type", value.getType(), gen);
+            serializers.defaultSerializeField("parentTypeInfo", value.getParentTypeInfo(), gen);
+            serializers.defaultSerializeField("typeIsNonNull", value.isNonNullType(), gen);
             gen.writeEndObject();
         }
     }));
 
     protected abstract GraphQLSchemaProvider getSchemaProvider();
+
     protected abstract GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
+
     protected abstract ExecutionStrategyProvider getExecutionStrategyProvider();
+
     protected abstract Instrumentation getInstrumentation();
+
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
+
     protected abstract GraphQLErrorHandler getGraphQLErrorHandler();
 
     private final List<GraphQLServletListener> listeners;
@@ -193,7 +196,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                 return;
             }
 
-            Map<String,Object> variables = graphQLRequest.getVariables();
+            Map<String, Object> variables = graphQLRequest.getVariables();
             if (variables == null) {
                 variables = new HashMap<>();
             }
@@ -258,7 +261,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private Optional<FileItem> getFileItem(Map<String, List<FileItem>> fileItems, String name) {
         List<FileItem> items = fileItems.get(name);
-        if(items == null || items.isEmpty()) {
+        if (items == null || items.isEmpty()) {
             return Optional.empty();
         }
 
@@ -268,11 +271,11 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     private GraphQL newGraphQL(GraphQLSchema schema) {
         ExecutionStrategyProvider executionStrategyProvider = getExecutionStrategyProvider();
         return GraphQL.newGraphQL(schema)
-            .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
-            .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
-            .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
-            .instrumentation(getInstrumentation())
-            .build();
+                .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
+                .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
+                .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
+                .instrumentation(getInstrumentation())
+                .build();
     }
 
     private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
@@ -300,7 +303,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             resp.setStatus(STATUS_OK);
             resp.getWriter().write(response);
 
-            if(getGraphQLErrorHandler().errorsPresent(errors)) {
+            if (getGraphQLErrorHandler().errorsPresent(errors)) {
                 runCallbacks(operationCallbacks, c -> c.onError(context, operationName, query, variables, data, errors));
             } else {
                 runCallbacks(operationCallbacks, c -> c.onSuccess(context, operationName, query, variables, data));
@@ -328,16 +331,16 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         }
 
         return listeners.stream()
-            .map(listener -> {
-                try {
-                    return action.apply(listener);
-                } catch (Throwable t) {
-                    log.error("Error running listener: {}", listener, t);
-                    return null;
-                }
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .map(listener -> {
+                    try {
+                        return action.apply(listener);
+                    } catch (Throwable t) {
+                        log.error("Error running listener: {}", listener, t);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private <T> void runCallbacks(List<T> callbacks, Consumer<T> action) {

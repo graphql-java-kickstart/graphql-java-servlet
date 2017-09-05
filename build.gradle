@@ -56,10 +56,10 @@ dependencies {
     compile 'commons-fileupload:commons-fileupload:1.3.1'
 
     // GraphQL
-    compile 'com.graphql-java:graphql-java:3.0.0'
+    compile 'com.graphql-java:graphql-java:4.1'
 
-    compileOnly 'com.graphql-java:graphql-java-annotations:0.13.1'
-    testCompile 'com.graphql-java:graphql-java-annotations:0.13.1'
+    compileOnly 'com.graphql-java:graphql-java-annotations:3.0.2'
+    testCompile 'com.graphql-java:graphql-java-annotations:3.0.2'
 
     // JSON
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
