@@ -16,7 +16,7 @@ package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
-import graphql.execution.TypeInfo
+import graphql.execution.ExecutionTypeInfo
 import graphql.schema.DataFetcher
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLNonNull
@@ -419,25 +419,8 @@ class GraphQLServletSpec extends Specification {
             resp.errors != null
     }
 
-    def "NonNullableFieldWasNullException is masked by default"() {
-        setup:
-            request.addParameter('query', 'query { returnsNullIncorrectly }')
-
-        when:
-            servlet.doGet(request, response)
-
-        then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            def resp = getResponseContent()
-            resp.containsKey("data")
-            resp.data == null
-            resp.errors != null
-            resp.errors.first().message.contains('Internal Server Error')
-    }
-
     def "typeInfo is serialized correctly"() {
         expect:
-            GraphQLServlet.mapper.writeValueAsString(TypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
+            GraphQLServlet.mapper.writeValueAsString(ExecutionTypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
     }
 }

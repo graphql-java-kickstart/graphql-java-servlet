@@ -46,7 +46,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     private final List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
-    private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
+    private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
     private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
 
@@ -164,7 +164,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         executionStrategyProvider = provider;
     }
     public void unsetExecutionStrategyProvider(ExecutionStrategyProvider provider) {
-        executionStrategyProvider = new EnhancedExecutionStrategyProvider();
+        executionStrategyProvider = new DefaultExecutionStrategyProvider();
     }
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL)

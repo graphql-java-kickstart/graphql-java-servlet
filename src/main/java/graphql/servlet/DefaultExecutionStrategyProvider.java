@@ -14,8 +14,8 @@
  */
 package graphql.servlet;
 
+import graphql.execution.AsyncExecutionStrategy;
 import graphql.execution.ExecutionStrategy;
-import graphql.execution.SimpleExecutionStrategy;
 
 /**
  * @author Andrew Potter
@@ -41,7 +41,7 @@ public class DefaultExecutionStrategyProvider implements ExecutionStrategyProvid
     }
 
     private ExecutionStrategy defaultIfNull(ExecutionStrategy executionStrategy) {
-        return defaultIfNull(executionStrategy, new SimpleExecutionStrategy());
+        return defaultIfNull(executionStrategy, new AsyncExecutionStrategy());
     }
 
     private ExecutionStrategy defaultIfNull(ExecutionStrategy executionStrategy, ExecutionStrategy defaultStrategy) {
