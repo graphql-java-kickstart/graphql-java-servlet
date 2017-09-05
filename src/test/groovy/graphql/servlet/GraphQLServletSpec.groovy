@@ -16,7 +16,7 @@ package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
-import graphql.execution.TypeInfo
+import graphql.execution.ExecutionTypeInfo
 import graphql.schema.DataFetcher
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLNonNull
@@ -52,35 +52,35 @@ class GraphQLServletSpec extends Specification {
 
     def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg }, DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
         GraphQLObjectType query = GraphQLObjectType.newObject()
-            .name("Query")
-            .field { GraphQLFieldDefinition.Builder field ->
-                field.name("echo")
-                field.type(Scalars.GraphQLString)
-                field.argument { argument ->
-                    argument.name("arg")
-                    argument.type(Scalars.GraphQLString)
-                }
-                field.dataFetcher(queryDataFetcher)
+                .name("Query")
+                .field { GraphQLFieldDefinition.Builder field ->
+            field.name("echo")
+            field.type(Scalars.GraphQLString)
+            field.argument { argument ->
+                argument.name("arg")
+                argument.type(Scalars.GraphQLString)
             }
-            .field { GraphQLFieldDefinition.Builder field ->
-                field.name("returnsNullIncorrectly")
-                field.type(new GraphQLNonNull(Scalars.GraphQLString))
-                field.dataFetcher({env -> null})
-            }
-            .build()
+            field.dataFetcher(queryDataFetcher)
+        }
+        .field { GraphQLFieldDefinition.Builder field ->
+            field.name("returnsNullIncorrectly")
+            field.type(new GraphQLNonNull(Scalars.GraphQLString))
+            field.dataFetcher({ env -> null })
+        }
+        .build()
 
         GraphQLObjectType mutation = GraphQLObjectType.newObject()
-            .name("Mutation")
-            .field { field ->
-                field.name("echo")
-                field.type(Scalars.GraphQLString)
-                field.argument { argument ->
-                    argument.name("arg")
-                    argument.type(Scalars.GraphQLString)
-                }
-                field.dataFetcher(mutationDataFetcher)
+                .name("Mutation")
+                .field { field ->
+            field.name("echo")
+            field.type(Scalars.GraphQLString)
+            field.argument { argument ->
+                argument.name("arg")
+                argument.type(Scalars.GraphQLString)
             }
-            .build()
+            field.dataFetcher(mutationDataFetcher)
+        }
+        .build()
 
         return new SimpleGraphQLServlet(new GraphQLSchema(query, mutation, [query, mutation].toSet()))
     }
@@ -91,77 +91,77 @@ class GraphQLServletSpec extends Specification {
 
     def "HTTP GET without info returns bad request"() {
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_BAD_REQUEST
+        response.getStatus() == STATUS_BAD_REQUEST
     }
 
     def "HTTP GET to /schema.json returns introspection query"() {
         setup:
-            request.setPathInfo('/schema.json')
+        request.setPathInfo('/schema.json')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.__schema != null
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.__schema != null
     }
 
     def "query over HTTP GET returns data"() {
         setup:
-            request.addParameter('query', 'query { echo(arg:"test") }')
+        request.addParameter('query', 'query { echo(arg:"test") }')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP GET with variables returns data"() {
         setup:
-            request.addParameter('query', 'query Echo($arg: String) { echo(arg:$arg) }')
-            request.addParameter('variables', '{"arg": "test"}')
+        request.addParameter('query', 'query Echo($arg: String) { echo(arg:$arg) }')
+        request.addParameter('variables', '{"arg": "test"}')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP GET with variables as string returns data"() {
         setup:
-            request.addParameter('query', 'query Echo($arg: String) { echo(arg:$arg) }')
-            request.addParameter('variables', '"{\\"arg\\": \\"test\\"}"')
+        request.addParameter('query', 'query Echo($arg: String) { echo(arg:$arg) }')
+        request.addParameter('variables', '"{\\"arg\\": \\"test\\"}"')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP GET with operationName returns data"() {
         when:
-            response = new MockHttpServletResponse()
-            request.addParameter('query', 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }')
-            request.addParameter('operationName', 'two')
-            servlet.doGet(request, response)
+        response = new MockHttpServletResponse()
+        request.addParameter('query', 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }')
+        request.addParameter('operationName', 'two')
+        servlet.doGet(request, response)
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echoOne == null
-            getResponseContent().data.echoTwo == "test-two"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echoOne == null
+        getResponseContent().data.echoTwo == "test-two"
 
     }
 
@@ -180,77 +180,77 @@ class GraphQLServletSpec extends Specification {
 
     def "mutation over HTTP GET returns errors"() {
         setup:
-            request.addParameter('query', 'mutation { echo(arg:"test") }')
+        request.addParameter('query', 'mutation { echo(arg:"test") }')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().errors.size() == 1
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().errors.size() == 1
     }
 
     def "query over HTTP POST without part or body returns bad request"() {
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_BAD_REQUEST
+        response.getStatus() == STATUS_BAD_REQUEST
     }
 
     def "query over HTTP POST body returns data"() {
         setup:
-            request.setContent(mapper.writeValueAsBytes([
+        request.setContent(mapper.writeValueAsBytes([
                 query: 'query { echo(arg:"test") }'
-            ]))
+        ]))
 
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP POST body with variables returns data"() {
         setup:
-            request.setContent(mapper.writeValueAsBytes([
-                query: 'query Echo($arg: String) { echo(arg:$arg) }',
+        request.setContent(mapper.writeValueAsBytes([
+                query    : 'query Echo($arg: String) { echo(arg:$arg) }',
                 variables: '{"arg": "test"}'
-            ]))
+        ]))
 
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP POST body with operationName returns data"() {
         setup:
-            request.setContent(mapper.writeValueAsBytes([
-                query: 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }',
+        request.setContent(mapper.writeValueAsBytes([
+                query        : 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }',
                 operationName: 'two'
-            ]))
+        ]))
 
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echoOne == null
-            getResponseContent().data.echoTwo == "test-two"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echoOne == null
+        getResponseContent().data.echoTwo == "test-two"
     }
 
     def "query over HTTP POST body with empty non-null operationName returns data"() {
         setup:
         request.setContent(mapper.writeValueAsBytes([
-                query: 'query echo{ echo: echo(arg:"test") }',
+                query        : 'query echo{ echo: echo(arg:"test") }',
                 operationName: ''
         ]))
 
@@ -265,56 +265,56 @@ class GraphQLServletSpec extends Specification {
 
     def "query over HTTP POST multipart named 'graphql' returns data"() {
         setup:
-            request.setContentType("multipart/form-data, boundary=test")
-            request.setMethod("POST")
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
 
-            request.setContent(new TestMultipartContentBuilder()
+        request.setContent(new TestMultipartContentBuilder()
                 .addPart('graphql', mapper.writeValueAsString([query: 'query { echo(arg:"test") }']))
                 .build())
 
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP POST multipart named 'query' returns data"() {
         setup:
-            request.setContentType("multipart/form-data, boundary=test")
-            request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.setContent(new TestMultipartContentBuilder()
                 .addPart('query', 'query { echo(arg:"test") }')
                 .build())
 
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP POST multipart named 'query' with operationName returns data"() {
         setup:
-            request.setContentType("multipart/form-data, boundary=test")
-            request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.setContent(new TestMultipartContentBuilder()
                 .addPart('query', 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }')
                 .addPart('operationName', 'two')
                 .build())
 
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echoOne == null
-            getResponseContent().data.echoTwo == "test-two"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echoOne == null
+        getResponseContent().data.echoTwo == "test-two"
     }
 
     def "query over HTTP POST multipart named 'query' with empty non-null operationName returns data"() {
@@ -337,107 +337,107 @@ class GraphQLServletSpec extends Specification {
 
     def "query over HTTP POST multipart named 'query' with variables returns data"() {
         setup:
-            request.setContentType("multipart/form-data, boundary=test")
-            request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.setContent(new TestMultipartContentBuilder()
                 .addPart('query', 'query Echo($arg: String) { echo(arg:$arg) }')
                 .addPart('variables', '{"arg": "test"}')
                 .build())
 
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "mutation over HTTP POST body returns data"() {
         setup:
-            request.setContent(mapper.writeValueAsBytes([
+        request.setContent(mapper.writeValueAsBytes([
                 query: 'mutation { echo(arg:"test") }'
-            ]))
+        ]))
 
         when:
-            servlet.doPost(request, response)
+        servlet.doPost(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            getResponseContent().data.echo == "test"
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "errors before graphql schema execution return internal server error"() {
         setup:
-            servlet = new SimpleGraphQLServlet(servlet.getSchemaProvider().getSchema()) {
-                @Override
-                GraphQLSchemaProvider getSchemaProvider() {
-                    throw new TestException()
-                }
+        servlet = new SimpleGraphQLServlet(servlet.getSchemaProvider().getSchema()) {
+            @Override
+            GraphQLSchemaProvider getSchemaProvider() {
+                throw new TestException()
             }
+        }
 
-            request.setPathInfo('/schema.json')
+        request.setPathInfo('/schema.json')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            noExceptionThrown()
-            response.getStatus() == STATUS_ERROR
+        noExceptionThrown()
+        response.getStatus() == STATUS_ERROR
     }
 
     def "errors while data fetching are masked in the response"() {
         setup:
-            servlet = createServlet({ throw new TestException() })
-            request.addParameter('query', 'query { echo(arg:"test") }')
+        servlet = createServlet({ throw new TestException() })
+        request.addParameter('query', 'query { echo(arg:"test") }')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            def errors = getResponseContent().errors
-            errors.size() == 1
-            errors.first().message.startsWith("Internal Server Error(s)")
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        def errors = getResponseContent().errors
+        errors.size() == 1
+        errors.first().message.startsWith("Internal Server Error(s)")
     }
 
     def "data field is present and null if no data can be returned"() {
         setup:
-            request.addParameter('query', 'query { not-a-field(arg:"test") }')
+        request.addParameter('query', 'query { not-a-field(arg:"test") }')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            def resp = getResponseContent()
-            resp.containsKey("data")
-            resp.data == null
-            resp.errors != null
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        def resp = getResponseContent()
+        resp.containsKey("data")
+        resp.data == null
+        resp.errors != null
     }
 
     def "NonNullableFieldWasNullException is masked by default"() {
         setup:
-            request.addParameter('query', 'query { returnsNullIncorrectly }')
+        request.addParameter('query', 'query { returnsNullIncorrectly }')
 
         when:
-            servlet.doGet(request, response)
+        servlet.doGet(request, response)
 
         then:
-            response.getStatus() == STATUS_OK
-            response.getContentType() == CONTENT_TYPE_JSON_UTF8
-            def resp = getResponseContent()
-            resp.containsKey("data")
-            resp.data == null
-            resp.errors != null
-            resp.errors.first().message.contains('Internal Server Error')
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        def resp = getResponseContent()
+        resp.containsKey("data")
+        resp.data == null
+        resp.errors != null
+        resp.errors.first().message.contains('Internal Server Error')
     }
 
     def "typeInfo is serialized correctly"() {
         expect:
-            GraphQLServlet.mapper.writeValueAsString(TypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
+        GraphQLServlet.mapper.writeValueAsString(ExecutionTypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
     }
 }
