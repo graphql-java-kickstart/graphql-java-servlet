@@ -433,7 +433,7 @@ class GraphQLServletSpec extends Specification {
         resp.containsKey("data")
         resp.data == null
         resp.errors != null
-        resp.errors.first().message.contains('Internal Server Error')
+        resp.errors.first().message.contains("Cannot return null for non-nullable type: \'String\' within parent \'Query\' (/returnsNullIncorrectly)")
     }
 
     def "typeInfo is serialized correctly"() {

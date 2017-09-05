@@ -46,7 +46,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     private final List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
-    private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
+    private ExecutionStrategyProvider executionStrategyProvider = new EnhancedExecutionStrategyProvider();
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
     private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
 
