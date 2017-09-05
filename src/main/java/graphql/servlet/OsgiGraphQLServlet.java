@@ -46,6 +46,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     private final List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
+    private GraphQLRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
     private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
     private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
@@ -159,6 +160,14 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         this.contextBuilder = new DefaultGraphQLContextBuilder();
     }
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
+    public void setRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
+        this.rootObjectBuilder = rootObjectBuilder;
+    }
+    public void unsetRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
+        this.rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
+    }
+
     @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
         executionStrategyProvider = provider;
@@ -190,6 +199,11 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
 
     protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
         return contextBuilder.build(req, resp);
+    }
+
+    @Override
+    protected Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
+        return rootObjectBuilder.build(request, response);
     }
 
     @Override

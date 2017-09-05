@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
@@ -72,6 +73,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     protected abstract GraphQLSchemaProvider getSchemaProvider();
     protected abstract GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
+    protected abstract Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
     protected abstract ExecutionStrategyProvider getExecutionStrategyProvider();
     protected abstract Instrumentation getInstrumentation();
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
@@ -93,12 +95,13 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
         this.getHandler = (request, response) -> {
             final GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
+            final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
             String path = request.getPathInfo();
             if (path == null) {
                 path = request.getServletPath();
             }
             if (path.contentEquals("/schema.json")) {
-                query(IntrospectionQuery.INTROSPECTION_QUERY, null, new HashMap<>(), getSchemaProvider().getSchema(request), request, response, context);
+                query(IntrospectionQuery.INTROSPECTION_QUERY, null, new HashMap<>(), getSchemaProvider().getSchema(request), request, response, context, rootObject);
             } else {
                 if (request.getParameter("query") != null) {
                     final Map<String, Object> variables = new HashMap<>();
@@ -109,7 +112,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                     if (request.getParameter("operationName") != null) {
                         operationName = request.getParameter("operationName");
                     }
-                    query(request.getParameter("query"), operationName, variables, getSchemaProvider().getReadOnlySchema(request), request, response, context);
+                    query(request.getParameter("query"), operationName, variables, getSchemaProvider().getReadOnlySchema(request), request, response, context, rootObject);
                 } else {
                     response.setStatus(STATUS_BAD_REQUEST);
                     log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
@@ -119,6 +122,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
         this.postHandler = (request, response) -> {
             final GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
+            final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
             GraphQLRequest graphQLRequest = null;
 
             try {
@@ -182,7 +186,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                 variables = new HashMap<>();
             }
 
-            query(graphQLRequest.getQuery(), graphQLRequest.getOperationName(), variables, getSchemaProvider().getSchema(request), request, response, context);
+            query(graphQLRequest.getQuery(), graphQLRequest.getOperationName(), variables, getSchemaProvider().getSchema(request), request, response, context, rootObject);
         };
     }
 
@@ -259,13 +263,13 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             .build();
     }
 
-    private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context) throws IOException {
+    private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, HttpServletRequest req, HttpServletResponse resp, GraphQLContext context, Object rootObject) throws IOException {
         if (operationName != null && operationName.isEmpty()) {
-            query(query, null, variables, schema, req, resp, context);
+            query(query, null, variables, schema, req, resp, context, rootObject);
         } else if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject().isPresent()) {
             Subject.doAs(context.getSubject().get(), (PrivilegedAction<Void>) () -> {
                 try {
-                    query(query, operationName, variables, schema, req, resp, context);
+                    query(query, operationName, variables, schema, req, resp, context, rootObject);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -274,7 +278,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         } else {
             List<GraphQLServletListener.OperationCallback> operationCallbacks = runListeners(l -> l.onOperation(context, operationName, query, variables));
 
-            final ExecutionResult executionResult = newGraphQL(schema).execute(query, operationName, context, transformVariables(schema, query, variables));
+            final ExecutionResult executionResult = newGraphQL(schema).execute(new ExecutionInput(query, operationName, context, rootObject, transformVariables(schema, query, variables)));
             final List<GraphQLError> errors = executionResult.getErrors();
             final Object data = executionResult.getData();
 

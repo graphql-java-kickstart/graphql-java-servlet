@@ -39,14 +39,14 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider) {
-        this(schema, executionStrategyProvider, null, null, null, null);
+        this(schema, executionStrategyProvider, null, null, null, null, null);
     }
 
-    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder) {
-        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, listeners, instrumentation, errorHandler, contextBuilder);
+    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder) {
+        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, listeners, instrumentation, errorHandler, contextBuilder, rootObjectBuilder);
     }
 
-    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder) {
+    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder) {
         super(listeners, null);
 
         this.schemaProvider = schemaProvider;
@@ -69,6 +69,12 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         } else {
             this.contextBuilder = contextBuilder;
         }
+
+        if(rootObjectBuilder == null) {
+            this.rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
+        } else {
+            this.rootObjectBuilder = rootObjectBuilder;
+        }
     }
 
     private final GraphQLSchemaProvider schemaProvider;
@@ -76,6 +82,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     private final Instrumentation instrumentation;
     private final GraphQLErrorHandler errorHandler;
     private final GraphQLContextBuilder contextBuilder;
+    private final GraphQLRootObjectBuilder rootObjectBuilder;
 
     @Override
     protected GraphQLSchemaProvider getSchemaProvider() {
@@ -85,6 +92,11 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     @Override
     protected GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
         return this.contextBuilder.build(request, response);
+    }
+
+    @Override
+    protected Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
+        return this.rootObjectBuilder.build(request, response);
     }
 
     @Override
