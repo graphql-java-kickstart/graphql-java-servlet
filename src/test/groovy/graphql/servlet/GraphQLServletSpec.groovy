@@ -407,6 +407,6 @@ class GraphQLServletSpec extends Specification {
 
     def "typeInfo is serialized correctly"() {
         expect:
-            GraphQLServlet.mapper.writeValueAsString(ExecutionTypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
+            servlet.getMapper().writeValueAsString(ExecutionTypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
     }
 }

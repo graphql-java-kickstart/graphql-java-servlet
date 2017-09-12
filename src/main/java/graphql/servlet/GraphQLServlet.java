@@ -178,7 +178,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         };
     }
 
-    private ObjectMapper getMapper() {
+    protected ObjectMapper getMapper() {
         return lazyObjectMapperBuilder.getMapper();
     }
 
@@ -343,15 +343,9 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     protected static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
 
-        private final ObjectMapper mapper;
-
-        public VariablesDeserializer(@JacksonInject ObjectMapper mapper) {
-            this.mapper = mapper;
-        }
-
         @Override
         public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            return deserializeVariablesObject(p.readValueAs(Object.class), mapper);
+            return deserializeVariablesObject(p.readValueAs(Object.class), (ObjectMapper) ctxt.findInjectableValue(ObjectMapper.class.getName(), null, null));
         }
     }
 
