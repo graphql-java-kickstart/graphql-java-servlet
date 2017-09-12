@@ -14,12 +14,14 @@
  */
 package graphql.servlet;
 
+import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
@@ -69,8 +71,6 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     public static final int STATUS_OK = 200;
     public static final int STATUS_BAD_REQUEST = 400;
 
-    private static final ObjectMapper mapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-
     protected abstract GraphQLSchemaProvider getSchemaProvider();
     protected abstract GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
     protected abstract Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
@@ -79,6 +79,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
     protected abstract GraphQLErrorHandler getGraphQLErrorHandler();
 
+    private final LazyObjectMapperBuilder lazyObjectMapperBuilder;
     private final List<GraphQLServletListener> listeners;
     private final ServletFileUpload fileUpload;
 
@@ -86,10 +87,11 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     private final RequestHandler postHandler;
 
     public GraphQLServlet() {
-        this(null, null);
+        this(null, null, null);
     }
 
-    public GraphQLServlet(List<GraphQLServletListener> listeners, FileItemFactory fileItemFactory) {
+    public GraphQLServlet(ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, FileItemFactory fileItemFactory) {
+        this.lazyObjectMapperBuilder = new LazyObjectMapperBuilder(objectMapperConfigurer != null ? objectMapperConfigurer : new DefaultObjectMapperConfigurer());
         this.listeners = listeners != null ? new ArrayList<>(listeners) : new ArrayList<>();
         this.fileUpload = new ServletFileUpload(fileItemFactory != null ? fileItemFactory : new DiskFileItemFactory());
 
@@ -172,7 +174,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                 }
 
                 if (graphQLRequest == null) {
-                    graphQLRequest = mapper.readValue(inputStream, GraphQLRequest.class);
+                    graphQLRequest = getGraphQLRequestMapper().readValue(inputStream);
                 }
 
             } catch (Exception e) {
@@ -188,6 +190,21 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
             query(graphQLRequest.getQuery(), graphQLRequest.getOperationName(), variables, getSchemaProvider().getSchema(request), request, response, context, rootObject);
         };
+    }
+
+    private ObjectMapper getMapper() {
+        return lazyObjectMapperBuilder.getMapper();
+    }
+
+    /**
+     * Creates an {@link ObjectReader} for deserializing {@link GraphQLRequest}
+     */
+    private ObjectReader getGraphQLRequestMapper() {
+        // Add object mapper to injection so VariablesDeserializer can access it...
+        InjectableValues.Std injectableValues = new InjectableValues.Std();
+        injectableValues.addValue(ObjectMapper.class, getMapper());
+
+        return getMapper().reader(injectableValues).forType(GraphQLRequest.class);
     }
 
     public void addListener(GraphQLServletListener servletListener) {
@@ -211,8 +228,8 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     @Override
     public String executeQuery(String query) {
         try {
-            final ExecutionResult result = newGraphQL(getSchemaProvider().getSchema()).execute(query, createContext(Optional.empty(), Optional.empty()), new HashMap<>());
-            return mapper.writeValueAsString(createResultFromDataAndErrors(result.getData(), result.getErrors()));
+            final ExecutionResult result = newGraphQL(getSchemaProvider().getSchema()).execute(new ExecutionInput(query, null, createContext(Optional.empty(), Optional.empty()), createRootObject(Optional.empty(), Optional.empty()), new HashMap<>()));
+            return getMapper().writeValueAsString(createResultFromDataAndErrors(result.getData(), result.getErrors()));
         } catch (Exception e) {
             return e.getMessage();
         }
@@ -282,7 +299,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             final List<GraphQLError> errors = executionResult.getErrors();
             final Object data = executionResult.getData();
 
-            final String response = mapper.writeValueAsString(createResultFromDataAndErrors(data, errors));
+            final String response = getMapper().writeValueAsString(createResultFromDataAndErrors(data, errors));
 
             resp.setContentType(APPLICATION_JSON_UTF8);
             resp.setStatus(STATUS_OK);
@@ -339,21 +356,28 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     }
 
     protected static class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
+
+        private final ObjectMapper mapper;
+
+        public VariablesDeserializer(@JacksonInject ObjectMapper mapper) {
+            this.mapper = mapper;
+        }
+
         @Override
         public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            return deserializeVariablesObject(p.readValueAs(Object.class));
+            return deserializeVariablesObject(p.readValueAs(Object.class), mapper);
         }
     }
 
-    private static Map<String, Object> deserializeVariables(String variables) {
+    private Map<String, Object> deserializeVariables(String variables) {
         try {
-            return deserializeVariablesObject(mapper.readValue(variables, Object.class));
+            return deserializeVariablesObject(getMapper().readValue(variables, Object.class), getMapper());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static Map<String, Object> deserializeVariablesObject(Object variables) {
+    private static Map<String, Object> deserializeVariablesObject(Object variables, ObjectMapper mapper) {
         if (variables instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<String, Object> genericVariables = (Map<String, Object>) variables;
