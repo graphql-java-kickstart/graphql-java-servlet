@@ -8,7 +8,6 @@ buildscript {
     }
 }
 plugins {
-    id "com.github.hierynomus.license" version "0.12.1"
     id "com.jfrog.bintray" version "1.6"
     id 'net.researchgate.release' version '2.3.4'
 }
@@ -69,7 +68,6 @@ dependencies {
 }
 
 apply plugin: 'osgi'
-apply plugin: 'license'
 apply plugin: 'java-library-distribution'
 apply plugin: 'biz.aQute.bnd.builder'
 apply plugin: 'com.jfrog.bintray'
@@ -80,10 +78,6 @@ jar {
     manifest {
         instruction 'Require-Capability', 'osgi.extender'
     }
-}
-
-license {
-    exclude 'introspectionQuery'
 }
 
 // custom tasks for creating source/javadoc jars
