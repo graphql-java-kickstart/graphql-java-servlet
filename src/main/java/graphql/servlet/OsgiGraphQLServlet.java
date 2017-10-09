@@ -154,7 +154,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         this.rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
     public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
         executionStrategyProvider = provider;
     }
@@ -162,7 +162,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         executionStrategyProvider = new DefaultExecutionStrategyProvider();
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
     public void setInstrumentationProvider(InstrumentationProvider provider) {
         instrumentationProvider = provider;
     }
@@ -170,7 +170,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         instrumentationProvider = new NoOpInstrumentationProvider();
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
     public void setErrorHandler(GraphQLErrorHandler errorHandler) {
         this.errorHandler = errorHandler;
     }
