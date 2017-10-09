@@ -4,10 +4,7 @@ import graphql.execution.instrumentation.Instrumentation;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.component.annotations.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -154,7 +151,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         this.rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy= ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
     public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
         executionStrategyProvider = provider;
     }
@@ -162,7 +159,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         executionStrategyProvider = new DefaultExecutionStrategyProvider();
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy= ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
     public void setInstrumentationProvider(InstrumentationProvider provider) {
         instrumentationProvider = provider;
     }
@@ -170,7 +167,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         instrumentationProvider = new NoOpInstrumentationProvider();
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy= ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
     public void setErrorHandler(GraphQLErrorHandler errorHandler) {
         this.errorHandler = errorHandler;
     }
