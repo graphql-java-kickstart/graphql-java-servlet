@@ -299,25 +299,19 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     }
 
     private void doBatchedQuery(Iterator<GraphQLRequest> graphQLRequests, GraphQLSchema schema, GraphQLContext context, Object rootObject, HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        final List<GraphQLResponse> graphQLResponses = new ArrayList<>();
-
-        while (graphQLRequests.hasNext()) {
-            GraphQLRequest graphQLRequest = graphQLRequests.next();
-            query(graphQLRequest.getQuery(), graphQLRequest.getOperationName(), graphQLRequest.getVariables(), schema, context, rootObject, graphQLResponses::add);
-        }
-
         resp.setContentType(APPLICATION_JSON_UTF8);
         resp.setStatus(STATUS_OK);
 
-        Writer responseWriter = resp.getWriter();
-        responseWriter.write('[');
-        for (Iterator<GraphQLResponse> i = graphQLResponses.iterator(); i.hasNext();) {
-            responseWriter.write(i.next().getResponse());
-            if (i.hasNext()) {
-                responseWriter.write(',');
+        Writer respWriter = resp.getWriter();
+        respWriter.write('[');
+        while (graphQLRequests.hasNext()) {
+            GraphQLRequest graphQLRequest = graphQLRequests.next();
+            query(graphQLRequest.getQuery(), graphQLRequest.getOperationName(), graphQLRequest.getVariables(), schema, context, rootObject, (r) -> respWriter.write(r.getResponse()));
+            if (graphQLRequests.hasNext()) {
+                respWriter.write(',');
             }
         }
-        responseWriter.write(']');
+        respWriter.write(']');
     }
 
     private void query(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, GraphQLContext context, Object rootObject, GraphQLResponseHandler responseHandler) throws Exception {
