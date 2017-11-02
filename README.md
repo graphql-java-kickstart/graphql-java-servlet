@@ -4,7 +4,7 @@
 
 # GraphQL Servlet
 
-This module implements a GraphQL Java Servlet. It also supports Relay.js and OSGi out of the box.
+This module implements a GraphQL Java Servlet. It also supports Relay.js, Apollo and OSGi out of the box.
 
 # Downloading
 
@@ -113,6 +113,10 @@ Relay.js support is provided by the [EnhancedExecutionStrategy](https://github.c
 You **MUST** pass this execution strategy to the servlet for Relay.js support.
 
 This is the default execution strategy for the `OsgiGraphQLServlet`, and must be added as a dependency when using that servlet.
+
+## Apollo support
+
+Query batching is supported, no configuration required.
 
 ## Spring Framework support
 
