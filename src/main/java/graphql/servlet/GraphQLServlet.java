@@ -29,10 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -131,25 +128,35 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                     if (fileItems.containsKey("graphql")) {
                         final Optional<FileItem> graphqlItem = getFileItem(fileItems, "graphql");
                         if (graphqlItem.isPresent()) {
-                            String query = new String(graphqlItem.get().get());
+                            InputStream inputStream = graphqlItem.get().getInputStream();
 
-                            if (isBatchedQuery(query)) {
-                                doBatchedQuery(getGraphQLRequestMapper().readValues(query), getSchemaProvider().getSchema(request), context, rootObject, request, response);
+                            if (!inputStream.markSupported()) {
+                                inputStream = new BufferedInputStream(inputStream);
+                            }
+
+                            if (isBatchedQuery(inputStream)) {
+                                doBatchedQuery(getGraphQLRequestMapper().readValues(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
                                 return;
                             } else {
-                                doQuery(getGraphQLRequestMapper().readValue(query), getSchemaProvider().getSchema(request), context, rootObject, request, response);
+                                doQuery(getGraphQLRequestMapper().readValue(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
                                 return;
                             }
                         }
                     } else if (fileItems.containsKey("query")) {
                         final Optional<FileItem> queryItem = getFileItem(fileItems, "query");
                         if (queryItem.isPresent()) {
-                            String query = new String(queryItem.get().get());
+                            InputStream inputStream = queryItem.get().getInputStream();
 
-                            if (isBatchedQuery(query)) {
-                                doBatchedQuery(getGraphQLRequestMapper().readValues(query), getSchemaProvider().getSchema(request), context, rootObject, request, response);
+                            if (!inputStream.markSupported()) {
+                                inputStream = new BufferedInputStream(inputStream);
+                            }
+
+                            if (isBatchedQuery(inputStream)) {
+                                doBatchedQuery(getGraphQLRequestMapper().readValues(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
                                 return;
                             } else {
+                                String query = new String(queryItem.get().get());
+
                                 Map<String, Object> variables = null;
                                 final Optional<FileItem> variablesItem = getFileItem(fileItems, "variables");
                                 if (variablesItem.isPresent()) {
@@ -172,12 +179,16 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                     log.info("Bad POST multipart request: no part named \"graphql\" or \"query\"");
                 } else {
                     // this is not a multipart request
-                    String query = inputStreamToString(request.getInputStream());
+                    InputStream inputStream = request.getInputStream();
 
-                    if (isBatchedQuery(query)) {
-                        doBatchedQuery(getGraphQLRequestMapper().readValues(query), getSchemaProvider().getSchema(request), context, rootObject, request, response);
+                    if (!inputStream.markSupported()) {
+                        inputStream = new BufferedInputStream(inputStream);
+                    }
+
+                    if (isBatchedQuery(inputStream)) {
+                        doBatchedQuery(getGraphQLRequestMapper().readValues(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
                     } else {
-                        doQuery(getGraphQLRequestMapper().readValue(query), getSchemaProvider().getSchema(request), context, rootObject, request, response);
+                        doQuery(getGraphQLRequestMapper().readValue(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
                     }
                 }
             } catch (Exception e) {
@@ -417,34 +428,49 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         }
     }
 
+    private boolean isBatchedQuery(InputStream inputStream) throws IOException {
+        if (inputStream == null) {
+            return false;
+        }
+
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        byte[] buffer = new byte[128];
+        int length;
+
+        inputStream.mark(0);
+        while ((length = inputStream.read(buffer)) != -1) {
+            result.write(buffer, 0, length);
+            String chunk = result.toString();
+            Boolean isArrayStart = isArrayStart(chunk);
+            if (isArrayStart != null) {
+                inputStream.reset();
+                return isArrayStart;
+            }
+        }
+
+        inputStream.reset();
+        return false;
+    }
+
     private boolean isBatchedQuery(String query) {
         if (query == null) {
             return false;
         }
 
-        // return true if the first non whitespace character is the beginning of an array
-        for (int i = 0; i < query.length(); i++) {
-            char ch = query.charAt(i);
+        Boolean isArrayStart = isArrayStart(query);
+        return isArrayStart != null && isArrayStart;
+    }
+
+    // return true if the first non whitespace character is the beginning of an array
+    private Boolean isArrayStart(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
             if (!Character.isWhitespace(ch)) {
                 return ch == '[';
             }
         }
 
-        return false;
-    }
-
-    private String inputStreamToString(InputStream inputStream) throws IOException {
-        if (inputStream == null) {
-            return null;
-        }
-
-        ByteArrayOutputStream result = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = inputStream.read(buffer)) != -1) {
-            result.write(buffer, 0, length);
-        }
-        return result.toString(StandardCharsets.UTF_8.name());
+        return null;
     }
 
     protected static class GraphQLRequest {
