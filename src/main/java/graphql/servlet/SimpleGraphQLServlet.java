@@ -3,6 +3,8 @@ package graphql.servlet;
 import graphql.execution.ExecutionStrategy;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.NoOpInstrumentation;
+import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
+import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,14 +27,14 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider) {
-        this(schema, executionStrategyProvider, null, null, null, null, null, null);
+        this(schema, executionStrategyProvider, null, null, null, null, null, null, null);
     }
 
-    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder) {
-        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, objectMapperConfigurer, listeners, instrumentation, errorHandler, contextBuilder, rootObjectBuilder);
+    public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder, PreparsedDocumentProvider preparsedDocumentProvider) {
+        this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, objectMapperConfigurer, listeners, instrumentation, errorHandler, contextBuilder, rootObjectBuilder, preparsedDocumentProvider);
     }
 
-    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder) {
+    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder, PreparsedDocumentProvider preparsedDocumentProvider) {
         super(objectMapperConfigurer, listeners, null);
 
         this.schemaProvider = schemaProvider;
@@ -61,6 +63,12 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         } else {
             this.rootObjectBuilder = rootObjectBuilder;
         }
+
+        if(preparsedDocumentProvider == null) {
+            this.preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
+        } else {
+            this.preparsedDocumentProvider = preparsedDocumentProvider;
+        }
     }
 
     private final GraphQLSchemaProvider schemaProvider;
@@ -69,6 +77,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     private final GraphQLErrorHandler errorHandler;
     private final GraphQLContextBuilder contextBuilder;
     private final GraphQLRootObjectBuilder rootObjectBuilder;
+    private final PreparsedDocumentProvider preparsedDocumentProvider;
 
     @Override
     protected GraphQLSchemaProvider getSchemaProvider() {
@@ -103,5 +112,10 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     @Override
     protected GraphQLErrorHandler getGraphQLErrorHandler() {
         return errorHandler;
+    }
+
+    @Override
+    protected PreparsedDocumentProvider getPreparsedDocumentProvider() {
+        return preparsedDocumentProvider;
     }
 }

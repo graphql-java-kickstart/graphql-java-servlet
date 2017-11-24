@@ -13,6 +13,7 @@ import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLError;
 import graphql.execution.instrumentation.Instrumentation;
+import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
@@ -67,6 +68,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected abstract Instrumentation getInstrumentation();
     protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
     protected abstract GraphQLErrorHandler getGraphQLErrorHandler();
+    protected abstract PreparsedDocumentProvider getPreparsedDocumentProvider();
 
     private final LazyObjectMapperBuilder lazyObjectMapperBuilder;
     private final List<GraphQLServletListener> listeners;
@@ -286,6 +288,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
             .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
             .instrumentation(getInstrumentation())
+            .preparsedDocumentProvider(getPreparsedDocumentProvider())
             .build();
     }
 

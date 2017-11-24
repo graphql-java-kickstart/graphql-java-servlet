@@ -1,6 +1,8 @@
 package graphql.servlet;
 
 import graphql.execution.instrumentation.Instrumentation;
+import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
+import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
@@ -33,6 +35,7 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
     private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
+    private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
 
     private GraphQLSchemaProvider schemaProvider;
 
@@ -175,6 +178,14 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         this.errorHandler = new DefaultGraphQLErrorHandler();
     }
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy= ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+    public void setPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
+        this.preparsedDocumentProvider = preparsedDocumentProvider;
+    }
+    public void unsetPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
+        this.preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
+    }
+
     @Override
     protected GraphQLSchemaProvider getSchemaProvider() {
         return schemaProvider;
@@ -207,5 +218,10 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     @Override
     protected GraphQLErrorHandler getGraphQLErrorHandler() {
         return errorHandler;
+    }
+
+    @Override
+    protected PreparsedDocumentProvider getPreparsedDocumentProvider() {
+        return preparsedDocumentProvider;
     }
 }
