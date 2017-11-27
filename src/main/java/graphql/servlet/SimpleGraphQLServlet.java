@@ -85,13 +85,13 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     @Override
-    protected GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
-        return this.contextBuilder.build(request, response);
+    protected GraphQLContextBuilder getContextBuilder() {
+        return this.contextBuilder;
     }
 
     @Override
-    protected Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
-        return this.rootObjectBuilder.build(request, response);
+    protected GraphQLRootObjectBuilder getRootObjectBuilder() {
+        return this.rootObjectBuilder;
     }
 
     @Override

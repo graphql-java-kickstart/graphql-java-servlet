@@ -27,6 +27,6 @@ public interface GraphQLServletListener {
     interface OperationCallback {
         default void onSuccess(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {}
         default void onError(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data, List<GraphQLError> errors) {}
-        default void onFinally(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {}
+        default void onFinally(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {}
     }
 }

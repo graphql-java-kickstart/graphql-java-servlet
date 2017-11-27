@@ -191,13 +191,14 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         return schemaProvider;
     }
 
-    protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
-        return contextBuilder.build(req, resp);
+    @Override
+    protected GraphQLContextBuilder getContextBuilder() {
+        return contextBuilder;
     }
 
     @Override
-    protected Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
-        return rootObjectBuilder.build(request, response);
+    protected GraphQLRootObjectBuilder getRootObjectBuilder() {
+        return rootObjectBuilder;
     }
 
     @Override

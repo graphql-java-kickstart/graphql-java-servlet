@@ -5,51 +5,53 @@ import org.apache.commons.fileupload.FileItem;
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.websocket.server.HandshakeRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class GraphQLContext {
-    private Optional<HttpServletRequest> request;
-    private Optional<HttpServletResponse> response;
+    private final HttpServletRequest httpServletRequest;
+    private final HandshakeRequest handshakeRequest;
+    private final Subject subject;
 
-    private Optional<Subject> subject = Optional.empty();
-    private Optional<Map<String, List<FileItem>>> files = Optional.empty();
+    private Map<String, List<FileItem>> files = null;
 
-    public GraphQLContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
-        this.request = request;
-        this.response = response;
-    }
-
-    public Optional<HttpServletRequest> getRequest() {
-        return request;
-    }
-
-    public void setRequest(Optional<HttpServletRequest> request) {
-        this.request = request;
-    }
-
-    public Optional<HttpServletResponse> getResponse() {
-        return response;
-    }
-
-    public void setResponse(Optional<HttpServletResponse> response) {
-        this.response = response;
-    }
-
-    public Optional<Subject> getSubject() {
-        return subject;
-    }
-
-    public void setSubject(Optional<Subject> subject) {
+    public GraphQLContext(HttpServletRequest httpServletRequest, HandshakeRequest handshakeRequest, Subject subject) {
+        this.httpServletRequest = httpServletRequest;
+        this.handshakeRequest = handshakeRequest;
         this.subject = subject;
     }
 
-    public Optional<Map<String, List<FileItem>>> getFiles() {
-        return files;
+    public GraphQLContext(HttpServletRequest httpServletRequest) {
+        this(httpServletRequest, null, null);
     }
 
-    public void setFiles(Optional<Map<String, List<FileItem>>> files) {
+    public GraphQLContext(HandshakeRequest handshakeRequest) {
+        this(null, handshakeRequest, null);
+    }
+
+    public GraphQLContext() {
+        this(null, null, null);
+    }
+
+    public Optional<HttpServletRequest> getHttpServletRequest() {
+        return Optional.ofNullable(httpServletRequest);
+    }
+
+    public Optional<HandshakeRequest> getHandshakeRequest() {
+        return Optional.ofNullable(handshakeRequest);
+    }
+
+    public Optional<Subject> getSubject() {
+        return Optional.ofNullable(subject);
+    }
+
+    public Optional<Map<String, List<FileItem>>> getFiles() {
+        return Optional.ofNullable(files);
+    }
+
+    public void setFiles(Map<String, List<FileItem>> files) {
         this.files = files;
     }
 }
