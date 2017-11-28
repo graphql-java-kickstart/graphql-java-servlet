@@ -44,6 +44,9 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
     }
 
     protected boolean isClientError(GraphQLError error) {
-        return !(error instanceof ExceptionWhileDataFetching || error instanceof Throwable);
+        if (error instanceof ExceptionWhileDataFetching) {
+            return ((ExceptionWhileDataFetching) error).getException() instanceof GraphQLError;
+        }
+        return !(error instanceof Throwable);
     }
 }

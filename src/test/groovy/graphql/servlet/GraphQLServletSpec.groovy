@@ -641,6 +641,23 @@ class GraphQLServletSpec extends Specification {
             errors.first().message.startsWith("Internal Server Error(s)")
     }
 
+    def "errors that also implement GraphQLError thrown while data fetching are passed to caller"() {
+        setup:
+            servlet = createServlet({ throw new TestGraphQLErrorException("This is a test message") })
+            request.addParameter('query', 'query { echo(arg:"test") }')
+
+        when:
+            servlet.doGet(request, response)
+
+        then:
+            response.getStatus() == STATUS_OK
+            response.getContentType() == CONTENT_TYPE_JSON_UTF8
+            def errors = getResponseContent().errors
+            errors.size() == 1
+            errors.first().extensions.foo == "bar"
+            errors.first().message.startsWith("Exception while fetching data (/echo) : This is a test message")
+    }
+
     def "batched errors while data fetching are masked in the response"() {
         setup:
             servlet = createServlet({ throw new TestException() })
