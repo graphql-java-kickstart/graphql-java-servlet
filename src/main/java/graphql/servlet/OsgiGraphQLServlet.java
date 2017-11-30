@@ -4,7 +4,6 @@ import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
 import org.osgi.service.component.annotations.*;
 
@@ -13,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -208,11 +206,6 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     @Override
     protected Instrumentation getInstrumentation() {
         return instrumentationProvider.getInstrumentation();
-    }
-
-    @Override
-    protected Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables) {
-        return new GraphQLVariables(schema, query, variables);
     }
 
     @Override

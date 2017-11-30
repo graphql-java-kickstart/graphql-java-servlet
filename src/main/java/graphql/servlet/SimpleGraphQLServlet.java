@@ -10,7 +10,6 @@ import graphql.schema.GraphQLSchema;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -102,11 +101,6 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     @Override
     protected Instrumentation getInstrumentation() {
         return instrumentation;
-    }
-
-    @Override
-    protected Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables) {
-        return variables;
     }
 
     @Override
