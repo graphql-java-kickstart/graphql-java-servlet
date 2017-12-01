@@ -111,6 +111,10 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     private final GraphQLRootObjectBuilder rootObjectBuilder;
     private final PreparsedDocumentProvider preparsedDocumentProvider;
 
+    public static SimpleGraphQLServlet create(GraphQLSchema schema) {
+        return new Builder(schema).build();
+    }
+
     public static Builder builder(GraphQLSchema schema) {
         return new Builder(schema);
     }
