@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -240,7 +241,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     public String executeQuery(String query) {
         try {
             final ExecutionResult result = newGraphQL(getSchemaProvider().getSchema()).execute(new ExecutionInput(query, null, createContext(Optional.empty(), Optional.empty()), createRootObject(Optional.empty(), Optional.empty()), new HashMap<>()));
-            return getMapper().writeValueAsString(createResultFromDataAndErrors(result.getData(), result.getErrors()));
+            return getMapper().writeValueAsString(createResultFromDataErrorsAndExtensions(result.getData(), result.getErrors(), result.getExtensions()));
         } catch (Exception e) {
             return e.getMessage();
         }
@@ -338,8 +339,9 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             final ExecutionResult executionResult = newGraphQL(schema).execute(new ExecutionInput(query, operationName, context, rootObject, transformVariables(schema, query, variables)));
             final List<GraphQLError> errors = executionResult.getErrors();
             final Object data = executionResult.getData();
+            final Object extensions = executionResult.getExtensions();
 
-            final String response = getMapper().writeValueAsString(createResultFromDataAndErrors(data, errors));
+            final String response = getMapper().writeValueAsString(createResultFromDataErrorsAndExtensions(data, errors, extensions));
 
             GraphQLResponse graphQLResponse = new GraphQLResponse();
             graphQLResponse.setStatus(STATUS_OK);
@@ -347,22 +349,26 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             responseHandler.handle(graphQLResponse);
 
             if(getGraphQLErrorHandler().errorsPresent(errors)) {
-                runCallbacks(operationCallbacks, c -> c.onError(context, operationName, query, variables, data, errors));
+                runCallbacks(operationCallbacks, c -> c.onError(context, operationName, query, variables, data, errors, extensions));
             } else {
-                runCallbacks(operationCallbacks, c -> c.onSuccess(context, operationName, query, variables, data));
+                runCallbacks(operationCallbacks, c -> c.onSuccess(context, operationName, query, variables, data, extensions));
             }
 
-            runCallbacks(operationCallbacks, c -> c.onFinally(context, operationName, query, variables, data));
+            runCallbacks(operationCallbacks, c -> c.onFinally(context, operationName, query, variables, data, extensions));
         }
     }
 
-    private Map<String, Object> createResultFromDataAndErrors(Object data, List<GraphQLError> errors) {
+    private Map<String, Object> createResultFromDataErrorsAndExtensions(Object data, List<GraphQLError> errors, Object extensions) {
 
-        final Map<String, Object> result = new HashMap<>();
+        final Map<String, Object> result = new LinkedHashMap<>();
         result.put("data", data);
 
         if (getGraphQLErrorHandler().errorsPresent(errors)) {
             result.put("errors", getGraphQLErrorHandler().processErrors(errors));
+        }
+
+        if(extensions != null){
+            result.put("extensions", extensions);
         }
 
         return result;
