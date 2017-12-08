@@ -66,7 +66,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected abstract Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
     protected abstract ExecutionStrategyProvider getExecutionStrategyProvider();
     protected abstract Instrumentation getInstrumentation();
-    protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
+
     protected abstract GraphQLErrorHandler getGraphQLErrorHandler();
     protected abstract PreparsedDocumentProvider getPreparsedDocumentProvider();
 
@@ -335,7 +335,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         } else {
             List<GraphQLServletListener.OperationCallback> operationCallbacks = runListeners(l -> l.onOperation(context, operationName, query, variables));
 
-            final ExecutionResult executionResult = newGraphQL(schema).execute(new ExecutionInput(query, operationName, context, rootObject, transformVariables(schema, query, variables)));
+            final ExecutionResult executionResult = newGraphQL(schema).execute(new ExecutionInput(query, operationName, context, rootObject, variables));
             final List<GraphQLError> errors = executionResult.getErrors();
             final Object data = executionResult.getData();
 
