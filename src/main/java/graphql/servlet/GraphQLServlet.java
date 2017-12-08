@@ -46,10 +46,10 @@ import java.io.Writer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,7 +78,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected abstract GraphQLRootObjectBuilder getRootObjectBuilder();
     protected abstract ExecutionStrategyProvider getExecutionStrategyProvider();
     protected abstract Instrumentation getInstrumentation();
-    protected abstract Map<String, Object> transformVariables(GraphQLSchema schema, String query, Map<String, Object> variables);
+
     protected abstract GraphQLErrorHandler getGraphQLErrorHandler();
     protected abstract PreparsedDocumentProvider getPreparsedDocumentProvider();
 
@@ -356,16 +356,14 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             List<GraphQLServletListener.OperationCallback> operationCallbacks = runListeners(l -> l.onOperation(context, operationName, query, variables));
 
             try {
-                final ExecutionResult executionResult = newGraphQL(schema).execute(new ExecutionInput(query, operationName, context, rootObject, transformVariables(schema, query, variables)));
-                final List<GraphQLError> errors = executionResult.getErrors();
-                final Object data = executionResult.getData();
+                final ExecutionResult executionResult = newGraphQL(schema).execute(new ExecutionInput(query, operationName, context, rootObject, variables));
 
                 resultHandler.accept(executionResult);
 
-                if (getGraphQLErrorHandler().errorsPresent(errors)) {
-                    runCallbacks(operationCallbacks, c -> c.onError(context, operationName, query, variables, data, errors));
+                if (getGraphQLErrorHandler().errorsPresent(executionResult.getErrors())) {
+                    runCallbacks(operationCallbacks, c -> c.onError(context, operationName, query, variables, executionResult));
                 } else {
-                    runCallbacks(operationCallbacks, c -> c.onSuccess(context, operationName, query, variables, data));
+                    runCallbacks(operationCallbacks, c -> c.onSuccess(context, operationName, query, variables, executionResult));
                 }
 
             } finally {
@@ -380,11 +378,15 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private Map<String, Object> createResultFromExecutionResult(ExecutionResult executionResult) {
 
-        final Map<String, Object> result = new HashMap<>();
+        final Map<String, Object> result = new LinkedHashMap<>();
         result.put("data", executionResult.getData());
 
         if (getGraphQLErrorHandler().errorsPresent(executionResult.getErrors())) {
             result.put("errors", getGraphQLErrorHandler().processErrors(executionResult.getErrors()));
+        }
+
+        if(executionResult.getExtensions() != null){
+            result.put("extensions", executionResult.getExtensions());
         }
 
         return result;

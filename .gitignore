@@ -6,3 +6,7 @@ build/
 .idea/
 target/
 /out/
+.classpath
+.project
+.settings
+bin
