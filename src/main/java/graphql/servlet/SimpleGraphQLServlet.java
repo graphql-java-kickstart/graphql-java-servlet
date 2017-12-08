@@ -18,7 +18,7 @@ import java.util.Optional;
 public class SimpleGraphQLServlet extends GraphQLServlet {
 
     /**
-     * @deprecated use {@link #builder()} instead.
+     * @deprecated use {@link #builder(GraphQLSchema)} instead.
      */
     @Deprecated
     public SimpleGraphQLServlet(GraphQLSchema schema) {
@@ -26,7 +26,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     /**
-     * @deprecated use {@link #builder()} instead.
+     * @deprecated use {@link #builder(GraphQLSchema)} instead.
      */
     @Deprecated
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategy executionStrategy) {
@@ -34,7 +34,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     /**
-     * @deprecated use {@link #builder()} instead.
+     * @deprecated use {@link #builder(GraphQLSchema)} instead.
      */
     @Deprecated
     public SimpleGraphQLServlet(GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider) {
@@ -42,7 +42,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     /**
-     * @deprecated use {@link #builder()} instead.
+     * @deprecated use {@link #builder(GraphQLSchema)} instead.
      */
     @Deprecated
     public SimpleGraphQLServlet(final GraphQLSchema schema, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder, PreparsedDocumentProvider preparsedDocumentProvider) {
@@ -50,7 +50,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     /**
-     * @deprecated use {@link #builder()} instead.
+     * @deprecated use {@link #builder(GraphQLSchemaProvider)} instead.
      */
     @Deprecated
     public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder, PreparsedDocumentProvider preparsedDocumentProvider) {
@@ -114,8 +114,16 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         return new Builder(schema).build();
     }
 
+    public static SimpleGraphQLServlet create(GraphQLSchemaProvider schemaProvider) {
+        return new Builder(schemaProvider).build();
+    }
+
     public static Builder builder(GraphQLSchema schema) {
         return new Builder(schema);
+    }
+
+    public static Builder builder(GraphQLSchemaProvider schemaProvider) {
+        return new Builder(schemaProvider);
     }
 
     public static class Builder {
@@ -130,7 +138,11 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
 
         public Builder(GraphQLSchema schema) {
-            this.schemaProvider = new DefaultGraphQLSchemaProvider(schema);
+            this(new DefaultGraphQLSchemaProvider(schema));
+        }
+
+        public Builder(GraphQLSchemaProvider schemaProvider) {
+            this.schemaProvider = schemaProvider;
         }
 
         public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
