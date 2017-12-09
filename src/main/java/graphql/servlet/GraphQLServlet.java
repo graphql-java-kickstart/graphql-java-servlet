@@ -252,8 +252,8 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(l -> l.onRequest(request, response));
 
         try {
-            runCallbacks(requestCallbacks, c -> c.onSuccess(request, response));
             handler.handle(request, response);
+            runCallbacks(requestCallbacks, c -> c.onSuccess(request, response));
         } catch (Throwable t) {
             response.setStatus(500);
             log.error("Error executing GraphQL request!", t);
@@ -394,7 +394,11 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private <T> void runCallbacks(List<T> callbacks, Consumer<T> action) {
         callbacks.forEach(callback -> {
-            action.accept(callback);
+            try {
+                action.accept(callback);
+            } catch (Throwable t) {
+                log.error("Error running callback: {}", callback, t);
+            }
         });
     }
 
