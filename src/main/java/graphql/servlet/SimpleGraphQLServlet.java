@@ -180,6 +180,11 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
             return this;
         }
 
+        public Builder withListeners(List<GraphQLServletListener> listeners) {
+            this.listeners = listeners;
+            return this;
+        }
+
         public SimpleGraphQLServlet build() {
             return new SimpleGraphQLServlet(this);
         }
