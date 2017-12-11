@@ -9,7 +9,7 @@ import spock.lang.Specification
 import static graphql.Scalars.GraphQLInt
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition
 
-class OsgiGraphQLServletSpec extends Specification {
+class OsgiGraphQLHttpServletSpec extends Specification {
 
     static class TestQueryProvider implements GraphQLQueryProvider {
 
@@ -34,7 +34,7 @@ class OsgiGraphQLServletSpec extends Specification {
 
     def "query provider adds query objects"() {
         setup:
-            OsgiGraphQLServlet servlet = new OsgiGraphQLServlet()
+            OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
             TestQueryProvider queryProvider = new TestQueryProvider()
             servlet.bindQueryProvider(queryProvider)
             GraphQLFieldDefinition query
@@ -65,7 +65,7 @@ class OsgiGraphQLServletSpec extends Specification {
 
     def "mutation provider adds mutation objects"() {
         setup:
-            OsgiGraphQLServlet servlet = new OsgiGraphQLServlet()
+            OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
             TestMutationProvider mutationProvider = new TestMutationProvider()
 
         when:

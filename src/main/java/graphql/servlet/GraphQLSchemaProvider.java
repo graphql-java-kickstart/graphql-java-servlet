@@ -18,7 +18,7 @@ public interface GraphQLSchemaProvider {
     GraphQLSchema getSchema(HttpServletRequest request);
 
     /**
-     * @param request the http request
+     * @param request the http request used to create a websocket
      * @return a schema based on the request (auth, etc).
      */
     GraphQLSchema getSchema(HandshakeRequest request);
