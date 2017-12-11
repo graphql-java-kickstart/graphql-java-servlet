@@ -33,6 +33,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
 
     private static final String HANDSHAKE_REQUEST_KEY = HandshakeRequest.class.getName();
     private static final String PROTOCOL_HANDLER_REQUEST_KEY = SubscriptionProtocolHandler.class.getName();
+    private static final CloseReason ERROR_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Internal Server Error");
 
     private static final List<SubscriptionProtocolFactory> subscriptionProtocolFactories = Collections.singletonList(new ApolloSubscriptionProtocolFactory());
     private static final SubscriptionProtocolFactory fallbackSubscriptionProtocolFactory = new FallbackSubscriptionProtocolFactory();
@@ -45,7 +46,15 @@ public class GraphQLWebsocketServlet extends Endpoint {
     }
 
     private final Map<Session, WsSessionSubscriptions> sessionSubscriptionCache = new HashMap<>();
-    private final CloseReason ERROR_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Internal Server Error");
+    private final GraphQLQueryInvoker queryInvoker;
+    private final GraphQLInvocationInputFactory invocationInputFactory;
+    private final GraphQLObjectMapper graphQLObjectMapper;
+
+    public GraphQLWebsocketServlet(GraphQLQueryInvoker queryInvoker, GraphQLInvocationInputFactory invocationInputFactory, GraphQLObjectMapper graphQLObjectMapper) {
+        this.queryInvoker = queryInvoker;
+        this.invocationInputFactory = invocationInputFactory;
+        this.graphQLObjectMapper = graphQLObjectMapper;
+    }
 
     @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
@@ -61,11 +70,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
             @Override
             public void onMessage(String text) {
                 try {
-//                    subscriptionProtocolHandler.onMessage(request, text, );
-//                    query(getGraphQLRequestMapper().readValue(text), invocationInputFactory.create(request), (executionResult) -> {
-//                        Object data = executionResult.getData();
-//                                session.getBasicRemote().sendText();
-//                    });
+                    subscriptionProtocolHandler.onMessage(request, session, text);
                 } catch (Throwable t) {
                     log.error("Error executing websocket query for session: {}", session.getId(), t);
                     closeUnexpectedly(session, t);
@@ -106,7 +111,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
         }
 
         SubscriptionProtocolFactory subscriptionProtocolFactory = getSubscriptionProtocolFactory(accept);
-        sec.getUserProperties().put(PROTOCOL_HANDLER_REQUEST_KEY, subscriptionProtocolFactory);
+        sec.getUserProperties().put(PROTOCOL_HANDLER_REQUEST_KEY, subscriptionProtocolFactory.createHandler(invocationInputFactory, queryInvoker, graphQLObjectMapper));
 
         if(request.getHeaders().get(HandshakeResponse.SEC_WEBSOCKET_ACCEPT) != null) {
             response.getHeaders().put(HandshakeResponse.SEC_WEBSOCKET_ACCEPT, allSubscriptionProtocols);

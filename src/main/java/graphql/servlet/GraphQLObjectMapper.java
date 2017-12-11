@@ -69,6 +69,10 @@ public class GraphQLObjectMapper {
         return getGraphQLRequestMapper().readValue(inputStream);
     }
 
+    public GraphQLRequest readGraphQLRequest(String text) throws IOException {
+        return getGraphQLRequestMapper().readValue(text);
+    }
+
     public List<GraphQLRequest> readBatchedGraphQLRequest(InputStream inputStream) throws IOException {
         MappingIterator<GraphQLRequest> iterator = getGraphQLRequestMapper().readValues(inputStream);
         List<GraphQLRequest> requests = new ArrayList<>();
