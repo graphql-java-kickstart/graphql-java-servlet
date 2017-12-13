@@ -90,7 +90,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         }
     }
 
-    private SimpleGraphQLServlet(Builder builder) {
+    protected SimpleGraphQLServlet(Builder builder) {
         super(builder.objectMapperConfigurer, builder.listeners, null);
 
         this.schemaProvider = builder.schemaProvider;
