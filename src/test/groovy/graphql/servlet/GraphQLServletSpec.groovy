@@ -13,6 +13,8 @@ import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
 import spock.lang.Specification
 
+import javax.servlet.ServletInputStream
+import javax.servlet.http.HttpServletRequest
 /**
  * @author Andrew Potter
  */
@@ -714,5 +716,27 @@ class GraphQLServletSpec extends Specification {
     def "typeInfo is serialized correctly"() {
         expect:
             servlet.getMapper().writeValueAsString(ExecutionTypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
+    }
+
+    def "isBatchedQuery check uses buffer length as read limit"() {
+        setup:
+            HttpServletRequest mockRequest = Mock()
+            ServletInputStream mockInputStream = Mock()
+
+            mockInputStream.markSupported() >> true
+            mockRequest.getInputStream() >> mockInputStream
+            mockRequest.getMethod() >> "POST"
+
+        when:
+            servlet.doPost(mockRequest, response)
+
+        then:
+            1 * mockInputStream.mark(128)
+
+        then:
+            1 * mockInputStream.read({ it.length == 128 }) >> -1
+
+        then:
+            1 * mockInputStream.reset()
     }
 }

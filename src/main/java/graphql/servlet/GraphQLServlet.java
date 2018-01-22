@@ -439,11 +439,12 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             return false;
         }
 
+        final int BUFFER_LENGTH = 128;
         ByteArrayOutputStream result = new ByteArrayOutputStream();
-        byte[] buffer = new byte[128];
+        byte[] buffer = new byte[BUFFER_LENGTH];
         int length;
 
-        inputStream.mark(0);
+        inputStream.mark(BUFFER_LENGTH);
         while ((length = inputStream.read(buffer)) != -1) {
             result.write(buffer, 0, length);
             String chunk = result.toString();
