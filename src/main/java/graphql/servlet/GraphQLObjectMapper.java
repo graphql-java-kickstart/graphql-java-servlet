@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import graphql.ExecutionResult;
+import graphql.ExecutionResultImpl;
+import graphql.GraphQLError;
 import graphql.servlet.internal.GraphQLRequest;
 import graphql.servlet.internal.VariablesDeserializer;
 
@@ -51,18 +53,18 @@ public class GraphQLObjectMapper {
         ObjectMapper mapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).registerModule(new Jdk8Module());
         objectMapperConfigurerSupplier.get().configure(mapper);
 
+        InjectableValues.Std injectableValues = new InjectableValues.Std();
+        injectableValues.addValue(ObjectMapper.class, mapper);
+        mapper.setInjectableValues(injectableValues);
+
         return mapper;
     }
 
     /**
-     * Creates an {@link ObjectReader} for deserializing {@link GraphQLRequest}
+     * @return an {@link ObjectReader} for deserializing {@link GraphQLRequest}
      */
     public ObjectReader getGraphQLRequestMapper() {
-        // Add object mapper to injection so VariablesDeserializer can access it...
-        InjectableValues.Std injectableValues = new InjectableValues.Std();
-        injectableValues.addValue(ObjectMapper.class, getJacksonMapper());
-
-        return getJacksonMapper().reader(injectableValues).forType(GraphQLRequest.class);
+        return getJacksonMapper().reader().forType(GraphQLRequest.class);
     }
 
     public GraphQLRequest readGraphQLRequest(InputStream inputStream) throws IOException {
@@ -103,15 +105,35 @@ public class GraphQLObjectMapper {
         }
     }
 
-    public Map<String, Object> createResultFromExecutionResult(ExecutionResult executionResult) {
+    public boolean areErrorsPresent(ExecutionResult executionResult) {
+        return graphQLErrorHandlerSupplier.get().errorsPresent(executionResult.getErrors());
+    }
+
+    public ExecutionResult sanitizeErrors(ExecutionResult executionResult) {
+        Object data = executionResult.getData();
+        Map<Object, Object> extensions = executionResult.getExtensions();
+        List<GraphQLError> errors = executionResult.getErrors();
 
         GraphQLErrorHandler errorHandler = graphQLErrorHandlerSupplier.get();
+        if(errorHandler.errorsPresent(errors)) {
+            errors = errorHandler.processErrors(errors);
+        } else {
+            errors = null;
+        }
 
+        return new ExecutionResultImpl(data, errors, extensions);
+    }
+
+    public Map<String, Object> createResultFromExecutionResult(ExecutionResult executionResult) {
+        return convertSanitizedExecutionResult(sanitizeErrors(executionResult));
+    }
+
+    public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult) {
         final Map<String, Object> result = new LinkedHashMap<>();
         result.put("data", executionResult.getData());
 
-        if (errorHandler.errorsPresent(executionResult.getErrors())) {
-            result.put("errors", errorHandler.processErrors(executionResult.getErrors()));
+        if (areErrorsPresent(executionResult)) {
+            result.put("errors", executionResult.getErrors());
         }
 
         if(executionResult.getExtensions() != null){

@@ -2,6 +2,7 @@ package graphql.servlet;
 
 import graphql.servlet.internal.ApolloSubscriptionProtocolFactory;
 import graphql.servlet.internal.FallbackSubscriptionProtocolFactory;
+import graphql.servlet.internal.SubscriptionHandlerInput;
 import graphql.servlet.internal.SubscriptionProtocolFactory;
 import graphql.servlet.internal.SubscriptionProtocolHandler;
 import graphql.servlet.internal.WsSessionSubscriptions;
@@ -49,11 +50,13 @@ public class GraphQLWebsocketServlet extends Endpoint {
     private final GraphQLQueryInvoker queryInvoker;
     private final GraphQLInvocationInputFactory invocationInputFactory;
     private final GraphQLObjectMapper graphQLObjectMapper;
+    private final SubscriptionHandlerInput subscriptionHandlerInput;
 
     public GraphQLWebsocketServlet(GraphQLQueryInvoker queryInvoker, GraphQLInvocationInputFactory invocationInputFactory, GraphQLObjectMapper graphQLObjectMapper) {
         this.queryInvoker = queryInvoker;
         this.invocationInputFactory = invocationInputFactory;
         this.graphQLObjectMapper = graphQLObjectMapper;
+        this.subscriptionHandlerInput = new SubscriptionHandlerInput(invocationInputFactory, queryInvoker, graphQLObjectMapper);
     }
 
     @Override
@@ -105,13 +108,13 @@ public class GraphQLWebsocketServlet extends Endpoint {
     public void modifyHandshake(ServerEndpointConfig sec, HandshakeRequest request, HandshakeResponse response) {
         sec.getUserProperties().put(HANDSHAKE_REQUEST_KEY, request);
 
-        List<String> accept = request.getHeaders().get(HandshakeResponse.SEC_WEBSOCKET_ACCEPT);
-        if(accept == null) {
-            accept = Collections.emptyList();
+        List<String> protocol = request.getHeaders().get(HandshakeRequest.SEC_WEBSOCKET_PROTOCOL);
+        if(protocol == null) {
+            protocol = Collections.emptyList();
         }
 
-        SubscriptionProtocolFactory subscriptionProtocolFactory = getSubscriptionProtocolFactory(accept);
-        sec.getUserProperties().put(PROTOCOL_HANDLER_REQUEST_KEY, subscriptionProtocolFactory.createHandler(invocationInputFactory, queryInvoker, graphQLObjectMapper));
+        SubscriptionProtocolFactory subscriptionProtocolFactory = getSubscriptionProtocolFactory(protocol);
+        sec.getUserProperties().put(PROTOCOL_HANDLER_REQUEST_KEY, subscriptionProtocolFactory.createHandler(subscriptionHandlerInput));
 
         if(request.getHeaders().get(HandshakeResponse.SEC_WEBSOCKET_ACCEPT) != null) {
             response.getHeaders().put(HandshakeResponse.SEC_WEBSOCKET_ACCEPT, allSubscriptionProtocols);

@@ -1,9 +1,5 @@
 package graphql.servlet.internal;
 
-import graphql.servlet.GraphQLInvocationInputFactory;
-import graphql.servlet.GraphQLObjectMapper;
-import graphql.servlet.GraphQLQueryInvoker;
-
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 
@@ -12,20 +8,16 @@ import javax.websocket.server.HandshakeRequest;
  */
 public class FallbackSubscriptionProtocolHandler implements SubscriptionProtocolHandler {
 
-    private final GraphQLQueryInvoker queryInvoker;
-    private final GraphQLInvocationInputFactory invocationInputFactory;
-    private final GraphQLObjectMapper graphQLObjectMapper;
+    private final SubscriptionHandlerInput input;
 
-    public FallbackSubscriptionProtocolHandler(GraphQLQueryInvoker queryInvoker, GraphQLInvocationInputFactory invocationInputFactory, GraphQLObjectMapper graphQLObjectMapper) {
-        this.queryInvoker = queryInvoker;
-        this.invocationInputFactory = invocationInputFactory;
-        this.graphQLObjectMapper = graphQLObjectMapper;
+    public FallbackSubscriptionProtocolHandler(SubscriptionHandlerInput subscriptionHandlerInput) {
+        this.input = subscriptionHandlerInput;
     }
 
     @Override
     public void onMessage(HandshakeRequest request, Session session, String text) throws Exception {
-        session.getBasicRemote().sendText(graphQLObjectMapper.serializeResultAsJson(
-            queryInvoker.query(invocationInputFactory.create(graphQLObjectMapper.readGraphQLRequest(text), request))
+        session.getBasicRemote().sendText(input.getGraphQLObjectMapper().serializeResultAsJson(
+            input.getQueryInvoker().query(input.getInvocationInputFactory().create(input.getGraphQLObjectMapper().readGraphQLRequest(text), request))
         ));
     }
 }
