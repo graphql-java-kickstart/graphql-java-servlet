@@ -15,7 +15,7 @@ public class FallbackSubscriptionProtocolHandler implements SubscriptionProtocol
     }
 
     @Override
-    public void onMessage(HandshakeRequest request, Session session, String text) throws Exception {
+    public void onMessage(HandshakeRequest request, Session session, WsSessionSubscriptions subscriptions, String text) throws Exception {
         session.getBasicRemote().sendText(input.getGraphQLObjectMapper().serializeResultAsJson(
             input.getQueryInvoker().query(input.getInvocationInputFactory().create(input.getGraphQLObjectMapper().readGraphQLRequest(text), request))
         ));

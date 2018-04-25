@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import graphql.ExecutionResult;
-import graphql.servlet.GraphQLObjectMapper;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -32,7 +31,7 @@ public class ApolloSubscriptionProtocolHandler implements SubscriptionProtocolHa
     }
 
     @Override
-    public void onMessage(HandshakeRequest request, Session session, String text) {
+    public void onMessage(HandshakeRequest request, Session session, WsSessionSubscriptions subscriptions, String text) {
         OperationMessage message;
         try {
             message = input.getGraphQLObjectMapper().getJacksonMapper().readValue(text, OperationMessage.class);
@@ -45,12 +44,13 @@ public class ApolloSubscriptionProtocolHandler implements SubscriptionProtocolHa
         switch(message.getType()) {
             case GQL_CONNECTION_INIT:
                 sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ACK, message.getId());
-//                sendMessage(session, OperationMessage.Type.GQL_CONNECTION_KEEP_ALIVE, message.getId());
+                sendMessage(session, OperationMessage.Type.GQL_CONNECTION_KEEP_ALIVE, message.getId());
                 break;
 
             case GQL_START:
                 handleSubscriptionStart(
                     session,
+                    subscriptions,
                     message.id,
                     input.getQueryInvoker().query(input.getInvocationInputFactory().create(
                         input.getGraphQLObjectMapper().getJacksonMapper().convertValue(message.payload, GraphQLRequest.class)
@@ -61,45 +61,15 @@ public class ApolloSubscriptionProtocolHandler implements SubscriptionProtocolHa
     }
 
     @SuppressWarnings("unchecked")
-    private void handleSubscriptionStart(Session session, String id, ExecutionResult executionResult) {
+    private void handleSubscriptionStart(Session session, WsSessionSubscriptions subscriptions, String id, ExecutionResult executionResult) {
         executionResult = input.getGraphQLObjectMapper().sanitizeErrors(executionResult);
-        OperationMessage.Type type = input.getGraphQLObjectMapper().areErrorsPresent(executionResult) ? OperationMessage.Type.GQL_ERROR : OperationMessage.Type.GQL_DATA;
 
-        Object data = executionResult.getData();
-        if(data instanceof Publisher) {
-            if(type == OperationMessage.Type.GQL_DATA) {
-                AtomicReference<Subscription> subscriptionReference = new AtomicReference<>();
-
-                ((Publisher<ExecutionResult>) data).subscribe(new Subscriber<ExecutionResult>() {
-                    @Override
-                    public void onSubscribe(Subscription subscription) {
-                        subscriptionReference.set(subscription);
-                        subscriptionReference.get().request(1);
-                    }
-
-                    @Override
-                    public void onNext(ExecutionResult executionResult) {
-                        subscriptionReference.get().request(1);
-                        Map<String, Object> result = new HashMap<>();
-                        result.put("data", executionResult.getData());
-                        sendMessage(session, OperationMessage.Type.GQL_DATA, id, result);
-                    }
-
-                    @Override
-                    public void onError(Throwable throwable) {
-                        log.error("Subscription error", throwable);
-                        sendMessage(session, OperationMessage.Type.GQL_ERROR, id);
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        sendMessage(session, OperationMessage.Type.GQL_COMPLETE, id);
-                    }
-                });
-            }
+        if(input.getGraphQLObjectMapper().areErrorsPresent(executionResult)) {
+            sendMessage(session, OperationMessage.Type.GQL_ERROR, id, input.getGraphQLObjectMapper().convertSanitizedExecutionResult(executionResult, false));
+            return;
         }
 
-        sendMessage(session, type, id, input.getGraphQLObjectMapper().convertSanitizedExecutionResult(executionResult));
+        subscribe(executionResult, subscriptions, id);
     }
 
     private void sendMessage(Session session, OperationMessage.Type type, String id) {

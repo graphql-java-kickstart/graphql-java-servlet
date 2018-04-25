@@ -6,6 +6,8 @@ import graphql.servlet.internal.SubscriptionHandlerInput;
 import graphql.servlet.internal.SubscriptionProtocolFactory;
 import graphql.servlet.internal.SubscriptionProtocolHandler;
 import graphql.servlet.internal.WsSessionSubscriptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.websocket.CloseReason;
 import javax.websocket.Endpoint;
@@ -23,14 +25,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static graphql.servlet.AbstractGraphQLHttpServlet.log;
-
 /**
  * Must be used with {@link #modifyHandshake(ServerEndpointConfig, HandshakeRequest, HandshakeResponse)}
  *
  * @author Andrew Potter
  */
 public class GraphQLWebsocketServlet extends Endpoint {
+
+    private static final Logger log = LoggerFactory.getLogger(GraphQLWebsocketServlet.class);
 
     private static final String HANDSHAKE_REQUEST_KEY = HandshakeRequest.class.getName();
     private static final String PROTOCOL_HANDLER_REQUEST_KEY = SubscriptionProtocolHandler.class.getName();
@@ -47,15 +49,9 @@ public class GraphQLWebsocketServlet extends Endpoint {
     }
 
     private final Map<Session, WsSessionSubscriptions> sessionSubscriptionCache = new HashMap<>();
-    private final GraphQLQueryInvoker queryInvoker;
-    private final GraphQLInvocationInputFactory invocationInputFactory;
-    private final GraphQLObjectMapper graphQLObjectMapper;
     private final SubscriptionHandlerInput subscriptionHandlerInput;
 
     public GraphQLWebsocketServlet(GraphQLQueryInvoker queryInvoker, GraphQLInvocationInputFactory invocationInputFactory, GraphQLObjectMapper graphQLObjectMapper) {
-        this.queryInvoker = queryInvoker;
-        this.invocationInputFactory = invocationInputFactory;
-        this.graphQLObjectMapper = graphQLObjectMapper;
         this.subscriptionHandlerInput = new SubscriptionHandlerInput(invocationInputFactory, queryInvoker, graphQLObjectMapper);
     }
 
@@ -73,7 +69,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
             @Override
             public void onMessage(String text) {
                 try {
-                    subscriptionProtocolHandler.onMessage(request, session, text);
+                    subscriptionProtocolHandler.onMessage(request, session, subscriptions, text);
                 } catch (Throwable t) {
                     log.error("Error executing websocket query for session: {}", session.getId(), t);
                     closeUnexpectedly(session, t);
