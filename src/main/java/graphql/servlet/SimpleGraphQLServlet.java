@@ -2,7 +2,7 @@ package graphql.servlet;
 
 import graphql.execution.ExecutionStrategy;
 import graphql.execution.instrumentation.Instrumentation;
-import graphql.execution.instrumentation.NoOpInstrumentation;
+import graphql.execution.instrumentation.SimpleInstrumentation;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
@@ -60,7 +60,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         this.executionStrategyProvider = executionStrategyProvider;
 
         if (instrumentation == null) {
-            this.instrumentation = NoOpInstrumentation.INSTANCE;
+            this.instrumentation = SimpleInstrumentation.INSTANCE;
         } else {
             this.instrumentation = instrumentation;
         }
@@ -131,7 +131,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
         private ObjectMapperConfigurer objectMapperConfigurer;
         private List<GraphQLServletListener> listeners;
-        private Instrumentation instrumentation = NoOpInstrumentation.INSTANCE;
+        private Instrumentation instrumentation = SimpleInstrumentation.INSTANCE;
         private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
         private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
         private GraphQLRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
