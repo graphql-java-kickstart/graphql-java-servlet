@@ -60,10 +60,10 @@ dependencies {
     testCompile 'io.github.graphql-java:graphql-java-annotations:5.2'
 
     // JSON
-    compile 'com.fasterxml.jackson.core:jackson-core:2.8.4'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.8.4'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.4'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.4'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.9.5'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.9.5'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.5'
 }
 
 apply plugin: 'osgi'
