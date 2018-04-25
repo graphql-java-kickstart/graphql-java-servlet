@@ -1,8 +1,8 @@
 package graphql.servlet
 
-import graphql.annotations.GraphQLAnnotations
-import graphql.annotations.GraphQLField
-import graphql.annotations.GraphQLName
+import graphql.annotations.annotationTypes.GraphQLField
+import graphql.annotations.annotationTypes.GraphQLName
+import graphql.annotations.processor.GraphQLAnnotations
 import graphql.schema.GraphQLFieldDefinition
 import spock.lang.Specification
 
