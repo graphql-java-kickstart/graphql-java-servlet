@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+import javax.servlet.AsyncContext;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -77,16 +78,18 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private final HttpRequestHandler getHandler;
     private final HttpRequestHandler postHandler;
+    
+    private final boolean asyncServletMode;
 
     public GraphQLServlet() {
-        this(null, null, null);
+        this(null, null, null,false);
     }
 
-    public GraphQLServlet(ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, FileItemFactory fileItemFactory) {
+    public GraphQLServlet(ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, FileItemFactory fileItemFactory, boolean asyncServletMode) {
         this.lazyObjectMapperBuilder = new LazyObjectMapperBuilder(objectMapperConfigurer != null ? objectMapperConfigurer : new DefaultObjectMapperConfigurer());
         this.listeners = listeners != null ? new ArrayList<>(listeners) : new ArrayList<>();
         this.fileUpload = new ServletFileUpload(fileItemFactory != null ? fileItemFactory : new DiskFileItemFactory());
-
+        this.asyncServletMode=asyncServletMode;
         this.getHandler = (request, response) -> {
             final GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
             final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
@@ -247,7 +250,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         }
     }
 
-    private void doRequest(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler) {
+    private void doRequest(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler,AsyncContext asyncContext) {
 
         List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(l -> l.onRequest(request, response));
 
@@ -260,17 +263,33 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             runCallbacks(requestCallbacks, c -> c.onError(request, response, t));
         } finally {
             runCallbacks(requestCallbacks, c -> c.onFinally(request, response));
+            if(asyncContext !=null)
+            	asyncContext.complete();
         }
     }
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doRequest(req, resp, getHandler);
-    }
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		if (asyncServletMode) {
+			AsyncContext asyncContext = req.startAsync();
+			HttpServletRequest request = (HttpServletRequest) asyncContext.getRequest();
+			HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
+			new Thread(() -> doRequest(request, response, getHandler, asyncContext)).start();
+		} else {
+			doRequest(req, resp, getHandler, null);
+		}
+	}
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doRequest(req, resp, postHandler);
+    	if (asyncServletMode) {
+			AsyncContext asyncContext = req.startAsync();
+			HttpServletRequest request = (HttpServletRequest) asyncContext.getRequest();
+			HttpServletResponse response = (HttpServletResponse) asyncContext.getResponse();
+			new Thread(() -> doRequest(request, response, getHandler, asyncContext)).start();
+		} else {
+			doRequest(req, resp, postHandler, null);
+		}
     }
 
     private Optional<FileItem> getFileItem(Map<String, List<FileItem>> fileItems, String name) {
