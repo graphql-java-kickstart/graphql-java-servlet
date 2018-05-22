@@ -1,5 +1,6 @@
 package graphql.servlet;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -480,6 +481,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         return null;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     protected static class GraphQLRequest {
         private String query;
         @JsonDeserialize(using = GraphQLServlet.VariablesDeserializer.class)
@@ -511,6 +513,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     protected static class GraphQLResponse {
         private int status;
         private String response;
