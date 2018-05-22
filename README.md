@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.graphql-java:graphql-java-servlet:5.0.0'
+    compile 'com.graphql-java:graphql-java-servlet:5.0.1'
 }
 ```
 
@@ -24,7 +24,7 @@ dependencies {
 <dependency>
     <groupId>com.graphql-java</groupId>
     <artifactId>graphql-java-servlet</artifactId>
-    <version>5.0.0</version>
+    <version>5.0.1</version>
 </dependency>
 ```
 
