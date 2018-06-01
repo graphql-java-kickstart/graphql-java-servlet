@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.io.ByteStreams;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -18,10 +19,6 @@ import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemFactory;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +28,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,6 +37,7 @@ import java.io.Writer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,6 +50,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Andrew Potter
@@ -74,19 +74,17 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private final LazyObjectMapperBuilder lazyObjectMapperBuilder;
     private final List<GraphQLServletListener> listeners;
-    private final ServletFileUpload fileUpload;
 
     private final HttpRequestHandler getHandler;
     private final HttpRequestHandler postHandler;
 
     public GraphQLServlet() {
-        this(null, null, null);
+        this(null, null);
     }
 
-    public GraphQLServlet(ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, FileItemFactory fileItemFactory) {
+    public GraphQLServlet(ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners) {
         this.lazyObjectMapperBuilder = new LazyObjectMapperBuilder(objectMapperConfigurer != null ? objectMapperConfigurer : new DefaultObjectMapperConfigurer());
         this.listeners = listeners != null ? new ArrayList<>(listeners) : new ArrayList<>();
-        this.fileUpload = new ServletFileUpload(fileItemFactory != null ? fileItemFactory : new DiskFileItemFactory());
 
         this.getHandler = (request, response) -> {
             final GraphQLContext context = createContext(Optional.of(request), Optional.of(response));
@@ -128,12 +126,17 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
 
             try {
-                if (ServletFileUpload.isMultipartContent(request)) {
-                    final Map<String, List<FileItem>> fileItems = fileUpload.parseParameterMap(request);
+                Collection<Part> parts = request.getParts();
+                if (!parts.isEmpty()) {
+                    final Map<String, List<Part>> fileItems = parts.stream()
+                            .collect(Collectors.toMap(
+                                    Part::getName,
+                                    Collections::singletonList,
+                                    (l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList())));
                     context.setFiles(Optional.of(fileItems));
 
                     if (fileItems.containsKey("graphql")) {
-                        final Optional<FileItem> graphqlItem = getFileItem(fileItems, "graphql");
+                        final Optional<Part> graphqlItem = getFileItem(fileItems, "graphql");
                         if (graphqlItem.isPresent()) {
                             InputStream inputStream = graphqlItem.get().getInputStream();
 
@@ -150,7 +153,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                             }
                         }
                     } else if (fileItems.containsKey("query")) {
-                        final Optional<FileItem> queryItem = getFileItem(fileItems, "query");
+                        final Optional<Part> queryItem = getFileItem(fileItems, "query");
                         if (queryItem.isPresent()) {
                             InputStream inputStream = queryItem.get().getInputStream();
 
@@ -162,18 +165,19 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                                 doBatchedQuery(getGraphQLRequestMapper().readValues(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
                                 return;
                             } else {
-                                String query = new String(queryItem.get().get());
+
+                                String query = new String(ByteStreams.toByteArray(inputStream));
 
                                 Map<String, Object> variables = null;
-                                final Optional<FileItem> variablesItem = getFileItem(fileItems, "variables");
+                                final Optional<Part> variablesItem = getFileItem(fileItems, "variables");
                                 if (variablesItem.isPresent()) {
-                                    variables = deserializeVariables(new String(variablesItem.get().get()));
+                                    variables = deserializeVariables(new String(ByteStreams.toByteArray(variablesItem.get().getInputStream())));
                                 }
 
                                 String operationName = null;
-                                final Optional<FileItem> operationNameItem = getFileItem(fileItems, "operationName");
+                                final Optional<Part> operationNameItem = getFileItem(fileItems, "operationName");
                                 if (operationNameItem.isPresent()) {
-                                    operationName = new String(operationNameItem.get().get()).trim();
+                                    operationName = new String(ByteStreams.toByteArray(operationNameItem.get().getInputStream())).trim();
                                 }
 
                                 doQuery(query, operationName, variables, getSchemaProvider().getSchema(request), context, rootObject, request, response);
@@ -274,13 +278,8 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         doRequest(req, resp, postHandler);
     }
 
-    private Optional<FileItem> getFileItem(Map<String, List<FileItem>> fileItems, String name) {
-        List<FileItem> items = fileItems.get(name);
-        if(items == null || items.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return items.stream().findFirst();
+    private Optional<Part> getFileItem(Map<String, List<Part>> fileItems, String name) {
+        return Optional.ofNullable(fileItems.get(name)).filter(list -> !list.isEmpty()).map(list -> list.get(0));
     }
 
     private GraphQL newGraphQL(GraphQLSchema schema) {
