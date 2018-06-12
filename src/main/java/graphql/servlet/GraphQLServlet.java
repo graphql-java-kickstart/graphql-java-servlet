@@ -57,7 +57,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     protected abstract ExecutionStrategyProvider getExecutionStrategyProvider();
 
-    protected abstract Instrumentation getInstrumentation();
+    protected abstract Instrumentation getInstrumentation(GraphQLContext context);
 
     protected abstract GraphQLErrorHandler getGraphQLErrorHandler();
 
@@ -68,7 +68,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private final HttpRequestHandler getHandler;
     private final HttpRequestHandler postHandler;
-    
+
     private final boolean asyncServletMode;
 
     public GraphQLServlet() {
@@ -246,7 +246,8 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     @Override
     public String executeQuery(String query) {
         try {
-            final ExecutionResult result = newGraphQL(getSchemaProvider().getSchema()).execute(new ExecutionInput(query, null, createContext(Optional.empty(), Optional.empty()), createRootObject(Optional.empty(), Optional.empty()), new HashMap<>()));
+            GraphQLContext context = createContext(Optional.empty(), Optional.empty());
+            final ExecutionResult result = newGraphQL(getSchemaProvider().getSchema(), context).execute(new ExecutionInput(query, null, context, createRootObject(Optional.empty(), Optional.empty()), new HashMap<>()));
             return getMapper().writeValueAsString(createResultFromDataErrorsAndExtensions(result.getData(), result.getErrors(), result.getExtensions()));
         } catch (Exception e) {
             return e.getMessage();
@@ -299,13 +300,13 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         return Optional.ofNullable(fileItems.get(name)).filter(list -> !list.isEmpty()).map(list -> list.get(0));
     }
 
-    private GraphQL newGraphQL(GraphQLSchema schema) {
+    private GraphQL newGraphQL(GraphQLSchema schema, GraphQLContext context) {
         ExecutionStrategyProvider executionStrategyProvider = getExecutionStrategyProvider();
         return GraphQL.newGraphQL(schema)
                 .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
                 .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
                 .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
-                .instrumentation(getInstrumentation())
+                .instrumentation(getInstrumentation(context))
                 .preparsedDocumentProvider(getPreparsedDocumentProvider())
                 .build();
     }
@@ -353,7 +354,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         } else {
             List<GraphQLServletListener.OperationCallback> operationCallbacks = runListeners(l -> l.onOperation(context, operationName, query, variables));
 
-            final ExecutionResult executionResult = newGraphQL(schema).execute(new ExecutionInput(query, operationName, context, rootObject, variables));
+            final ExecutionResult executionResult = newGraphQL(schema, context).execute(new ExecutionInput(query, operationName, context, rootObject, variables));
             final List<GraphQLError> errors = executionResult.getErrors();
             final Object data = executionResult.getData();
             final Object extensions = executionResult.getExtensions();

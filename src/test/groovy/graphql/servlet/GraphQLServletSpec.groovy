@@ -3,11 +3,14 @@ package graphql.servlet
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
 import graphql.execution.ExecutionTypeInfo
+import graphql.execution.instrumentation.Instrumentation
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation
 import graphql.schema.DataFetcher
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLNonNull
 import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLSchema
+import org.dataloader.DataLoaderRegistry
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
@@ -38,39 +41,45 @@ class GraphQLServletSpec extends Specification {
         response = new MockHttpServletResponse()
     }
 
-    def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg }, DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
+    def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
+                      DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
+        return new SimpleGraphQLServlet(createGraphQlSchema(queryDataFetcher, mutationDataFetcher))
+    }
+
+    def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
+                            DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
         GraphQLObjectType query = GraphQLObjectType.newObject()
-            .name("Query")
-            .field { GraphQLFieldDefinition.Builder field ->
-                field.name("echo")
-                field.type(Scalars.GraphQLString)
-                field.argument { argument ->
-                    argument.name("arg")
-                    argument.type(Scalars.GraphQLString)
-                }
-                field.dataFetcher(queryDataFetcher)
+                .name("Query")
+                .field { GraphQLFieldDefinition.Builder field ->
+            field.name("echo")
+            field.type(Scalars.GraphQLString)
+            field.argument { argument ->
+                argument.name("arg")
+                argument.type(Scalars.GraphQLString)
             }
-            .field { GraphQLFieldDefinition.Builder field ->
-                field.name("returnsNullIncorrectly")
-                field.type(new GraphQLNonNull(Scalars.GraphQLString))
-                field.dataFetcher({env -> null})
-            }
-            .build()
+            field.dataFetcher(queryDataFetcher)
+        }
+        .field { GraphQLFieldDefinition.Builder field ->
+            field.name("returnsNullIncorrectly")
+            field.type(new GraphQLNonNull(Scalars.GraphQLString))
+            field.dataFetcher({env -> null})
+        }
+        .build()
 
         GraphQLObjectType mutation = GraphQLObjectType.newObject()
-            .name("Mutation")
-            .field { field ->
-                field.name("echo")
-                field.type(Scalars.GraphQLString)
-                field.argument { argument ->
-                    argument.name("arg")
-                    argument.type(Scalars.GraphQLString)
-                }
-                field.dataFetcher(mutationDataFetcher)
+                .name("Mutation")
+                .field { field ->
+            field.name("echo")
+            field.type(Scalars.GraphQLString)
+            field.argument { argument ->
+                argument.name("arg")
+                argument.type(Scalars.GraphQLString)
             }
-            .build()
+            field.dataFetcher(mutationDataFetcher)
+        }
+        .build()
 
-        return new SimpleGraphQLServlet(new GraphQLSchema(query, mutation, [query, mutation].toSet()))
+        return new GraphQLSchema(query, mutation, [query, mutation].toSet())
     }
 
     Map<String, Object> getResponseContent() {
@@ -854,5 +863,41 @@ class GraphQLServletSpec extends Specification {
 
         then:
             1 * mockInputStream.reset()
+    }
+
+    def "getInstrumentation returns the set Instrumentation if none is provided in the context"() {
+
+        setup:
+            Instrumentation expectedInstrumentation = Mock()
+            GraphQLContext context = new GraphQLContext(Optional.of(request), Optional.of(response))
+            SimpleGraphQLServlet simpleGraphQLServlet = SimpleGraphQLServlet
+                    .builder(createGraphQlSchema())
+                    .withInstrumentation(expectedInstrumentation)
+                    .build();
+        when:
+            Instrumentation actualInstrumentation = simpleGraphQLServlet.getInstrumentation(context)
+        then:
+        actualInstrumentation == expectedInstrumentation;
+        ! (actualInstrumentation instanceof DataLoaderDispatcherInstrumentation)
+
+    }
+
+    def "getInstrumentation returns the DataLoaderDispatcherInstrumentation if DataLoader provided in context"() {
+
+        setup:
+            Instrumentation servletInstrumentation = Mock()
+            GraphQLContext context = new GraphQLContext(Optional.of(request), Optional.of(response))
+            DataLoaderRegistry dlr = Mock()
+            context.setDataLoaderRegistry(Optional.of(dlr))
+            SimpleGraphQLServlet simpleGraphQLServlet = SimpleGraphQLServlet
+                    .builder(createGraphQlSchema())
+                    .withInstrumentation(servletInstrumentation)
+                    .build();
+        when:
+            Instrumentation actualInstrumentation = simpleGraphQLServlet.getInstrumentation(context)
+        then:
+            actualInstrumentation instanceof DataLoaderDispatcherInstrumentation
+            actualInstrumentation != servletInstrumentation;
+
     }
 }

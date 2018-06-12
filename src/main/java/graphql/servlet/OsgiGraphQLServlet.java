@@ -1,6 +1,7 @@
 package graphql.servlet;
 
 import graphql.execution.instrumentation.Instrumentation;
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLObjectType;
@@ -204,8 +205,11 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     }
 
     @Override
-    protected Instrumentation getInstrumentation() {
-        return instrumentationProvider.getInstrumentation();
+    protected Instrumentation getInstrumentation(GraphQLContext context) {
+        return context.getDataLoaderRegistry()
+                .map(DataLoaderDispatcherInstrumentation::new)
+                .map(Instrumentation.class::cast)
+                .orElse(instrumentationProvider.getInstrumentation());
     }
 
     @Override
