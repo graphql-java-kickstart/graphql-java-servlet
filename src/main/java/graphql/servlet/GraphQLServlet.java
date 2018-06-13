@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.io.CharStreams;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -60,6 +61,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     public static final Logger log = LoggerFactory.getLogger(GraphQLServlet.class);
 
     public static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
+    public static final String APPLICATION_GRAPHQL = "application/graphql";
     public static final int STATUS_OK = 200;
     public static final int STATUS_BAD_REQUEST = 400;
 
@@ -128,7 +130,10 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
 
             try {
-                if (ServletFileUpload.isMultipartContent(request)) {
+                if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
+                    String query = CharStreams.toString(request.getReader());
+                    doQuery(query, null, null, getSchemaProvider().getSchema(request), context, rootObject, request, response);
+                } else if (ServletFileUpload.isMultipartContent(request)) {
                     final Map<String, List<FileItem>> fileItems = fileUpload.parseParameterMap(request);
                     context.setFiles(Optional.of(fileItems));
 
