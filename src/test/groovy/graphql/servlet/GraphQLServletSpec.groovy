@@ -387,9 +387,7 @@ class GraphQLServletSpec extends Specification {
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
 
-            request.setContent(new TestMultipartContentBuilder()
-                .addPart('graphql', mapper.writeValueAsString([query: 'query { echo(arg:"test") }']))
-                .build())
+            request.addPart(TestMultipartContentBuilder.createPart('graphql', mapper.writeValueAsString([query: 'query { echo(arg:"test") }'])))
 
         when:
             servlet.doPost(request, response)
@@ -404,9 +402,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query { echo(arg:"test") }')
-                .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', 'query { echo(arg:"test") }'))
 
         when:
             servlet.doPost(request, response)
@@ -421,10 +417,8 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }')
-                .addPart('operationName', 'two')
-                .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }'))
+            request.addPart(TestMultipartContentBuilder.createPart('operationName', 'two'))
 
         when:
             servlet.doPost(request, response)
@@ -440,10 +434,8 @@ class GraphQLServletSpec extends Specification {
         setup:
         request.setContentType("multipart/form-data, boundary=test")
         request.setMethod("POST")
-        request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query echo{ echo: echo(arg:"test") }')
-                .addPart('operationName', '')
-                .build())
+        request.addPart(TestMultipartContentBuilder.createPart('query', 'query echo{ echo: echo(arg:"test") }'))
+        request.addPart(TestMultipartContentBuilder.createPart('operationName', ''))
 
         when:
         servlet.doPost(request, response)
@@ -458,10 +450,8 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query Echo($arg: String) { echo(arg:$arg) }')
-                .addPart('variables', '{"arg": "test"}')
-                .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', 'query Echo($arg: String) { echo(arg:$arg) }'))
+            request.addPart(TestMultipartContentBuilder.createPart('variables', '{"arg": "test"}'))
 
         when:
             servlet.doPost(request, response)
@@ -476,10 +466,8 @@ class GraphQLServletSpec extends Specification {
         setup:
         request.setContentType("multipart/form-data, boundary=test")
         request.setMethod("POST")
-        request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query { echo(arg:"test") }')
-                .addPart('test', 'test')
-                .build())
+        request.addPart(TestMultipartContentBuilder.createPart('query', 'query { echo(arg:"test") }'))
+        request.addPart(TestMultipartContentBuilder.createPart('test', 'test'))
 
         when:
         servlet.doPost(request, response)
@@ -567,9 +555,7 @@ class GraphQLServletSpec extends Specification {
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
 
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('graphql', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('graphql', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]'))
 
         when:
             servlet.doPost(request, response)
@@ -586,9 +572,7 @@ class GraphQLServletSpec extends Specification {
         request.setContentType("multipart/form-data, boundary=test")
         request.setMethod("POST")
 
-        request.setContent(new TestMultipartContentBuilder()
-                .addPart('graphql', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]')
-                .build())
+        request.addPart(TestMultipartContentBuilder.createPart('graphql', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]'))
 
         when:
         servlet.doPost(request, response)
@@ -604,9 +588,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]'))
 
         when:
             servlet.doPost(request, response)
@@ -622,9 +604,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('query', '[{ "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "one" }, { "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "two" }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "one" }, { "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "two" }]'))
 
         when:
             servlet.doPost(request, response)
@@ -642,9 +622,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('query', '[{ "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }, { "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }, { "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }]'))
 
         when:
             servlet.doPost(request, response)
@@ -660,9 +638,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('query', '[{ "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }, { "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }, { "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }]'))
 
         when:
             servlet.doPost(request, response)
@@ -678,9 +654,7 @@ class GraphQLServletSpec extends Specification {
         setup:
         request.setContentType("multipart/form-data, boundary=test")
         request.setMethod("POST")
-        request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]')
-                .build())
+        request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]'))
 
         when:
         servlet.doPost(request, response)
@@ -853,6 +827,7 @@ class GraphQLServletSpec extends Specification {
             mockInputStream.markSupported() >> true
             mockRequest.getInputStream() >> mockInputStream
             mockRequest.getMethod() >> "POST"
+            mockRequest.getParts() >> Collections.emptyList()
 
         when:
             servlet.doPost(mockRequest, response)
