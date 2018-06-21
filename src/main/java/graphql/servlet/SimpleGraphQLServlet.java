@@ -54,7 +54,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
      */
     @Deprecated
     public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder, PreparsedDocumentProvider preparsedDocumentProvider) {
-        super(objectMapperConfigurer, listeners, null);
+        super(objectMapperConfigurer, listeners);
 
         this.schemaProvider = schemaProvider;
         this.executionStrategyProvider = executionStrategyProvider;
@@ -91,7 +91,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     protected SimpleGraphQLServlet(Builder builder) {
-        super(builder.objectMapperConfigurer, builder.listeners, null);
+        super(builder.objectMapperConfigurer, builder.listeners);
 
         this.schemaProvider = builder.schemaProvider;
         this.executionStrategyProvider = builder.executionStrategyProvider;

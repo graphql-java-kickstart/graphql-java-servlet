@@ -1,36 +1,68 @@
 package graphql.servlet
 
+import javax.servlet.http.Part
+import java.nio.charset.StandardCharsets
+
 /**
  * @author Andrew Potter
  */
 class TestMultipartContentBuilder {
 
-    private StringBuilder content = new StringBuilder()
-    private String boundary = "--test"
-
-    TestMultipartContentBuilder nline() {
-        content.append('\r\n')
-
-        this
+    static Part createPart(String name, String part) {
+        return new MockPart(name, part);
     }
 
-    TestMultipartContentBuilder addPart(String name, String part) {
-        content.append(boundary)
-        nline()
-        content.append("Content-Disposition: form-data; name=\"$name\"")
-        nline()
-        nline()
-        content.append(part)
-        nline()
+    static class MockPart implements Part {
+        final String name
+        final String content
+        MockPart(String name, String content) {
+            this.name = name
+            this.content = content
+        }
+        @Override
+        InputStream getInputStream() throws IOException {
+            return new ByteArrayInputStream(content.getBytes())
+        }
 
-        this
+        @Override
+        String getContentType() {
+            return null
+        }
+
+        @Override
+        String getName() {
+            return name
+        }
+
+        @Override
+        long getSize() {
+            return content.getBytes().length
+        }
+
+        @Override
+        void write(String fileName) throws IOException {
+            throw new IllegalArgumentException("Not supported")
+        }
+
+        @Override
+        void delete() throws IOException {
+            throw new IllegalArgumentException("Not supported")
+        }
+
+        @Override
+        String getHeader(String name) {
+            return null
+        }
+
+        @Override
+        Collection<String> getHeaders(String name) {
+            return Collections.emptyList()
+        }
+
+        @Override
+        Collection<String> getHeaderNames() {
+            return Collections.emptyList()
+        }
     }
 
-    byte[] build() {
-        nline()
-        content.append(boundary)
-        content.append('--')
-        nline()
-        content.toString().getBytes()
-    }
 }
