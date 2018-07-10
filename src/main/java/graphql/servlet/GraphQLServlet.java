@@ -126,7 +126,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
 
             try {
-                Collection<Part> parts = request.getParts();
+                Collection<Part> parts = getRequestParts(request);
                 if (!parts.isEmpty()) {
                     final Map<String, List<Part>> fileItems = parts.stream()
                             .collect(Collectors.toMap(
@@ -207,6 +207,14 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                 response.setStatus(STATUS_BAD_REQUEST);
             }
         };
+    }
+
+    private Collection<Part> getRequestParts(HttpServletRequest request) throws IOException, ServletException {
+        String contentType = request.getContentType();
+        if (contentType != null && contentType.startsWith("multipart/form-data")) {
+            return request.getParts();
+        }
+        return Collections.emptyList();
     }
 
     protected ObjectMapper getMapper() {
