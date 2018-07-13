@@ -3,11 +3,7 @@ package graphql.servlet;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.InjectableValues;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.io.ByteStreams;
 import graphql.ExecutionInput;
@@ -29,23 +25,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
+import java.io.*;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -64,12 +47,17 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     public static final int STATUS_BAD_REQUEST = 400;
 
     protected abstract GraphQLSchemaProvider getSchemaProvider();
+
     protected abstract GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
+
     protected abstract Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response);
+
     protected abstract ExecutionStrategyProvider getExecutionStrategyProvider();
+
     protected abstract Instrumentation getInstrumentation();
 
     protected abstract GraphQLErrorHandler getGraphQLErrorHandler();
+
     protected abstract PreparsedDocumentProvider getPreparsedDocumentProvider();
 
     private final LazyObjectMapperBuilder lazyObjectMapperBuilder;
@@ -126,9 +114,8 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
 
             try {
-                Collection<Part> parts = request.getParts();
-                if (!parts.isEmpty()) {
-                    final Map<String, List<Part>> fileItems = parts.stream()
+                if (request.getContentType().equals("multipart/form-data") && !request.getParts().isEmpty()) {
+                    final Map<String, List<Part>> fileItems = request.getParts().stream()
                             .collect(Collectors.toMap(
                                     Part::getName,
                                     Collections::singletonList,
@@ -189,24 +176,28 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
                     response.setStatus(STATUS_BAD_REQUEST);
                     log.info("Bad POST multipart request: no part named \"graphql\" or \"query\"");
                 } else {
-                    // this is not a multipart request
-                    InputStream inputStream = request.getInputStream();
-
-                    if (!inputStream.markSupported()) {
-                        inputStream = new BufferedInputStream(inputStream);
-                    }
-
-                    if (isBatchedQuery(inputStream)) {
-                        doBatchedQuery(getGraphQLRequestMapper().readValues(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
-                    } else {
-                        doQuery(getGraphQLRequestMapper().readValue(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
-                    }
+                    handleNonMultipartRequest(request, response, context, rootObject);
                 }
             } catch (Exception e) {
                 log.info("Bad POST request: parsing failed", e);
                 response.setStatus(STATUS_BAD_REQUEST);
             }
         };
+    }
+
+    private void handleNonMultipartRequest(HttpServletRequest request, HttpServletResponse response, GraphQLContext context, Object rootObject) throws Exception {
+        // this is not a multipart request
+        InputStream inputStream = request.getInputStream();
+
+        if (!inputStream.markSupported()) {
+            inputStream = new BufferedInputStream(inputStream);
+        }
+
+        if (isBatchedQuery(inputStream)) {
+            doBatchedQuery(getGraphQLRequestMapper().readValues(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
+        } else {
+            doQuery(getGraphQLRequestMapper().readValue(inputStream), getSchemaProvider().getSchema(request), context, rootObject, request, response);
+        }
     }
 
     protected ObjectMapper getMapper() {
@@ -285,12 +276,12 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     private GraphQL newGraphQL(GraphQLSchema schema) {
         ExecutionStrategyProvider executionStrategyProvider = getExecutionStrategyProvider();
         return GraphQL.newGraphQL(schema)
-            .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
-            .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
-            .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
-            .instrumentation(getInstrumentation())
-            .preparsedDocumentProvider(getPreparsedDocumentProvider())
-            .build();
+                .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
+                .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
+                .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
+                .instrumentation(getInstrumentation())
+                .preparsedDocumentProvider(getPreparsedDocumentProvider())
+                .build();
     }
 
     private void doQuery(GraphQLRequest graphQLRequest, GraphQLSchema schema, GraphQLContext context, Object rootObject, HttpServletRequest httpReq, HttpServletResponse httpRes) throws Exception {
@@ -348,7 +339,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             graphQLResponse.setResponse(response);
             responseHandler.handle(graphQLResponse);
 
-            if(getGraphQLErrorHandler().errorsPresent(errors)) {
+            if (getGraphQLErrorHandler().errorsPresent(errors)) {
                 runCallbacks(operationCallbacks, c -> c.onError(context, operationName, query, variables, data, errors, extensions));
             } else {
                 runCallbacks(operationCallbacks, c -> c.onSuccess(context, operationName, query, variables, data, extensions));
@@ -367,7 +358,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             result.put("errors", getGraphQLErrorHandler().processErrors(errors));
         }
 
-        if(extensions != null){
+        if (extensions != null) {
             result.put("extensions", extensions);
         }
 
@@ -380,16 +371,16 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         }
 
         return listeners.stream()
-            .map(listener -> {
-                try {
-                    return action.apply(listener);
-                } catch (Throwable t) {
-                    log.error("Error running listener: {}", listener, t);
-                    return null;
-                }
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .map(listener -> {
+                    try {
+                        return action.apply(listener);
+                    } catch (Throwable t) {
+                        log.error("Error running listener: {}", listener, t);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private <T> void runCallbacks(List<T> callbacks, Consumer<T> action) {
@@ -425,7 +416,8 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             return genericVariables;
         } else if (variables instanceof String) {
             try {
-                return mapper.readValue((String) variables, new TypeReference<Map<String, Object>>() {});
+                return mapper.readValue((String) variables, new TypeReference<Map<String, Object>>() {
+                });
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

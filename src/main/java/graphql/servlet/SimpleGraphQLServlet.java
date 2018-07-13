@@ -65,25 +65,25 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
             this.instrumentation = instrumentation;
         }
 
-        if(errorHandler == null) {
+        if (errorHandler == null) {
             this.errorHandler = new DefaultGraphQLErrorHandler();
         } else {
             this.errorHandler = errorHandler;
         }
 
-        if(contextBuilder == null) {
+        if (contextBuilder == null) {
             this.contextBuilder = new DefaultGraphQLContextBuilder();
         } else {
             this.contextBuilder = contextBuilder;
         }
 
-        if(rootObjectBuilder == null) {
+        if (rootObjectBuilder == null) {
             this.rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
         } else {
             this.rootObjectBuilder = rootObjectBuilder;
         }
 
-        if(preparsedDocumentProvider == null) {
+        if (preparsedDocumentProvider == null) {
             this.preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
         } else {
             this.preparsedDocumentProvider = preparsedDocumentProvider;

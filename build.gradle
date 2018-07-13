@@ -70,6 +70,7 @@ apply plugin: 'biz.aQute.bnd.builder'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven-publish'
 apply plugin: 'idea'
+apply plugin: 'maven'
 
 jar {
     manifest {
