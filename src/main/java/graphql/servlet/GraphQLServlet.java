@@ -114,7 +114,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
 
             try {
-                if (request.getContentType().equals("multipart/form-data") && !request.getParts().isEmpty()) {
+                if (request.getContentType() != null && request.getContentType().startsWith("multipart/form-data") && !request.getParts().isEmpty()) {
                     final Map<String, List<Part>> fileItems = request.getParts().stream()
                             .collect(Collectors.toMap(
                                     Part::getName,
