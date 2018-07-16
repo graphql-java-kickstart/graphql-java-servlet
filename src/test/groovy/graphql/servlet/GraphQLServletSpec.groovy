@@ -13,6 +13,8 @@ import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
 import spock.lang.Specification
 
+import javax.servlet.ServletInputStream
+import javax.servlet.http.HttpServletRequest
 /**
  * @author Andrew Potter
  */
@@ -167,6 +169,20 @@ class GraphQLServletSpec extends Specification {
         getResponseContent().data.echo == "test"
     }
 
+    def "query over HTTP GET with unknown property 'test' returns data"() {
+        setup:
+        request.addParameter('query', 'query { echo(arg:"test") }')
+        request.addParameter('test', 'test')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+    }
+
     def "batched query over HTTP GET returns data"() {
         setup:
             request.addParameter('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
@@ -237,6 +253,20 @@ class GraphQLServletSpec extends Specification {
             getBatchedResponseContent()[1].data.echo == "test"
     }
 
+    def "batched query over HTTP GET with unknown property 'test' returns data"() {
+        setup:
+        request.addParameter('query', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
+    }
+
     def "mutation over HTTP GET returns errors"() {
         setup:
             request.addParameter('query', 'mutation { echo(arg:"test") }')
@@ -285,6 +315,20 @@ class GraphQLServletSpec extends Specification {
             response.getStatus() == STATUS_OK
             response.getContentType() == CONTENT_TYPE_JSON_UTF8
             getResponseContent().data.echo == "test"
+    }
+
+    def "query over HTTP POST body with graphql contentType returns data"() {
+        setup:
+        request.addHeader("Content-Type", "application/graphql")
+        request.setContent('query { echo(arg:"test") }'.getBytes("UTF-8"))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "query over HTTP POST body with variables returns data"() {
@@ -336,14 +380,28 @@ class GraphQLServletSpec extends Specification {
         getResponseContent().data.echo == "test"
     }
 
+    def "query over HTTP POST body with unknown property 'test' returns data"() {
+        setup:
+        request.setContent(mapper.writeValueAsBytes([
+                query: 'query { echo(arg:"test") }',
+                test: 'test'
+        ]))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+    }
+
     def "query over HTTP POST multipart named 'graphql' returns data"() {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
 
-            request.setContent(new TestMultipartContentBuilder()
-                .addPart('graphql', mapper.writeValueAsString([query: 'query { echo(arg:"test") }']))
-                .build())
+            request.addPart(TestMultipartContentBuilder.createPart('graphql', mapper.writeValueAsString([query: 'query { echo(arg:"test") }'])))
 
         when:
             servlet.doPost(request, response)
@@ -358,9 +416,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query { echo(arg:"test") }')
-                .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', 'query { echo(arg:"test") }'))
 
         when:
             servlet.doPost(request, response)
@@ -375,10 +431,8 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }')
-                .addPart('operationName', 'two')
-                .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }'))
+            request.addPart(TestMultipartContentBuilder.createPart('operationName', 'two'))
 
         when:
             servlet.doPost(request, response)
@@ -394,10 +448,8 @@ class GraphQLServletSpec extends Specification {
         setup:
         request.setContentType("multipart/form-data, boundary=test")
         request.setMethod("POST")
-        request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query echo{ echo: echo(arg:"test") }')
-                .addPart('operationName', '')
-                .build())
+        request.addPart(TestMultipartContentBuilder.createPart('query', 'query echo{ echo: echo(arg:"test") }'))
+        request.addPart(TestMultipartContentBuilder.createPart('operationName', ''))
 
         when:
         servlet.doPost(request, response)
@@ -412,10 +464,8 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                .addPart('query', 'query Echo($arg: String) { echo(arg:$arg) }')
-                .addPart('variables', '{"arg": "test"}')
-                .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', 'query Echo($arg: String) { echo(arg:$arg) }'))
+            request.addPart(TestMultipartContentBuilder.createPart('variables', '{"arg": "test"}'))
 
         when:
             servlet.doPost(request, response)
@@ -424,6 +474,22 @@ class GraphQLServletSpec extends Specification {
             response.getStatus() == STATUS_OK
             response.getContentType() == CONTENT_TYPE_JSON_UTF8
             getResponseContent().data.echo == "test"
+    }
+
+    def "query over HTTP POST multipart named 'query' with unknown property 'test' returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('query', 'query { echo(arg:"test") }'))
+        request.addPart(TestMultipartContentBuilder.createPart('test', 'test'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
     }
 
     def "batched query over HTTP POST body returns data"() {
@@ -484,14 +550,26 @@ class GraphQLServletSpec extends Specification {
             getBatchedResponseContent()[1].data.echo == "test"
     }
 
+    def "batched query over HTTP POST body with unknown property 'test' returns data"() {
+        setup:
+        request.setContent('[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]'.bytes)
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
+    }
+
     def "batched query over HTTP POST multipart named 'graphql' returns data"() {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
 
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('graphql', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('graphql', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]'))
 
         when:
             servlet.doPost(request, response)
@@ -503,13 +581,28 @@ class GraphQLServletSpec extends Specification {
             getBatchedResponseContent()[1].data.echo == "test"
     }
 
+    def "batched query over HTTP POST multipart named 'graphql' with unknown property 'test' returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+
+        request.addPart(TestMultipartContentBuilder.createPart('graphql', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
+    }
+
     def "batched query over HTTP POST multipart named 'query' returns data"() {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]'))
 
         when:
             servlet.doPost(request, response)
@@ -525,9 +618,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('query', '[{ "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "one" }, { "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "two" }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "one" }, { "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "two" }]'))
 
         when:
             servlet.doPost(request, response)
@@ -545,9 +636,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('query', '[{ "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }, { "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }, { "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }]'))
 
         when:
             servlet.doPost(request, response)
@@ -563,9 +652,7 @@ class GraphQLServletSpec extends Specification {
         setup:
             request.setContentType("multipart/form-data, boundary=test")
             request.setMethod("POST")
-            request.setContent(new TestMultipartContentBuilder()
-                    .addPart('query', '[{ "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }, { "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }]')
-                    .build())
+            request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }, { "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }]'))
 
         when:
             servlet.doPost(request, response)
@@ -575,6 +662,22 @@ class GraphQLServletSpec extends Specification {
             response.getContentType() == CONTENT_TYPE_JSON_UTF8
             getBatchedResponseContent()[0].data.echo == "test"
             getBatchedResponseContent()[1].data.echo == "test"
+    }
+
+    def "batched query over HTTP POST multipart named 'query' with unknown property 'test' returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
     }
 
     def "mutation over HTTP POST body returns data"() {
@@ -604,6 +707,20 @@ class GraphQLServletSpec extends Specification {
             response.getContentType() == CONTENT_TYPE_JSON_UTF8
             getBatchedResponseContent()[0].data.echo == "test"
             getBatchedResponseContent()[1].data.echo == "test"
+    }
+
+    def "batched mutation over HTTP POST body with unknown property 'test' returns data"() {
+        setup:
+        request.setContent('[{ "query": "mutation { echo(arg:\\"test\\") }", "test": "test" }, { "query": "mutation { echo(arg:\\"test\\") }", "test": "test" }]'.bytes)
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
     }
 
     def "errors before graphql schema execution return internal server error"() {
@@ -714,5 +831,28 @@ class GraphQLServletSpec extends Specification {
     def "typeInfo is serialized correctly"() {
         expect:
             servlet.getMapper().writeValueAsString(ExecutionTypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
+    }
+
+    def "isBatchedQuery check uses buffer length as read limit"() {
+        setup:
+            HttpServletRequest mockRequest = Mock()
+            ServletInputStream mockInputStream = Mock()
+
+            mockInputStream.markSupported() >> true
+            mockRequest.getInputStream() >> mockInputStream
+            mockRequest.getMethod() >> "POST"
+            mockRequest.getParts() >> Collections.emptyList()
+
+        when:
+            servlet.doPost(mockRequest, response)
+
+        then:
+            1 * mockInputStream.mark(128)
+
+        then:
+            1 * mockInputStream.read({ it.length == 128 }) >> -1
+
+        then:
+            1 * mockInputStream.reset()
     }
 }

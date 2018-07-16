@@ -1,10 +1,9 @@
 package graphql.servlet;
 
-import org.apache.commons.fileupload.FileItem;
-
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,7 +13,7 @@ public class GraphQLContext {
     private Optional<HttpServletResponse> response;
 
     private Optional<Subject> subject = Optional.empty();
-    private Optional<Map<String, List<FileItem>>> files = Optional.empty();
+    private Optional<Map<String, List<Part>>> files = Optional.empty();
 
     public GraphQLContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
         this.request = request;
@@ -45,11 +44,11 @@ public class GraphQLContext {
         this.subject = subject;
     }
 
-    public Optional<Map<String, List<FileItem>>> getFiles() {
+    public Optional<Map<String, List<Part>>> getFiles() {
         return files;
     }
 
-    public void setFiles(Optional<Map<String, List<FileItem>>> files) {
+    public void setFiles(Optional<Map<String, List<Part>>> files) {
         this.files = files;
     }
 }

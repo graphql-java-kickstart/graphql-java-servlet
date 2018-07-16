@@ -56,8 +56,8 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
      * @deprecated use {@link #builder(GraphQLSchemaProvider)} instead.
      */
     @Deprecated
-    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder, PreparsedDocumentProvider preparsedDocumentProvider,boolean asyncServletMode) {
-        super(objectMapperConfigurer, listeners, null,asyncServletMode);
+    public SimpleGraphQLServlet(GraphQLSchemaProvider schemaProvider, ExecutionStrategyProvider executionStrategyProvider, ObjectMapperConfigurer objectMapperConfigurer, List<GraphQLServletListener> listeners, Instrumentation instrumentation, GraphQLErrorHandler errorHandler, GraphQLContextBuilder contextBuilder, GraphQLRootObjectBuilder rootObjectBuilder, PreparsedDocumentProvider preparsedDocumentProvider, boolean asyncServletMode) {
+        super(objectMapperConfigurer, listeners, asyncServletMode);
 
         this.schemaProvider = schemaProvider;
         this.executionStrategyProvider = executionStrategyProvider;
@@ -68,25 +68,25 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
             this.instrumentation = instrumentation;
         }
 
-        if(errorHandler == null) {
+        if (errorHandler == null) {
             this.errorHandler = new DefaultGraphQLErrorHandler();
         } else {
             this.errorHandler = errorHandler;
         }
 
-        if(contextBuilder == null) {
+        if (contextBuilder == null) {
             this.contextBuilder = new DefaultGraphQLContextBuilder();
         } else {
             this.contextBuilder = contextBuilder;
         }
 
-        if(rootObjectBuilder == null) {
+        if (rootObjectBuilder == null) {
             this.rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
         } else {
             this.rootObjectBuilder = rootObjectBuilder;
         }
 
-        if(preparsedDocumentProvider == null) {
+        if (preparsedDocumentProvider == null) {
             this.preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
         } else {
             this.preparsedDocumentProvider = preparsedDocumentProvider;
@@ -94,7 +94,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     }
 
     protected SimpleGraphQLServlet(Builder builder) {
-        super(builder.objectMapperConfigurer, builder.listeners, null,builder.asyncServletMode);
+        super(builder.objectMapperConfigurer, builder.listeners, builder.asyncServletMode);
 
         this.schemaProvider = builder.schemaProvider;
         this.executionStrategyProvider = builder.executionStrategyProvider;
