@@ -317,6 +317,20 @@ class GraphQLServletSpec extends Specification {
             getResponseContent().data.echo == "test"
     }
 
+    def "query over HTTP POST body with graphql contentType returns data"() {
+        setup:
+        request.addHeader("Content-Type", "application/graphql")
+        request.setContent('query { echo(arg:"test") }'.getBytes("UTF-8"))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+    }
+
     def "query over HTTP POST body with variables returns data"() {
         setup:
             request.setContent(mapper.writeValueAsBytes([

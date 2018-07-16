@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -43,6 +44,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     public static final Logger log = LoggerFactory.getLogger(GraphQLServlet.class);
 
     public static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
+    public static final String APPLICATION_GRAPHQL = "application/graphql";
     public static final int STATUS_OK = 200;
     public static final int STATUS_BAD_REQUEST = 400;
 
@@ -114,12 +116,16 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             final Object rootObject = createRootObject(Optional.of(request), Optional.of(response));
 
             try {
-                if (request.getContentType() != null && request.getContentType().startsWith("multipart/form-data") && !request.getParts().isEmpty()) {
+                if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
+                    String query = CharStreams.toString(request.getReader());
+                    doQuery(query, null, null, getSchemaProvider().getSchema(request), context, rootObject, request, response);
+                } else if (request.getContentType() != null && request.getContentType().startsWith("multipart/form-data") && !request.getParts().isEmpty()) {
                     final Map<String, List<Part>> fileItems = request.getParts().stream()
                             .collect(Collectors.toMap(
                                     Part::getName,
                                     Collections::singletonList,
                                     (l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList())));
+
                     context.setFiles(Optional.of(fileItems));
 
                     if (fileItems.containsKey("graphql")) {
