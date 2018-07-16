@@ -1,5 +1,6 @@
 package graphql.servlet;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -7,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import graphql.execution.ExecutionStrategy;
+import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.SimpleInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
@@ -14,11 +16,13 @@ import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
 
+
+
 /**
  * @author Andrew Potter
  */
 public class SimpleGraphQLServlet extends GraphQLServlet {
-	
+
 
     /**
      * @deprecated use {@link #builder(GraphQLSchema)} instead.
@@ -52,7 +56,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, objectMapperConfigurer, listeners, instrumentation, errorHandler, contextBuilder, rootObjectBuilder, preparsedDocumentProvider,false);
     }
 
-    
+
     /**
      * @deprecated use {@link #builder(GraphQLSchemaProvider)} instead.
      */
@@ -189,7 +193,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
             this.listeners = listeners;
             return this;
         }
-        
+
         public Builder withAsyncServletMode(boolean value) {
         	this.asyncServletMode=value;
         	return this;
@@ -223,7 +227,15 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
     @Override
     protected Instrumentation getInstrumentation(GraphQLContext context) {
         return context.getDataLoaderRegistry()
-                .map(DataLoaderDispatcherInstrumentation::new)
+                .map(registry -> {
+                    List<Instrumentation> instrumentations = new ArrayList<>();
+                    if (this.instrumentation != null) {
+                        instrumentations.add(this.instrumentation);
+                    }
+                    instrumentations.add(new DataLoaderDispatcherInstrumentation(registry));
+
+                    return new ChainedInstrumentation(instrumentations);
+                })
                 .map(Instrumentation.class::cast)
                 .orElse(this.instrumentation);
     }

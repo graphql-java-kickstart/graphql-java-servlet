@@ -3,8 +3,8 @@ package graphql.servlet
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
 import graphql.execution.ExecutionTypeInfo
+import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.Instrumentation
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation
 import graphql.schema.DataFetcher
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLNonNull
@@ -878,11 +878,11 @@ class GraphQLServletSpec extends Specification {
             Instrumentation actualInstrumentation = simpleGraphQLServlet.getInstrumentation(context)
         then:
         actualInstrumentation == expectedInstrumentation;
-        ! (actualInstrumentation instanceof DataLoaderDispatcherInstrumentation)
+        ! (actualInstrumentation instanceof ChainedInstrumentation)
 
     }
 
-    def "getInstrumentation returns the DataLoaderDispatcherInstrumentation if DataLoader provided in context"() {
+    def "getInstrumentation returns the ChainedInstrumentation if DataLoader provided in context"() {
 
         setup:
             Instrumentation servletInstrumentation = Mock()
@@ -896,8 +896,7 @@ class GraphQLServletSpec extends Specification {
         when:
             Instrumentation actualInstrumentation = simpleGraphQLServlet.getInstrumentation(context)
         then:
-            actualInstrumentation instanceof DataLoaderDispatcherInstrumentation
-            actualInstrumentation != servletInstrumentation;
-
+            actualInstrumentation instanceof ChainedInstrumentation
+            actualInstrumentation != servletInstrumentation
     }
 }
