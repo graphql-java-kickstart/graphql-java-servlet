@@ -41,6 +41,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     public static final Logger log = LoggerFactory.getLogger(AbstractGraphQLHttpServlet.class);
 
     public static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
+    public static final String APPLICATION_GRAPHQL = "application/graphql";
     public static final int STATUS_OK = 200;
     public static final int STATUS_BAD_REQUEST = 400;
 
@@ -51,18 +52,19 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     protected abstract GraphQLObjectMapper getGraphQLObjectMapper();
 
     private final List<GraphQLServletListener> listeners;
-    private final ServletFileUpload fileUpload;
 
     private final HttpRequestHandler getHandler;
     private final HttpRequestHandler postHandler;
 
+    private final boolean asyncServletMode;
+
     public AbstractGraphQLHttpServlet() {
-        this(null, null);
+        this(null, false);
     }
 
-    public AbstractGraphQLHttpServlet(List<GraphQLServletListener> listeners, FileItemFactory fileItemFactory) {
+    public AbstractGraphQLHttpServlet(List<GraphQLServletListener> listeners, boolean asyncServletMode) {
         this.listeners = listeners != null ? new ArrayList<>(listeners) : new ArrayList<>();
-        this.fileUpload = new ServletFileUpload(fileItemFactory != null ? fileItemFactory : new DiskFileItemFactory());
+        this.asyncServletMode = asyncServletMode;
 
         this.getHandler = (request, response) -> {
             GraphQLInvocationInputFactory invocationInputFactory = getInvocationInputFactory();
