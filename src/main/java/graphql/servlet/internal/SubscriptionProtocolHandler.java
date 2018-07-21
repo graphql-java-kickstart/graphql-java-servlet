@@ -20,14 +20,13 @@ public abstract class SubscriptionProtocolHandler {
 
     private static final Logger log = LoggerFactory.getLogger(SubscriptionProtocolHandler.class);
 
-    abstract void onMessage(HandshakeRequest request, Session session, WsSessionSubscriptions subscriptions, String text) throws Exception;
+    public abstract void onMessage(HandshakeRequest request, Session session, WsSessionSubscriptions subscriptions, String text) throws Exception;
 
     protected void subscribe(ExecutionResult executionResult, WsSessionSubscriptions subscriptions, String id) {
         final Object data = executionResult.getData();
 
-        if(data instanceof Publisher) {
-            @SuppressWarnings("unchecked")
-            final Publisher<ExecutionResult> publisher = (Publisher<ExecutionResult>) data;
+        if (data instanceof Publisher) {
+            @SuppressWarnings("unchecked") final Publisher<ExecutionResult> publisher = (Publisher<ExecutionResult>) data;
             final AtomicReference<Subscription> subscriptionReference = new AtomicReference<>();
 
             publisher.subscribe(new Subscriber<ExecutionResult>() {
@@ -44,25 +43,22 @@ public abstract class SubscriptionProtocolHandler {
                     subscriptionReference.get().request(1);
                     Map<String, Object> result = new HashMap<>();
                     result.put("data", executionResult.getData());
-                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_DATA, id, result);
+//                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_DATA, id, result);
                 }
 
                 @Override
                 public void onError(Throwable throwable) {
                     log.error("Subscription error", throwable);
                     subscriptions.cancel(id);
-                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_ERROR, id);
+//                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_ERROR, id);
                 }
 
                 @Override
                 public void onComplete() {
                     subscriptions.cancel(id);
-                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_COMPLETE, id);
+//                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_COMPLETE, id);
                 }
             });
         }
-        }
     }
-
-    public static
 }

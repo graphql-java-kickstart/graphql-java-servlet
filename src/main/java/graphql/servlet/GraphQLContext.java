@@ -21,6 +21,18 @@ public class GraphQLContext {
         this.subject = subject;
     }
 
+    public GraphQLContext(HttpServletRequest httpServletRequest) {
+        this(httpServletRequest, null, null);
+    }
+
+    public GraphQLContext(HandshakeRequest handshakeRequest) {
+        this(null, handshakeRequest, null);
+    }
+
+    public GraphQLContext() {
+        this(null, null, null);
+    }
+
     public Optional<HttpServletRequest> getHttpServletRequest() {
         return Optional.ofNullable(httpServletRequest);
     }

@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author Andrew Potter
  */
-public class ApolloSubscriptionProtocolHandler implements SubscriptionProtocolHandler {
+public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApolloSubscriptionProtocolHandler.class);
 

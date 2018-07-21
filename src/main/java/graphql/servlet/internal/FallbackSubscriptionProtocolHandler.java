@@ -6,7 +6,7 @@ import javax.websocket.server.HandshakeRequest;
 /**
  * @author Andrew Potter
  */
-public class FallbackSubscriptionProtocolHandler implements SubscriptionProtocolHandler {
+public class FallbackSubscriptionProtocolHandler extends SubscriptionProtocolHandler {
 
     private final SubscriptionHandlerInput input;
 

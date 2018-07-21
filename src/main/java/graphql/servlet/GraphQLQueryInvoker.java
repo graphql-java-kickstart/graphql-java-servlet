@@ -4,7 +4,7 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.execution.instrumentation.Instrumentation;
-import graphql.execution.instrumentation.NoOpInstrumentation;
+import graphql.execution.instrumentation.SimpleInstrumentation;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
@@ -79,7 +79,7 @@ public class GraphQLQueryInvoker {
 
     public static class Builder {
         private Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider = DefaultExecutionStrategyProvider::new;
-        private Supplier<Instrumentation> getInstrumentation = () -> NoOpInstrumentation.INSTANCE;
+        private Supplier<Instrumentation> getInstrumentation = () -> SimpleInstrumentation.INSTANCE;
         private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider = () -> NoOpPreparsedDocumentProvider.INSTANCE;
 
         public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
