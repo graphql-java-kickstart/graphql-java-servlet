@@ -11,7 +11,8 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     private final GraphQLQueryInvoker queryInvoker;
     private final GraphQLObjectMapper graphQLObjectMapper;
 
-    protected SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper) {
+    private SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, boolean asyncServletMode) {
+        super(null, asyncServletMode);
         this.invocationInputFactory = invocationInputFactory;
         this.queryInvoker = queryInvoker;
         this.graphQLObjectMapper = graphQLObjectMapper;
@@ -48,8 +49,9 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         private final GraphQLInvocationInputFactory invocationInputFactory;
         private GraphQLQueryInvoker queryInvoker = GraphQLQueryInvoker.newBuilder().build();
         private GraphQLObjectMapper graphQLObjectMapper = GraphQLObjectMapper.newBuilder().build();
+        private boolean asyncServletMode;
 
-        public Builder(GraphQLInvocationInputFactory invocationInputFactory) {
+        Builder(GraphQLInvocationInputFactory invocationInputFactory) {
             this.invocationInputFactory = invocationInputFactory;
         }
 
@@ -63,8 +65,13 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
             return this;
         }
 
+        public Builder withAsyncServletMode(boolean asyncServletMode) {
+            this.asyncServletMode = asyncServletMode;
+            return this;
+        }
+
         public SimpleGraphQLHttpServlet build() {
-            return new SimpleGraphQLHttpServlet(invocationInputFactory, queryInvoker, graphQLObjectMapper);
+            return new SimpleGraphQLHttpServlet(invocationInputFactory, queryInvoker, graphQLObjectMapper, asyncServletMode);
         }
     }
 }

@@ -16,8 +16,8 @@ import graphql.schema.GraphQLSchema;
 /**
  * @author Andrew Potter
  */
-public class SimpleGraphQLServlet extends GraphQLServlet {
-	
+public class SimpleGraphQLServlet {
+
 
     /**
      * @deprecated use {@link #builder(GraphQLSchema)} instead.
@@ -51,7 +51,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
         this(new DefaultGraphQLSchemaProvider(schema), executionStrategyProvider, objectMapperConfigurer, listeners, instrumentation, errorHandler, contextBuilder, rootObjectBuilder, preparsedDocumentProvider,false);
     }
 
-    
+
     /**
      * @deprecated use {@link #builder(GraphQLSchemaProvider)} instead.
      */
@@ -188,7 +188,7 @@ public class SimpleGraphQLServlet extends GraphQLServlet {
             this.listeners = listeners;
             return this;
         }
-        
+
         public Builder withAsyncServletMode(boolean value) {
         	this.asyncServletMode=value;
         	return this;

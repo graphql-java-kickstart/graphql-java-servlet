@@ -1,37 +1,28 @@
 package graphql.servlet;
 
+import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import graphql.ExecutionResult;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.servlet.internal.GraphQLRequest;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileItemFactory;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.AsyncContext;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import javax.servlet.http.Part;
+import java.io.*;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Andrew Potter
@@ -48,7 +39,9 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     private static final GraphQLRequest INTROSPECTION_REQUEST = new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), null);
 
     protected abstract GraphQLQueryInvoker getQueryInvoker();
+
     protected abstract GraphQLInvocationInputFactory getInvocationInputFactory();
+
     protected abstract GraphQLObjectMapper getGraphQLObjectMapper();
 
     private final List<GraphQLServletListener> listeners;
@@ -89,10 +82,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                             variables.putAll(graphQLObjectMapper.deserializeVariables(request.getParameter("variables")));
                         }
 
-                        String operationName = null;
-                        if (request.getParameter("operationName") != null) {
-                            operationName = request.getParameter("operationName");
-                        }
+                        String operationName = request.getParameter("operationName");
 
                         query(queryInvoker, graphQLObjectMapper, invocationInputFactory.createReadOnly(new GraphQLRequest(query, variables, operationName), request), response);
                     }
@@ -109,11 +99,18 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             GraphQLQueryInvoker queryInvoker = getQueryInvoker();
 
             try {
-                if (ServletFileUpload.isMultipartContent(request)) {
-                    final Map<String, List<FileItem>> fileItems = fileUpload.parseParameterMap(request);
+                if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
+                    String query = CharStreams.toString(request.getReader());
+                    query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readGraphQLRequest(query), request), response);
+                } else if (request.getContentType() != null && request.getContentType().startsWith("multipart/form-data") && !request.getParts().isEmpty()) {
+                    final Map<String, List<Part>> fileItems = request.getParts().stream()
+                            .collect(Collectors.toMap(
+                                    Part::getName,
+                                    Collections::singletonList,
+                                    (l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList())));
 
                     if (fileItems.containsKey("graphql")) {
-                        final Optional<FileItem> graphqlItem = getFileItem(fileItems, "graphql");
+                        final Optional<Part> graphqlItem = getFileItem(fileItems, "graphql");
                         if (graphqlItem.isPresent()) {
                             InputStream inputStream = graphqlItem.get().getInputStream();
 
@@ -134,7 +131,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                             }
                         }
                     } else if (fileItems.containsKey("query")) {
-                        final Optional<FileItem> queryItem = getFileItem(fileItems, "query");
+                        final Optional<Part> queryItem = getFileItem(fileItems, "query");
                         if (queryItem.isPresent()) {
                             InputStream inputStream = queryItem.get().getInputStream();
 
@@ -148,18 +145,18 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                                 queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
                                 return;
                             } else {
-                                String query = new String(queryItem.get().get());
+                                String query = new String(ByteStreams.toByteArray(inputStream));
 
                                 Map<String, Object> variables = null;
-                                final Optional<FileItem> variablesItem = getFileItem(fileItems, "variables");
+                                final Optional<Part> variablesItem = getFileItem(fileItems, "variables");
                                 if (variablesItem.isPresent()) {
-                                    variables = graphQLObjectMapper.deserializeVariables(new String(variablesItem.get().get()));
+                                    variables = graphQLObjectMapper.deserializeVariables(new String(ByteStreams.toByteArray(variablesItem.get().getInputStream())));
                                 }
 
                                 String operationName = null;
-                                final Optional<FileItem> operationNameItem = getFileItem(fileItems, "operationName");
+                                final Optional<Part> operationNameItem = getFileItem(fileItems, "operationName");
                                 if (operationNameItem.isPresent()) {
-                                    operationName = new String(operationNameItem.get().get()).trim();
+                                    operationName = new String(ByteStreams.toByteArray(operationNameItem.get().getInputStream())).trim();
                                 }
 
                                 GraphQLSingleInvocationInput invocationInput = invocationInputFactory.create(new GraphQLRequest(query, variables, operationName), request);
@@ -220,7 +217,18 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         }
     }
 
-    private void doRequest(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler) {
+    private void doRequestAsync(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler) {
+        if (asyncServletMode) {
+            AsyncContext asyncContext = request.startAsync();
+            HttpServletRequest asyncRequest = (HttpServletRequest) asyncContext.getRequest();
+            HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
+            new Thread(() -> doRequest(asyncRequest, asyncResponse, handler, asyncContext)).start();
+        } else {
+            doRequest(request, response, handler, null);
+        }
+    }
+
+    private void doRequest(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler, AsyncContext asyncContext) {
 
         List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(l -> l.onRequest(request, response));
 
@@ -233,26 +241,24 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             runCallbacks(requestCallbacks, c -> c.onError(request, response, t));
         } finally {
             runCallbacks(requestCallbacks, c -> c.onFinally(request, response));
+            if (asyncContext != null) {
+                asyncContext.complete();
+            }
         }
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doRequest(req, resp, getHandler);
+        doRequestAsync(req, resp, getHandler);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doRequest(req, resp, postHandler);
+        doRequestAsync(req, resp, postHandler);
     }
 
-    private Optional<FileItem> getFileItem(Map<String, List<FileItem>> fileItems, String name) {
-        List<FileItem> items = fileItems.get(name);
-        if(items == null || items.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return items.stream().findFirst();
+    private Optional<Part> getFileItem(Map<String, List<Part>> fileItems, String name) {
+        return Optional.ofNullable(fileItems.get(name)).filter(list -> !list.isEmpty()).map(list -> list.get(0));
     }
 
     private void query(GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, GraphQLSingleInvocationInput invocationInput, HttpServletResponse resp) throws IOException {
@@ -272,7 +278,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
         queryInvoker.query(invocationInput, (result, hasNext) -> {
             respWriter.write(graphQLObjectMapper.serializeResultAsJson(result));
-            if(hasNext) {
+            if (hasNext) {
                 respWriter.write(',');
             }
         });
@@ -286,16 +292,16 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         }
 
         return listeners.stream()
-            .map(listener -> {
-                try {
-                    return action.apply(listener);
-                } catch (Throwable t) {
-                    log.error("Error running listener: {}", listener, t);
-                    return null;
-                }
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+                .map(listener -> {
+                    try {
+                        return action.apply(listener);
+                    } catch (Throwable t) {
+                        log.error("Error running listener: {}", listener, t);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private <T> void runCallbacks(List<T> callbacks, Consumer<T> action) {
