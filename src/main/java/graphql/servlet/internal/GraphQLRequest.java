@@ -1,5 +1,6 @@
 package graphql.servlet.internal;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.Map;
 /**
  * @author Andrew Potter
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GraphQLRequest {
     private String query;
     @JsonDeserialize(using = VariablesDeserializer.class)
@@ -40,7 +42,7 @@ public class GraphQLRequest {
     }
 
     public String getOperationName() {
-        if(operationName != null && !operationName.isEmpty()) {
+        if (operationName != null && !operationName.isEmpty()) {
             return operationName;
         }
 

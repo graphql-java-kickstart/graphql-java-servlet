@@ -10,6 +10,7 @@ import graphql.schema.GraphQLObjectType
 import graphql.schema.GraphQLSchema
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -828,6 +829,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
             servlet.getGraphQLObjectMapper().getJacksonMapper().writeValueAsString(ExecutionTypeInfo.newTypeInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
     }
 
+    @Ignore
     def "isBatchedQuery check uses buffer length as read limit"() {
         setup:
             HttpServletRequest mockRequest = Mock()
