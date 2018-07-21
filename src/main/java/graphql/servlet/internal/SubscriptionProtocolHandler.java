@@ -22,7 +22,13 @@ public abstract class SubscriptionProtocolHandler {
 
     public abstract void onMessage(HandshakeRequest request, Session session, WsSessionSubscriptions subscriptions, String text) throws Exception;
 
-    protected void subscribe(ExecutionResult executionResult, WsSessionSubscriptions subscriptions, String id) {
+    protected abstract void sendDataMessage(Session session, String id, Object payload);
+
+    protected abstract void sendErrorMessage(Session session, String id);
+
+    protected abstract void sendCompleteMessage(Session session, String id);
+
+    protected void subscribe(Session session, ExecutionResult executionResult, WsSessionSubscriptions subscriptions, String id) {
         final Object data = executionResult.getData();
 
         if (data instanceof Publisher) {
@@ -43,19 +49,21 @@ public abstract class SubscriptionProtocolHandler {
                     subscriptionReference.get().request(1);
                     Map<String, Object> result = new HashMap<>();
                     result.put("data", executionResult.getData());
-//                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_DATA, id, result);
+                    sendDataMessage(session, id, result);
                 }
 
                 @Override
                 public void onError(Throwable throwable) {
                     log.error("Subscription error", throwable);
                     subscriptions.cancel(id);
+                    sendErrorMessage(session, id);
 //                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_ERROR, id);
                 }
 
                 @Override
                 public void onComplete() {
                     subscriptions.cancel(id);
+                    sendCompleteMessage(session, id);
 //                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_COMPLETE, id);
                 }
             });

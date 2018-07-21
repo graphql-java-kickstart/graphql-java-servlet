@@ -1,9 +1,5 @@
 package graphql.servlet.internal;
 
-import graphql.servlet.GraphQLInvocationInputFactory;
-import graphql.servlet.GraphQLObjectMapper;
-import graphql.servlet.GraphQLQueryInvoker;
-
 /**
  * @author Andrew Potter
  */

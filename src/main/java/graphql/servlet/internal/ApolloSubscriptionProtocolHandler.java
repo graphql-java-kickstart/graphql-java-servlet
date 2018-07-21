@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import graphql.ExecutionResult;
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +12,10 @@ import javax.websocket.server.HandshakeRequest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+
+import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_COMPLETE;
+import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_DATA;
+import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_ERROR;
 
 /**
  * @author Andrew Potter
@@ -69,7 +69,22 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
             return;
         }
 
-        subscribe(executionResult, subscriptions, id);
+        subscribe(session, executionResult, subscriptions, id);
+    }
+
+    @Override
+    protected void sendDataMessage(Session session, String id, Object payload) {
+        sendMessage(session, GQL_DATA, id, payload);
+    }
+
+    @Override
+    protected void sendErrorMessage(Session session, String id) {
+        sendMessage(session, GQL_ERROR, id);
+    }
+
+    @Override
+    protected void sendCompleteMessage(Session session, String id) {
+        sendMessage(session, GQL_COMPLETE, id);
     }
 
     private void sendMessage(Session session, OperationMessage.Type type, String id) {

@@ -35,6 +35,11 @@ class TestMultipartContentBuilder {
         }
 
         @Override
+        String getSubmittedFileName() {
+            return name
+        }
+
+        @Override
         long getSize() {
             return content.getBytes().length
         }

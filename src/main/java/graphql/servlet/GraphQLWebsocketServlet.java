@@ -1,20 +1,10 @@
 package graphql.servlet;
 
-import graphql.servlet.internal.ApolloSubscriptionProtocolFactory;
-import graphql.servlet.internal.FallbackSubscriptionProtocolFactory;
-import graphql.servlet.internal.SubscriptionHandlerInput;
-import graphql.servlet.internal.SubscriptionProtocolFactory;
-import graphql.servlet.internal.SubscriptionProtocolHandler;
-import graphql.servlet.internal.WsSessionSubscriptions;
+import graphql.servlet.internal.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.websocket.CloseReason;
-import javax.websocket.Endpoint;
-import javax.websocket.EndpointConfig;
-import javax.websocket.HandshakeResponse;
-import javax.websocket.MessageHandler;
-import javax.websocket.Session;
+import javax.websocket.*;
 import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpointConfig;
 import java.io.IOException;
@@ -44,8 +34,8 @@ public class GraphQLWebsocketServlet extends Endpoint {
 
     static {
         allSubscriptionProtocols = Stream.concat(subscriptionProtocolFactories.stream(), Stream.of(fallbackSubscriptionProtocolFactory))
-            .map(SubscriptionProtocolFactory::getProtocol)
-            .collect(Collectors.toList());
+                .map(SubscriptionProtocolFactory::getProtocol)
+                .collect(Collectors.toList());
     }
 
     private final Map<Session, WsSessionSubscriptions> sessionSubscriptionCache = new HashMap<>();
@@ -57,7 +47,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
 
     @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
-
+        log.debug("Session opened: {}, {}", session.getId(), endpointConfig);
         final WsSessionSubscriptions subscriptions = new WsSessionSubscriptions();
         final HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HANDSHAKE_REQUEST_KEY);
         final SubscriptionProtocolHandler subscriptionProtocolHandler = (SubscriptionProtocolHandler) session.getUserProperties().get(PROTOCOL_HANDLER_REQUEST_KEY);
@@ -82,7 +72,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
     public void onClose(Session session, CloseReason closeReason) {
         log.debug("Session closed: {}, {}", session.getId(), closeReason);
         WsSessionSubscriptions subscriptions = sessionSubscriptionCache.remove(session);
-        if(subscriptions != null) {
+        if (subscriptions != null) {
             subscriptions.close();
         }
     }
@@ -105,23 +95,25 @@ public class GraphQLWebsocketServlet extends Endpoint {
         sec.getUserProperties().put(HANDSHAKE_REQUEST_KEY, request);
 
         List<String> protocol = request.getHeaders().get(HandshakeRequest.SEC_WEBSOCKET_PROTOCOL);
-        if(protocol == null) {
+        if (protocol == null) {
             protocol = Collections.emptyList();
         }
 
         SubscriptionProtocolFactory subscriptionProtocolFactory = getSubscriptionProtocolFactory(protocol);
         sec.getUserProperties().put(PROTOCOL_HANDLER_REQUEST_KEY, subscriptionProtocolFactory.createHandler(subscriptionHandlerInput));
 
-        if(request.getHeaders().get(HandshakeResponse.SEC_WEBSOCKET_ACCEPT) != null) {
+        if (request.getHeaders().get(HandshakeResponse.SEC_WEBSOCKET_ACCEPT) != null) {
             response.getHeaders().put(HandshakeResponse.SEC_WEBSOCKET_ACCEPT, allSubscriptionProtocols);
         }
-        response.getHeaders().put(HandshakeRequest.SEC_WEBSOCKET_PROTOCOL, Collections.singletonList(subscriptionProtocolFactory.getProtocol()));
+        if (!protocol.isEmpty()) {
+            response.getHeaders().put(HandshakeRequest.SEC_WEBSOCKET_PROTOCOL, Collections.singletonList(subscriptionProtocolFactory.getProtocol()));
+        }
     }
 
     private static SubscriptionProtocolFactory getSubscriptionProtocolFactory(List<String> accept) {
-        for(String protocol: accept) {
-            for(SubscriptionProtocolFactory subscriptionProtocolFactory: subscriptionProtocolFactories) {
-                if(subscriptionProtocolFactory.getProtocol().equals(protocol)) {
+        for (String protocol : accept) {
+            for (SubscriptionProtocolFactory subscriptionProtocolFactory : subscriptionProtocolFactories) {
+                if (subscriptionProtocolFactory.getProtocol().equals(protocol)) {
                     return subscriptionProtocolFactory;
                 }
             }
