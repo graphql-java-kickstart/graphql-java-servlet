@@ -7,14 +7,15 @@ import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
-import org.osgi.service.component.annotations.*;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import static graphql.schema.GraphQLObjectType.newObject;
@@ -24,11 +25,15 @@ import static graphql.schema.GraphQLSchema.newSchema;
         service={javax.servlet.http.HttpServlet.class,javax.servlet.Servlet.class},
         property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"}
 )
-public class OsgiGraphQLServlet extends GraphQLServlet {
+public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
     private final List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
     private final List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
     private final List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
+
+    private final GraphQLQueryInvoker queryInvoker;
+    private final GraphQLInvocationInputFactory invocationInputFactory;
+    private final GraphQLObjectMapper graphQLObjectMapper;
 
     private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
     private GraphQLRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
@@ -38,6 +43,39 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
     private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
 
     private GraphQLSchemaProvider schemaProvider;
+
+    @Override
+    protected GraphQLQueryInvoker getQueryInvoker() {
+        return queryInvoker;
+    }
+
+    @Override
+    protected GraphQLInvocationInputFactory getInvocationInputFactory() {
+        return invocationInputFactory;
+    }
+
+    @Override
+    protected GraphQLObjectMapper getGraphQLObjectMapper() {
+        return graphQLObjectMapper;
+    }
+
+    public OsgiGraphQLHttpServlet() {
+        updateSchema();
+
+        this.queryInvoker = GraphQLQueryInvoker.newBuilder()
+            .withPreparsedDocumentProvider(this::getPreparsedDocumentProvider)
+            .withInstrumentation(() -> this.getInstrumentationProvider().getInstrumentation())
+            .withExecutionStrategyProvider(this::getExecutionStrategyProvider).build();
+
+        this.invocationInputFactory = GraphQLInvocationInputFactory.newBuilder(this::getSchemaProvider)
+            .withGraphQLContextBuilder(this::getContextBuilder)
+            .withGraphQLRootObjectBuilder(this::getRootObjectBuilder)
+            .build();
+
+        this.graphQLObjectMapper = GraphQLObjectMapper.newBuilder()
+            .withGraphQLErrorHandler(this::getErrorHandler)
+            .build();
+    }
 
     protected void updateSchema() {
         final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query").description("Root query type");
@@ -68,10 +106,6 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         }
 
         this.schemaProvider = new DefaultGraphQLSchemaProvider(newSchema().query(queryTypeBuilder.build()).mutation(mutationType).build(types));
-    }
-
-    public OsgiGraphQLServlet() {
-        updateSchema();
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
@@ -186,26 +220,22 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
         this.preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
     }
 
-    @Override
-    protected GraphQLSchemaProvider getSchemaProvider() {
-        return schemaProvider;
+    public GraphQLContextBuilder getContextBuilder() {
+        return contextBuilder;
     }
 
-    protected GraphQLContext createContext(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
-        return contextBuilder.build(req, resp);
+    public GraphQLRootObjectBuilder getRootObjectBuilder() {
+        return rootObjectBuilder;
     }
 
-    @Override
-    protected Object createRootObject(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
-        return rootObjectBuilder.build(request, response);
-    }
-
-    @Override
-    protected ExecutionStrategyProvider getExecutionStrategyProvider() {
+    public ExecutionStrategyProvider getExecutionStrategyProvider() {
         return executionStrategyProvider;
     }
 
-    @Override
+    public InstrumentationProvider getInstrumentationProvider() {
+        return instrumentationProvider;
+    }
+
     protected Instrumentation getInstrumentation(GraphQLContext context) {
         return context.getDataLoaderRegistry()
                 .map(registry -> {
@@ -219,13 +249,15 @@ public class OsgiGraphQLServlet extends GraphQLServlet {
                 .orElse(instrumentationProvider.getInstrumentation());
     }
 
-    @Override
-    protected GraphQLErrorHandler getGraphQLErrorHandler() {
+    public GraphQLErrorHandler getErrorHandler() {
         return errorHandler;
     }
 
-    @Override
-    protected PreparsedDocumentProvider getPreparsedDocumentProvider() {
+    public PreparsedDocumentProvider getPreparsedDocumentProvider() {
         return preparsedDocumentProvider;
+    }
+
+    public GraphQLSchemaProvider getSchemaProvider() {
+        return schemaProvider;
     }
 }

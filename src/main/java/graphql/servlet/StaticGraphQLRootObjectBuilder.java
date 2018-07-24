@@ -1,8 +1,7 @@
 package graphql.servlet;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Optional;
+import javax.websocket.server.HandshakeRequest;
 
 public class StaticGraphQLRootObjectBuilder implements GraphQLRootObjectBuilder {
 
@@ -13,7 +12,17 @@ public class StaticGraphQLRootObjectBuilder implements GraphQLRootObjectBuilder 
     }
 
     @Override
-    public Object build(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
+    public Object build(HttpServletRequest req) {
+        return rootObject;
+    }
+
+    @Override
+    public Object build(HandshakeRequest req) {
+        return rootObject;
+    }
+
+    @Override
+    public Object build() {
         return rootObject;
     }
 }

@@ -1,14 +1,22 @@
 package graphql.servlet;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Optional;
+import javax.websocket.server.HandshakeRequest;
 
 public class DefaultGraphQLContextBuilder implements GraphQLContextBuilder {
 
     @Override
-    public GraphQLContext build(Optional<HttpServletRequest> req, Optional<HttpServletResponse> resp) {
-        return new GraphQLContext(req, resp);
+    public GraphQLContext build(HttpServletRequest httpServletRequest) {
+        return new GraphQLContext(httpServletRequest);
     }
 
+    @Override
+    public GraphQLContext build(HandshakeRequest handshakeRequest) {
+        return new GraphQLContext(handshakeRequest);
+    }
+
+    @Override
+    public GraphQLContext build() {
+        return new GraphQLContext();
+    }
 }
