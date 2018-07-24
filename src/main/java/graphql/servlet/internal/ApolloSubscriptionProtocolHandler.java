@@ -7,6 +7,7 @@ import graphql.ExecutionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.websocket.CloseReason;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import java.io.IOException;
@@ -14,10 +15,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_COMPLETE;
+import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_CONNECTION_TERMINATE;
 import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_DATA;
 import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_ERROR;
 
 /**
+ * https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
+ *
  * @author Andrew Potter
  */
 public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandler {
@@ -57,6 +61,21 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
                     ))
                 );
                 break;
+
+            case GQL_STOP:
+                unsubscribe(subscriptions, message.id);
+                break;
+
+            case GQL_CONNECTION_TERMINATE:
+                try {
+                    session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "client requested " + GQL_CONNECTION_TERMINATE.getType()));
+                } catch (IOException e) {
+                    log.error("Unable to close websocket session!", e);
+                }
+                break;
+
+            default:
+                throw new IllegalArgumentException("Unknown message type: " + message.getType());
         }
     }
 

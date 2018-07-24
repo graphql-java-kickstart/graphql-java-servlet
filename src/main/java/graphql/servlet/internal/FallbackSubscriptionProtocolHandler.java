@@ -3,6 +3,7 @@ package graphql.servlet.internal;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * @author Andrew Potter
@@ -17,8 +18,16 @@ public class FallbackSubscriptionProtocolHandler extends SubscriptionProtocolHan
 
     @Override
     public void onMessage(HandshakeRequest request, Session session, WsSessionSubscriptions subscriptions, String text) throws Exception {
-        subscribe(session, input.getQueryInvoker().query(input.getInvocationInputFactory().create(
-                input.getGraphQLObjectMapper().readGraphQLRequest(text))), subscriptions, session.getId());
+        subscribe(
+            session,
+            input.getQueryInvoker().query(
+                input.getInvocationInputFactory().create(
+                    input.getGraphQLObjectMapper().readGraphQLRequest(text)
+                )
+            ),
+            subscriptions,
+            UUID.randomUUID().toString()
+        );
     }
 
     @Override

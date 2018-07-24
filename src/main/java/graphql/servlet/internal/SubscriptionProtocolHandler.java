@@ -33,7 +33,7 @@ public abstract class SubscriptionProtocolHandler {
 
         if (data instanceof Publisher) {
             @SuppressWarnings("unchecked") final Publisher<ExecutionResult> publisher = (Publisher<ExecutionResult>) data;
-            final AtomicReference<Subscription> subscriptionReference = new AtomicReference<>();
+            final AtomicSubscriptionReference subscriptionReference = new AtomicSubscriptionReference();
 
             publisher.subscribe(new Subscriber<ExecutionResult>() {
                 @Override
@@ -57,16 +57,39 @@ public abstract class SubscriptionProtocolHandler {
                     log.error("Subscription error", throwable);
                     subscriptions.cancel(id);
                     sendErrorMessage(session, id);
-//                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_ERROR, id);
                 }
 
                 @Override
                 public void onComplete() {
                     subscriptions.cancel(id);
                     sendCompleteMessage(session, id);
-//                    sendMessage(session, ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_COMPLETE, id);
                 }
             });
+        }
+    }
+
+    protected void unsubscribe(WsSessionSubscriptions subscriptions, String id) {
+        subscriptions.cancel(id);
+    }
+
+    static class AtomicSubscriptionReference {
+        private final AtomicReference<Subscription> reference = new AtomicReference<>(null);
+
+        public void set(Subscription subscription) {
+            if(reference.get() != null) {
+                throw new IllegalStateException("Cannot overwrite subscription!");
+            }
+
+            reference.set(subscription);
+        }
+
+        public Subscription get() {
+            Subscription subscription = reference.get();
+            if(subscription == null) {
+                throw new IllegalStateException("Subscription has not been initialized yet!");
+            }
+
+            return subscription;
         }
     }
 }
