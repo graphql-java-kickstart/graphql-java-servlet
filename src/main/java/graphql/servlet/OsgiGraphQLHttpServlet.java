@@ -236,19 +236,6 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         return instrumentationProvider;
     }
 
-    protected Instrumentation getInstrumentation(GraphQLContext context) {
-        return context.getDataLoaderRegistry()
-                .map(registry -> {
-                    List<Instrumentation> instrumentations = new ArrayList<>();
-                    instrumentations.add(this.instrumentationProvider.getInstrumentation());
-                    instrumentations.add(new DataLoaderDispatcherInstrumentation(registry));
-
-                    return new ChainedInstrumentation(instrumentations);
-                })
-                .map(Instrumentation.class::cast)
-                .orElse(instrumentationProvider.getInstrumentation());
-    }
-
     public GraphQLErrorHandler getErrorHandler() {
         return errorHandler;
     }

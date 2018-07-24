@@ -3,8 +3,10 @@ package graphql.servlet;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
+import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.SimpleInstrumentation;
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
@@ -13,7 +15,9 @@ import graphql.servlet.internal.ExecutionResultHandler;
 import javax.security.auth.Subject;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -44,15 +48,30 @@ public class GraphQLQueryInvoker {
         }
     }
 
-    private GraphQL newGraphQL(GraphQLSchema schema) {
+    private GraphQL newGraphQL(GraphQLSchema schema, Object context) {
         ExecutionStrategyProvider executionStrategyProvider = getExecutionStrategyProvider.get();
         return GraphQL.newGraphQL(schema)
             .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
             .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
             .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
-            .instrumentation(getInstrumentation.get())
+            .instrumentation(getInstrumentation(context))
             .preparsedDocumentProvider(getPreparsedDocumentProvider.get())
             .build();
+    }
+
+    protected Instrumentation getInstrumentation(Object context) {
+        if (context instanceof GraphQLContext) {
+            return ((GraphQLContext) context).getDataLoaderRegistry()
+                    .map(registry -> {
+                        List<Instrumentation> instrumentations = new ArrayList<>();
+                        instrumentations.add(getInstrumentation.get());
+                        instrumentations.add(new DataLoaderDispatcherInstrumentation(registry));
+                        return new ChainedInstrumentation(instrumentations);
+                    })
+                    .map(Instrumentation.class::cast)
+                    .orElse(getInstrumentation.get());
+        }
+        return getInstrumentation.get();
     }
 
     private ExecutionResult query(GraphQLInvocationInput invocationInput, ExecutionInput executionInput) {
@@ -70,7 +89,7 @@ public class GraphQLQueryInvoker {
     }
 
     private ExecutionResult query(GraphQLSchema schema, ExecutionInput executionInput) {
-        return newGraphQL(schema).execute(executionInput);
+        return newGraphQL(schema, executionInput.getContext()).execute(executionInput);
     }
 
     public static Builder newBuilder() {

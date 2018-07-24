@@ -2,6 +2,7 @@ package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
+import graphql.analysis.QueryVisitorInlineFragmentEnvironment
 import graphql.execution.ExecutionTypeInfo
 import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.Instrumentation
@@ -44,7 +45,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                       DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
-        return SimpleGraphQLHttpServlet.newBuilder(createGraphQlSchema(queryDataFetcher, mutationDataFetcher))
+        return SimpleGraphQLHttpServlet.newBuilder(createGraphQlSchema(queryDataFetcher, mutationDataFetcher)).build()
     }
 
     def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
@@ -866,13 +867,13 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
         setup:
             Instrumentation expectedInstrumentation = Mock()
-            GraphQLContext context = new GraphQLContext(Optional.of(request), Optional.of(response))
-            SimpleGraphQLServlet simpleGraphQLServlet = SimpleGraphQLServlet
-                    .builder(createGraphQlSchema())
-                    .withInstrumentation(expectedInstrumentation)
-                    .build();
+            GraphQLContext context = new GraphQLContext(request, null, null)
+            SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
+                    .newBuilder(createGraphQlSchema())
+                    .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(expectedInstrumentation).build())
+                    .build()
         when:
-            Instrumentation actualInstrumentation = simpleGraphQLServlet.getInstrumentation(context)
+            Instrumentation actualInstrumentation = simpleGraphQLServlet.getQueryInvoker().getInstrumentation(context)
         then:
         actualInstrumentation == expectedInstrumentation;
         ! (actualInstrumentation instanceof ChainedInstrumentation)
@@ -883,15 +884,15 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
         setup:
             Instrumentation servletInstrumentation = Mock()
-            GraphQLContext context = new GraphQLContext(Optional.of(request), Optional.of(response))
+            GraphQLContext context = new GraphQLContext(request, null, null)
             DataLoaderRegistry dlr = Mock()
-            context.setDataLoaderRegistry(Optional.of(dlr))
-            SimpleGraphQLServlet simpleGraphQLServlet = SimpleGraphQLServlet
-                    .builder(createGraphQlSchema())
-                    .withInstrumentation(servletInstrumentation)
+            context.setDataLoaderRegistry(dlr)
+            SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
+                    .newBuilder(createGraphQlSchema())
+                    .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(servletInstrumentation).build())
                     .build();
         when:
-            Instrumentation actualInstrumentation = simpleGraphQLServlet.getInstrumentation(context)
+            Instrumentation actualInstrumentation = simpleGraphQLServlet.getQueryInvoker().getInstrumentation(context)
         then:
             actualInstrumentation instanceof ChainedInstrumentation
             actualInstrumentation != servletInstrumentation
