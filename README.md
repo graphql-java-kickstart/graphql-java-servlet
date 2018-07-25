@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/graphql-java/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/graphql-java/graphql-java-servlet)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet)
+[![Maven Central](https://img.shields.io/maven-central/v/com.graphql-java/graphql-java-servlet.svg)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet)
 [![Chat on Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/graphql-java/graphql-java)
 
 # GraphQL Servlet
@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.graphql-java:graphql-java-servlet:5.1.0'
+    compile 'com.graphql-java:graphql-java-servlet:6.0.0'
 }
 ```
 
@@ -24,7 +24,7 @@ dependencies {
 <dependency>
     <groupId>com.graphql-java</groupId>
     <artifactId>graphql-java-servlet</artifactId>
-    <version>5.1.0</version>
+    <version>6.0.0</version>
 </dependency>
 ```
 
