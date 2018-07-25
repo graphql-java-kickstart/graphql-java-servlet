@@ -1,5 +1,7 @@
 package graphql.servlet;
 
+import org.dataloader.DataLoaderRegistry;
+
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Part;
@@ -14,6 +16,8 @@ public class GraphQLContext {
 
     private Subject subject;
     private Map<String, List<Part>> files;
+
+    private DataLoaderRegistry dataLoaderRegistry;
 
     public GraphQLContext(HttpServletRequest httpServletRequest, HandshakeRequest handshakeRequest, Subject subject) {
         this.httpServletRequest = httpServletRequest;
@@ -51,5 +55,13 @@ public class GraphQLContext {
 
     public void setFiles(Map<String, List<Part>> files) {
         this.files = files;
+    }
+
+    public Optional<DataLoaderRegistry> getDataLoaderRegistry() {
+        return Optional.ofNullable(dataLoaderRegistry);
+    }
+
+    public void setDataLoaderRegistry(DataLoaderRegistry dataLoaderRegistry) {
+        this.dataLoaderRegistry = dataLoaderRegistry;
     }
 }
