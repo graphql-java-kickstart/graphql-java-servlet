@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 public interface GraphQLSchemaProvider {
 
     static GraphQLSchema copyReadOnly(GraphQLSchema schema) {
-        return GraphQLSchema.newSchema().query(schema.getQueryType()).build(schema.getAdditionalTypes());
+        return GraphQLSchema.newSchema().query(schema.getQueryType()).subscription(schema.getSubscriptionType()).build(schema.getAdditionalTypes());
     }
 
     /**

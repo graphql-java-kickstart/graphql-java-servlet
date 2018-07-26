@@ -2,6 +2,7 @@ package graphql.servlet;
 
 import graphql.execution.AsyncExecutionStrategy;
 import graphql.execution.ExecutionStrategy;
+import graphql.execution.SubscriptionExecutionStrategy;
 
 /**
  * @author Andrew Potter
@@ -21,13 +22,9 @@ public class DefaultExecutionStrategyProvider implements ExecutionStrategyProvid
     }
 
     public DefaultExecutionStrategyProvider(ExecutionStrategy queryExecutionStrategy, ExecutionStrategy mutationExecutionStrategy, ExecutionStrategy subscriptionExecutionStrategy) {
-        this.queryExecutionStrategy = defaultIfNull(queryExecutionStrategy);
+        this.queryExecutionStrategy = defaultIfNull(queryExecutionStrategy, new AsyncExecutionStrategy());
         this.mutationExecutionStrategy = defaultIfNull(mutationExecutionStrategy, this.queryExecutionStrategy);
-        this.subscriptionExecutionStrategy = defaultIfNull(subscriptionExecutionStrategy, this.queryExecutionStrategy);
-    }
-
-    private ExecutionStrategy defaultIfNull(ExecutionStrategy executionStrategy) {
-        return defaultIfNull(executionStrategy, new AsyncExecutionStrategy());
+        this.subscriptionExecutionStrategy = defaultIfNull(subscriptionExecutionStrategy, new SubscriptionExecutionStrategy());
     }
 
     private ExecutionStrategy defaultIfNull(ExecutionStrategy executionStrategy, ExecutionStrategy defaultStrategy) {

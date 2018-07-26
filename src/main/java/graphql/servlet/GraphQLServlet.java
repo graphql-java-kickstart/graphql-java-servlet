@@ -2,11 +2,7 @@ package graphql.servlet;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.InjectableValues;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
@@ -21,31 +17,22 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
+import javax.servlet.*;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
+import java.io.*;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -299,9 +286,20 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
     private void doQuery(String query, String operationName, Map<String, Object> variables, GraphQLSchema schema, GraphQLContext context, Object rootObject, HttpServletRequest req, HttpServletResponse resp) throws Exception {
         query(query, operationName, variables, schema, context, rootObject, (r) -> {
-            resp.setContentType(APPLICATION_JSON_UTF8);
-            resp.setStatus(r.getStatus());
-            resp.getWriter().write(r.getResponse());
+            if (r.getPublisher() != null) {
+                resp.setContentType("text/event-stream");
+                resp.setCharacterEncoding("UTF-8");
+
+                AtomicReference<Subscription> subscriptionRef = new AtomicReference<>();
+                final AsyncContext ac = req.startAsync();
+                ac.setTimeout(60 * 1000);
+                ac.addListener(new SubscriptionAsyncListener(subscriptionRef));
+                r.getPublisher().subscribe(new ExecutionResultSubscriber(subscriptionRef, ac));
+            } else {
+                resp.setContentType(APPLICATION_JSON_UTF8);
+                resp.setStatus(r.getStatus());
+                resp.getWriter().write(r.getResponse());
+            }
         });
     }
 
@@ -346,6 +344,9 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
             GraphQLResponse graphQLResponse = new GraphQLResponse();
             graphQLResponse.setStatus(STATUS_OK);
             graphQLResponse.setResponse(response);
+            if (data instanceof Publisher) {
+                graphQLResponse.setPublisher((Publisher<ExecutionResult>) data);
+            }
             responseHandler.handle(graphQLResponse);
 
             if(getGraphQLErrorHandler().errorsPresent(errors)) {
@@ -513,6 +514,7 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
     protected static class GraphQLResponse {
         private int status;
         private String response;
+        private Publisher<ExecutionResult> publisher;
 
         public int getStatus() {
             return status;
@@ -528,6 +530,14 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
 
         public void setResponse(String response) {
             this.response = response;
+        }
+
+        public Publisher<ExecutionResult> getPublisher() {
+            return publisher;
+        }
+
+        public void setPublisher(Publisher<ExecutionResult> publisher) {
+            this.publisher = publisher;
         }
     }
 
@@ -555,5 +565,72 @@ public abstract class GraphQLServlet extends HttpServlet implements Servlet, Gra
         }
 
         void handle(GraphQLResponse r) throws Exception;
+    }
+
+    private static class SubscriptionAsyncListener implements AsyncListener {
+        private final AtomicReference<Subscription> subscriptionRef;
+
+        public SubscriptionAsyncListener(AtomicReference<Subscription> subscriptionRef) {
+            this.subscriptionRef = subscriptionRef;
+        }
+
+        @Override public void onComplete(AsyncEvent event) throws IOException {
+            log.debug("GraphQLServlet.onComplete");
+            subscriptionRef.get().cancel();
+        }
+
+        @Override public void onTimeout(AsyncEvent event) throws IOException {
+            log.debug("GraphQLServlet.onTimeout");
+            subscriptionRef.get().cancel();
+        }
+
+        @Override public void onError(AsyncEvent event) throws IOException {
+            log.debug("GraphQLServlet.onError");
+            subscriptionRef.get().cancel();
+        }
+
+        @Override public void onStartAsync(AsyncEvent event) throws IOException {
+
+        }
+    }
+
+    private class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
+        private final AtomicReference<Subscription> subscriptionRef;
+        private final AsyncContext ac;
+
+        public ExecutionResultSubscriber(AtomicReference<Subscription> subscriptionRef, AsyncContext ac) {
+            this.subscriptionRef = subscriptionRef;
+            this.ac = ac;
+        }
+
+        @Override
+        public void onSubscribe(Subscription subscription) {
+            subscription.request(1);
+            subscriptionRef.set(subscription);
+        }
+
+        @Override
+        public void onNext(ExecutionResult executionResult) {
+            try {
+                final String response = getMapper().writeValueAsString(createResultFromDataErrorsAndExtensions(executionResult.getData(), executionResult.getErrors(), executionResult.getExtensions()));
+                log.debug("Next response : " + response);
+                PrintWriter writer = ac.getResponse().getWriter();
+                writer.write("data: " + response + "\n\n");
+                writer.flush();
+                subscriptionRef.get().request(1);
+            } catch (IOException e) {
+                ac.complete();
+            }
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            ac.complete();
+        }
+
+        @Override
+        public void onComplete() {
+            ac.complete();
+        }
     }
 }
