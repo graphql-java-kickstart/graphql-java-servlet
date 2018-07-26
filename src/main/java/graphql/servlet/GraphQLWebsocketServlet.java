@@ -10,8 +10,10 @@ import javax.websocket.server.ServerEndpointConfig;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +29,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
     private static final String HANDSHAKE_REQUEST_KEY = HandshakeRequest.class.getName();
     private static final String PROTOCOL_HANDLER_REQUEST_KEY = SubscriptionProtocolHandler.class.getName();
     private static final CloseReason ERROR_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Internal Server Error");
+    private static final CloseReason SHUTDOWN_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Server Shut Down");
 
     private static final List<SubscriptionProtocolFactory> subscriptionProtocolFactories = Collections.singletonList(new ApolloSubscriptionProtocolFactory());
     private static final SubscriptionProtocolFactory fallbackSubscriptionProtocolFactory = new FallbackSubscriptionProtocolFactory();
@@ -40,6 +43,9 @@ public class GraphQLWebsocketServlet extends Endpoint {
 
     private final Map<Session, WsSessionSubscriptions> sessionSubscriptionCache = new HashMap<>();
     private final SubscriptionHandlerInput subscriptionHandlerInput;
+    private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
+    private final AtomicBoolean isShutDown = new AtomicBoolean(false);
+    private final Object cacheLock = new Object();
 
     public GraphQLWebsocketServlet(GraphQLQueryInvoker queryInvoker, GraphQLInvocationInputFactory invocationInputFactory, GraphQLObjectMapper graphQLObjectMapper) {
         this.subscriptionHandlerInput = new SubscriptionHandlerInput(invocationInputFactory, queryInvoker, graphQLObjectMapper);
@@ -47,12 +53,19 @@ public class GraphQLWebsocketServlet extends Endpoint {
 
     @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
-        log.debug("Session opened: {}, {}", session.getId(), endpointConfig);
         final WsSessionSubscriptions subscriptions = new WsSessionSubscriptions();
         final HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HANDSHAKE_REQUEST_KEY);
         final SubscriptionProtocolHandler subscriptionProtocolHandler = (SubscriptionProtocolHandler) session.getUserProperties().get(PROTOCOL_HANDLER_REQUEST_KEY);
 
-        sessionSubscriptionCache.put(session, subscriptions);
+        synchronized (cacheLock) {
+            if (isShuttingDown.get()) {
+                throw new IllegalStateException("Server is shutting down!");
+            }
+
+            sessionSubscriptionCache.put(session, subscriptions);
+        }
+
+        log.debug("Session opened: {}, {}", session.getId(), endpointConfig);
 
         // This *cannot* be a lambda because of the way undertow checks the class...
         session.addMessageHandler(new MessageHandler.Whole<String>() {
@@ -71,7 +84,10 @@ public class GraphQLWebsocketServlet extends Endpoint {
     @Override
     public void onClose(Session session, CloseReason closeReason) {
         log.debug("Session closed: {}, {}", session.getId(), closeReason);
-        WsSessionSubscriptions subscriptions = sessionSubscriptionCache.remove(session);
+        WsSessionSubscriptions subscriptions;
+        synchronized (cacheLock) {
+            subscriptions = sessionSubscriptionCache.remove(session);
+        }
         if (subscriptions != null) {
             subscriptions.close();
         }
@@ -108,6 +124,42 @@ public class GraphQLWebsocketServlet extends Endpoint {
         if (!protocol.isEmpty()) {
             response.getHeaders().put(HandshakeRequest.SEC_WEBSOCKET_PROTOCOL, Collections.singletonList(subscriptionProtocolFactory.getProtocol()));
         }
+    }
+
+    /**
+     * Stops accepting connections and closes all existing connections
+     */
+    public void beginShutDown() {
+        synchronized (cacheLock) {
+            isShuttingDown.set(true);
+            Map<Session, WsSessionSubscriptions> copy = new HashMap<>(sessionSubscriptionCache);
+
+            // Prevent comodification exception since #onClose() is called during session.close(), but we can't necessarily rely on that happening so we close subscriptions here anyway.
+            copy.forEach((session, wsSessionSubscriptions) -> {
+                wsSessionSubscriptions.close();
+                try {
+                    session.close(SHUTDOWN_CLOSE_REASON);
+                } catch (IOException e) {
+                    log.error("Error closing websocket session!", e);
+                }
+            });
+
+            copy.clear();
+
+            if(!sessionSubscriptionCache.isEmpty()) {
+                log.error("GraphQLWebsocketServlet did not shut down cleanly!");
+                sessionSubscriptionCache.clear();
+            }
+        }
+
+        isShutDown.set(true);
+    }
+
+    /**
+     * @return true when shutdown is complete
+     */
+    public boolean isShutDown() {
+        return isShutDown.get();
     }
 
     private static SubscriptionProtocolFactory getSubscriptionProtocolFactory(List<String> accept) {

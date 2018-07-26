@@ -27,6 +27,7 @@ import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.Operati
 public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApolloSubscriptionProtocolHandler.class);
+    private static final CloseReason TERMINATE_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "client requested " + GQL_CONNECTION_TERMINATE.getType());
 
     private final SubscriptionHandlerInput input;
 
@@ -68,9 +69,9 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
 
             case GQL_CONNECTION_TERMINATE:
                 try {
-                    session.close(new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "client requested " + GQL_CONNECTION_TERMINATE.getType()));
+                    session.close(TERMINATE_CLOSE_REASON);
                 } catch (IOException e) {
-                    log.error("Unable to close websocket session!", e);
+                    log.error("Error closing websocket session!", e);
                 }
                 break;
 
