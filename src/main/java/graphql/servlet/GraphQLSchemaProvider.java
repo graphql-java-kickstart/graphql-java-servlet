@@ -8,7 +8,10 @@ import javax.websocket.server.HandshakeRequest;
 public interface GraphQLSchemaProvider {
 
     static GraphQLSchema copyReadOnly(GraphQLSchema schema) {
-        return GraphQLSchema.newSchema().query(schema.getQueryType()).build(schema.getAdditionalTypes());
+        return GraphQLSchema.newSchema()
+                .query(schema.getQueryType())
+                .subscription(schema.getSubscriptionType())
+                .build(schema.getAdditionalTypes());
     }
 
     /**
@@ -33,4 +36,5 @@ public interface GraphQLSchemaProvider {
      * @return a read-only schema based on the request (auth, etc).  Should return the same schema (query-only version) as {@link #getSchema(HttpServletRequest)} for a given request.
      */
     GraphQLSchema getReadOnlySchema(HttpServletRequest request);
+
 }

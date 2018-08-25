@@ -2,6 +2,8 @@ package graphql.servlet;
 
 import graphql.schema.GraphQLSchema;
 
+import java.util.List;
+
 /**
  * @author Andrew Potter
  */
@@ -11,8 +13,8 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     private final GraphQLQueryInvoker queryInvoker;
     private final GraphQLObjectMapper graphQLObjectMapper;
 
-    private SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, boolean asyncServletMode) {
-        super(null, asyncServletMode);
+    private SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners, boolean asyncServletMode) {
+        super(listeners, asyncServletMode);
         this.invocationInputFactory = invocationInputFactory;
         this.queryInvoker = queryInvoker;
         this.graphQLObjectMapper = graphQLObjectMapper;
@@ -49,6 +51,7 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         private final GraphQLInvocationInputFactory invocationInputFactory;
         private GraphQLQueryInvoker queryInvoker = GraphQLQueryInvoker.newBuilder().build();
         private GraphQLObjectMapper graphQLObjectMapper = GraphQLObjectMapper.newBuilder().build();
+        private List<GraphQLServletListener> listeners;
         private boolean asyncServletMode;
 
         Builder(GraphQLInvocationInputFactory invocationInputFactory) {
@@ -70,8 +73,13 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
             return this;
         }
 
+        public Builder withListeners(List<GraphQLServletListener> listeners) {
+            this.listeners = listeners;
+            return this;
+        }
+
         public SimpleGraphQLHttpServlet build() {
-            return new SimpleGraphQLHttpServlet(invocationInputFactory, queryInvoker, graphQLObjectMapper, asyncServletMode);
+            return new SimpleGraphQLHttpServlet(invocationInputFactory, queryInvoker, graphQLObjectMapper, listeners, asyncServletMode);
         }
     }
 }
