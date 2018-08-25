@@ -25,13 +25,13 @@ import java.util.function.Supplier;
  * @author Andrew Potter
  */
 public class GraphQLObjectMapper {
-    private final Supplier<ObjectMapperConfigurer> objectMapperConfigurerSupplier;
+    private final ObjectMapperProvider objectMapperProvider;
     private final Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier;
 
     private volatile ObjectMapper mapper;
 
-    protected GraphQLObjectMapper(Supplier<ObjectMapperConfigurer> objectMapperConfigurerSupplier, Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier) {
-        this.objectMapperConfigurerSupplier = objectMapperConfigurerSupplier;
+    protected GraphQLObjectMapper(ObjectMapperProvider objectMapperProvider, Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier) {
+        this.objectMapperProvider = objectMapperProvider;
         this.graphQLErrorHandlerSupplier = graphQLErrorHandlerSupplier;
     }
 
@@ -42,22 +42,11 @@ public class GraphQLObjectMapper {
             synchronized(this) {
                 result = mapper;
                 if (result == null) // Second check (with locking)
-                    mapper = result = createObjectMapper();
+                    mapper = result = objectMapperProvider.provide();
             }
         }
 
         return result;
-    }
-
-    private ObjectMapper createObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS).registerModule(new Jdk8Module());
-        objectMapperConfigurerSupplier.get().configure(mapper);
-
-        InjectableValues.Std injectableValues = new InjectableValues.Std();
-        injectableValues.addValue(ObjectMapper.class, mapper);
-        mapper.setInjectableValues(injectableValues);
-
-        return mapper;
     }
 
     /**
@@ -163,7 +152,7 @@ public class GraphQLObjectMapper {
     }
 
     public static class Builder {
-        private Supplier<ObjectMapperConfigurer> objectMapperConfigurer = DefaultObjectMapperConfigurer::new;
+        private ObjectMapperProvider objectMapperProvider = new ConfiguringObjectMapperProvider();
         private Supplier<GraphQLErrorHandler> graphQLErrorHandler = DefaultGraphQLErrorHandler::new;
 
         public Builder withObjectMapperConfigurer(ObjectMapperConfigurer objectMapperConfigurer) {
@@ -171,7 +160,12 @@ public class GraphQLObjectMapper {
         }
 
         public Builder withObjectMapperConfigurer(Supplier<ObjectMapperConfigurer> objectMapperConfigurer) {
-            this.objectMapperConfigurer = objectMapperConfigurer;
+            this.objectMapperProvider = new ConfiguringObjectMapperProvider(objectMapperConfigurer.get());
+            return this;
+        }
+
+        public Builder withObjectMapperProvider(ObjectMapperProvider objectMapperProvider) {
+            this.objectMapperProvider = objectMapperProvider;
             return this;
         }
 
@@ -185,7 +179,7 @@ public class GraphQLObjectMapper {
         }
 
         public GraphQLObjectMapper build() {
-            return new GraphQLObjectMapper(objectMapperConfigurer, graphQLErrorHandler);
+            return new GraphQLObjectMapper(objectMapperProvider, graphQLErrorHandler);
         }
     }
 }
