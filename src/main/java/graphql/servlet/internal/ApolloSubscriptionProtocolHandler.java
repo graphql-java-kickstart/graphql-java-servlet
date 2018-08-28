@@ -58,7 +58,8 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
                     subscriptions,
                     message.id,
                     input.getQueryInvoker().query(input.getInvocationInputFactory().create(
-                        input.getGraphQLObjectMapper().getJacksonMapper().convertValue(message.payload, GraphQLRequest.class)
+                        input.getGraphQLObjectMapper().getJacksonMapper().convertValue(message.payload, GraphQLRequest.class),
+                        (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName())
                     ))
                 );
                 break;
