@@ -6,6 +6,7 @@ import graphql.ExecutionResult;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.servlet.internal.GraphQLRequest;
+import graphql.servlet.internal.VariableMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +17,18 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -109,7 +120,37 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                                     Collections::singletonList,
                                     (l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList())));
 
-                    if (fileItems.containsKey("graphql")) {
+                    if(fileItems.containsKey("operations")) {
+                        final Optional<Part> queryItem = getFileItem(fileItems, "operations");
+                        if (queryItem.isPresent()) {
+                            InputStream inputStream = queryItem.get().getInputStream();
+
+                            if (!inputStream.markSupported()) {
+                                inputStream = new BufferedInputStream(inputStream);
+                            }
+
+                            final Optional<Map<String, List<String>>> variablesMap =
+                                getFileItem(fileItems, "map")
+                                    .map(graphQLObjectMapper::deserializeMultipartMap);
+
+                            if (isBatchedQuery(inputStream)) {
+                                List<GraphQLRequest> graphQLRequests = graphQLObjectMapper.readBatchedGraphQLRequest(inputStream);
+                                variablesMap.ifPresent(map -> graphQLRequests.forEach(r -> mapMultipartVariables(r, map, fileItems)));
+                                GraphQLBatchedInvocationInput invocationInput = invocationInputFactory.create(graphQLRequests, request);
+                                invocationInput.getContext().setFiles(fileItems);
+                                queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
+                                return;
+                            } else {
+                                GraphQLRequest graphQLRequest = graphQLObjectMapper.readGraphQLRequest(inputStream);
+                                variablesMap.ifPresent(m -> mapMultipartVariables(graphQLRequest, m, fileItems));
+                                GraphQLSingleInvocationInput invocationInput =
+                                    invocationInputFactory.create(graphQLRequest, request);
+                                invocationInput.getContext().setFiles(fileItems);
+                                query(queryInvoker, graphQLObjectMapper, invocationInput, response);
+                                return;
+                            }
+                        }
+                    } else if (fileItems.containsKey("graphql")) {
                         final Optional<Part> graphqlItem = getFileItem(fileItems, "graphql");
                         if (graphqlItem.isPresent()) {
                             InputStream inputStream = graphqlItem.get().getInputStream();
@@ -188,6 +229,22 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                 response.setStatus(STATUS_BAD_REQUEST);
             }
         };
+    }
+
+    private void mapMultipartVariables(GraphQLRequest request,
+                                       Map<String, List<String>> variablesMap,
+                                       Map<String, List<Part>> fileItems)
+    {
+        Map<String, Object> variables = request.getVariables();
+
+        variablesMap.forEach((partName, objectPaths) -> {
+            Part part = getFileItem(fileItems, partName)
+                            .orElseThrow(() -> new RuntimeException("unable to find part name " +
+                                                                    partName +
+                                                                    " as referenced in the variables map"));
+
+            objectPaths.forEach(objectPath -> VariableMapper.mapVariable(objectPath, variables, part));
+        });
     }
 
     public void addListener(GraphQLServletListener servletListener) {

@@ -459,6 +459,118 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getResponseContent().data.echo == "test"
     }
 
+    def "query over HTTP POST multipart named 'operations' returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '{"query": "query { echo(arg:\\"test\\") }"}'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+    }
+
+    def "query over HTTP POST multipart named 'operations' with operationName returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '{"query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "two"}'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echoOne == null
+        getResponseContent().data.echoTwo == "test-two"
+    }
+
+    def "query over HTTP POST multipart named 'operations' with empty non-null operationName returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '{"query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+    }
+
+    def "query over HTTP POST multipart named 'operations' with variables returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '{"query": "query Echo($arg: String) { echo(arg:$arg) }", "variables": {"arg": "test"} }'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+    }
+
+    def "query over HTTP POST multipart named 'operations' with unknown property 'test' returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '{\"query\": \"query { echo(arg:\\"test\\") }\"}'))
+        request.addPart(TestMultipartContentBuilder.createPart('test', 'test'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echo == "test"
+    }
+
+    def "query over HTTP POST multipart named 'operations' will interpolate variables from map"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '{"query": "mutation test($file: Upload!) { echoFile(file: $file) }", "variables": { "file": null }}'))
+        request.addPart(TestMultipartContentBuilder.createPart('map', '{"0": ["variables.file"]}'))
+        request.addPart(TestMultipartContentBuilder.createPart('0', 'test'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echoFile == "test"
+    }
+
+    def "query over HTTP POST multipart named 'operations' will interpolate variable list from map"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '{"query": "mutation test($files: [Upload!]!) { echoFiles(files: $files) }", "variables": { "files": [null, null] }}'))
+        request.addPart(TestMultipartContentBuilder.createPart('map', '{"0": ["variables.files.0"], "1": ["variables.files.1"]}'))
+        request.addPart(TestMultipartContentBuilder.createPart('0', 'test'))
+        request.addPart(TestMultipartContentBuilder.createPart('1', 'test again'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getResponseContent().data.echoFiles == ["test", "test again"]
+    }
+
     def "batched query over HTTP POST body returns data"() {
         setup:
         request.setContent('[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]'.bytes)
@@ -636,6 +748,90 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         request.setContentType("multipart/form-data, boundary=test")
         request.setMethod("POST")
         request.addPart(TestMultipartContentBuilder.createPart('query', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
+    }
+
+    def "batched query over HTTP POST multipart named 'operations' returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
+    }
+
+    def "batched query over HTTP POST multipart named 'operations' with unknown property 'test' returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
+    }
+
+    def "batched query over HTTP POST multipart named 'operations' with operationName returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '[{ "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "one" }, { "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "two" }]'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echoOne == "test-one"
+        getBatchedResponseContent()[0].data.echoTwo == null
+        getBatchedResponseContent()[1].data.echoOne == null
+        getBatchedResponseContent()[1].data.echoTwo == "test-two"
+    }
+
+    def "batched query over HTTP POST multipart named 'operations' with empty non-null operationName returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '[{ "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }, { "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }]'))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
+    }
+
+    def "batched query over HTTP POST multipart named 'operations' with variables returns data"() {
+        setup:
+        request.setContentType("multipart/form-data, boundary=test")
+        request.setMethod("POST")
+        request.addPart(TestMultipartContentBuilder.createPart('operations', '[{ "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }, { "query": "query echo($arg: String) { echo(arg:$arg) }", "variables": { "arg": "test" } }]'))
 
         when:
         servlet.doPost(request, response)
