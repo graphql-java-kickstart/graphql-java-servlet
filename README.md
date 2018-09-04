@@ -186,3 +186,61 @@ And here is a sample src/main/feature/feature.xml file to add some dependencies 
 Here's an example of a GraphQL provider that implements three interfaces at the same time.
 
 * [ExampleGraphQLProvider](examples/osgi/providers/src/main/java/graphql/servlet/examples/osgi/ExampleGraphQLProvider.java)
+
+## Request-scoped DataLoaders
+
+It is possible to use dataloaders in a request scope by customizing [GraphQLContextBuilder](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLContextBuilder.java).
+And instantiating a new [DataLoaderRegistry](https://github.com/graphql-java/java-dataloader/blob/master/src/main/java/org/dataloader/DataLoaderRegistry.java) for each GraphQLContext.
+For eg:
+```java
+public class CustomGraphQLContextBuilder implements GraphQLContextBuilder {
+
+    private final DataLoader userDataLoader;
+
+    public CustomGraphQLContextBuilder(DataLoader userDataLoader) {
+        this.userDataLoader = userDataLoader;
+    }
+
+    @Override
+    public GraphQLContext build(HttpServletRequest req) {
+        GraphQLContext context = new GraphQLContext(req);
+        context.setDataLoaderRegistry(buildDataLoaderRegistry());
+
+        return context;
+    }
+
+    @Override
+    public GraphQLContext build() {
+        GraphQLContext context = new GraphQLContext();
+        context.setDataLoaderRegistry(buildDataLoaderRegistry());
+
+        return context;
+    }
+
+    @Override
+    public GraphQLContext build(HandshakeRequest request) {
+        GraphQLContext context = new GraphQLContext(request);
+        context.setDataLoaderRegistry(buildDataLoaderRegistry());
+
+        return context;
+    }
+
+    private DataLoaderRegistry buildDataLoaderRegistry() {
+        DataLoaderRegistry dataLoaderRegistry = new DataLoaderRegistry();
+        dataLoaderRegistry.register("userDataLoader", userDataLoader);
+        return dataLoaderRegistry;
+    }
+}
+
+```
+ It is then possible to access the [DataLoader](https://github.com/graphql-java/java-dataloader/blob/master/src/main/java/org/dataloader/DataLoader.java) in the resolvers by accessing the [DataLoaderRegistry] from context. For eg:
+ ```java
+ public CompletableFuture<String> getEmailAddress(User user, DataFetchingEnvironment dfe) { // User is the graphQL type
+         final DataLoader<String, UserDetail> userDataloader =
+                dfe.getContext().getDataLoaderRegistry().get().getDataLoader("userDataLoader"); // UserDetail is the data that is loaded
+
+         return userDataloader.load(User.getName())
+                 .thenApply(userDetail -> userDetail != null ? userDetail.getEmailAddress() : null);
+     }
+
+ ```
