@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author Andrew Potter
@@ -48,6 +48,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     public static final int STATUS_BAD_REQUEST = 400;
 
     private static final GraphQLRequest INTROSPECTION_REQUEST = new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), null);
+    private static final String[] MULTIPART_KEYS = new String[]{"operations", "graphql", "query"};
 
     protected abstract GraphQLQueryInvoker getQueryInvoker();
 
@@ -114,109 +115,58 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                     String query = CharStreams.toString(request.getReader());
                     query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(new GraphQLRequest(query, null, null)), response);
                 } else if (request.getContentType() != null && request.getContentType().startsWith("multipart/form-data") && !request.getParts().isEmpty()) {
-                    final Map<String, List<Part>> fileItems = request.getParts().stream()
-                            .collect(Collectors.toMap(
-                                    Part::getName,
-                                    Collections::singletonList,
-                                    (l1, l2) -> Stream.concat(l1.stream(), l2.stream()).collect(Collectors.toList())));
+                    final Map<String, List<Part>> fileItems = request.getParts()
+                                                                     .stream()
+                                                                     .collect(Collectors.groupingBy(Part::getName));
 
-                    if(fileItems.containsKey("operations")) {
-                        final Optional<Part> queryItem = getFileItem(fileItems, "operations");
-                        if (queryItem.isPresent()) {
-                            InputStream inputStream = queryItem.get().getInputStream();
-
-                            if (!inputStream.markSupported()) {
-                                inputStream = new BufferedInputStream(inputStream);
-                            }
-
-                            final Optional<Map<String, List<String>>> variablesMap =
-                                getFileItem(fileItems, "map")
-                                    .map(graphQLObjectMapper::deserializeMultipartMap);
-
-                            if (isBatchedQuery(inputStream)) {
-                                List<GraphQLRequest> graphQLRequests = graphQLObjectMapper.readBatchedGraphQLRequest(inputStream);
-                                variablesMap.ifPresent(map -> graphQLRequests.forEach(r -> mapMultipartVariables(r, map, fileItems)));
-                                GraphQLBatchedInvocationInput invocationInput = invocationInputFactory.create(graphQLRequests, request);
-                                invocationInput.getContext().setFiles(fileItems);
-                                queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
-                                return;
-                            } else {
-                                GraphQLRequest graphQLRequest = graphQLObjectMapper.readGraphQLRequest(inputStream);
-                                variablesMap.ifPresent(m -> mapMultipartVariables(graphQLRequest, m, fileItems));
-                                GraphQLSingleInvocationInput invocationInput =
-                                    invocationInputFactory.create(graphQLRequest, request);
-                                invocationInput.getContext().setFiles(fileItems);
-                                query(queryInvoker, graphQLObjectMapper, invocationInput, response);
-                                return;
-                            }
+                    for (String key : MULTIPART_KEYS) {
+                        // Check to see if there is a part under the key we seek
+                        if(!fileItems.containsKey(key)) {
+                            continue;
                         }
-                    } else if (fileItems.containsKey("graphql")) {
-                        final Optional<Part> graphqlItem = getFileItem(fileItems, "graphql");
-                        if (graphqlItem.isPresent()) {
-                            InputStream inputStream = graphqlItem.get().getInputStream();
 
-                            if (!inputStream.markSupported()) {
-                                inputStream = new BufferedInputStream(inputStream);
-                            }
-
-                            if (isBatchedQuery(inputStream)) {
-                                GraphQLBatchedInvocationInput invocationInput = invocationInputFactory.create(graphQLObjectMapper.readBatchedGraphQLRequest(inputStream), request);
-                                invocationInput.getContext().setFiles(fileItems);
-                                queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
-                                return;
-                            } else {
-                                GraphQLSingleInvocationInput invocationInput = invocationInputFactory.create(graphQLObjectMapper.readGraphQLRequest(inputStream), request);
-                                invocationInput.getContext().setFiles(fileItems);
-                                query(queryInvoker, graphQLObjectMapper, invocationInput, response);
-                                return;
-                            }
+                        final Optional<Part> queryItem = getFileItem(fileItems, key);
+                        if (!queryItem.isPresent()) {
+                            // If there is a part, but we don't see an item, then break and return BAD_REQUEST
+                            break;
                         }
-                    } else if (fileItems.containsKey("query")) {
-                        final Optional<Part> queryItem = getFileItem(fileItems, "query");
-                        if (queryItem.isPresent()) {
-                            InputStream inputStream = queryItem.get().getInputStream();
 
-                            if (!inputStream.markSupported()) {
-                                inputStream = new BufferedInputStream(inputStream);
-                            }
+                        InputStream inputStream = asMarkableInputStream(queryItem.get().getInputStream());
 
-                            if (isBatchedQuery(inputStream)) {
-                                GraphQLBatchedInvocationInput invocationInput = invocationInputFactory.create(graphQLObjectMapper.readBatchedGraphQLRequest(inputStream), request);
-                                invocationInput.getContext().setFiles(fileItems);
-                                queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
-                                return;
+                        final Optional<Map<String, List<String>>> variablesMap =
+                            getFileItem(fileItems, "map").map(graphQLObjectMapper::deserializeMultipartMap);
+
+                        if (isBatchedQuery(inputStream)) {
+                            List<GraphQLRequest> graphQLRequests =
+                                graphQLObjectMapper.readBatchedGraphQLRequest(inputStream);
+                            variablesMap.ifPresent(map -> graphQLRequests.forEach(r -> mapMultipartVariables(r, map, fileItems)));
+                            GraphQLBatchedInvocationInput invocationInput =
+                                invocationInputFactory.create(graphQLRequests, request);
+                            invocationInput.getContext().setFiles(fileItems);
+                            queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
+                            return;
+                        } else {
+                            GraphQLRequest graphQLRequest;
+                            if("query".equals(key)) {
+                                graphQLRequest = buildRequestFromQuery(inputStream, graphQLObjectMapper, fileItems);
                             } else {
-                                String query = new String(ByteStreams.toByteArray(inputStream));
-
-                                Map<String, Object> variables = null;
-                                final Optional<Part> variablesItem = getFileItem(fileItems, "variables");
-                                if (variablesItem.isPresent()) {
-                                    variables = graphQLObjectMapper.deserializeVariables(new String(ByteStreams.toByteArray(variablesItem.get().getInputStream())));
-                                }
-
-                                String operationName = null;
-                                final Optional<Part> operationNameItem = getFileItem(fileItems, "operationName");
-                                if (operationNameItem.isPresent()) {
-                                    operationName = new String(ByteStreams.toByteArray(operationNameItem.get().getInputStream())).trim();
-                                }
-
-                                GraphQLSingleInvocationInput invocationInput = invocationInputFactory.create(new GraphQLRequest(query, variables, operationName), request);
-                                invocationInput.getContext().setFiles(fileItems);
-                                query(queryInvoker, graphQLObjectMapper, invocationInput, response);
-                                return;
+                                graphQLRequest = graphQLObjectMapper.readGraphQLRequest(inputStream);
                             }
+
+                            variablesMap.ifPresent(m -> mapMultipartVariables(graphQLRequest, m, fileItems));
+                            GraphQLSingleInvocationInput invocationInput =
+                                invocationInputFactory.create(graphQLRequest, request);
+                            invocationInput.getContext().setFiles(fileItems);
+                            query(queryInvoker, graphQLObjectMapper, invocationInput, response);
+                            return;
                         }
                     }
 
                     response.setStatus(STATUS_BAD_REQUEST);
-                    log.info("Bad POST multipart request: no part named \"graphql\" or \"query\"");
+                    log.info("Bad POST multipart request: no part named " + Arrays.toString(MULTIPART_KEYS));
                 } else {
                     // this is not a multipart request
-                    InputStream inputStream = request.getInputStream();
-
-                    if (!inputStream.markSupported()) {
-                        inputStream = new BufferedInputStream(inputStream);
-                    }
+                    InputStream inputStream = asMarkableInputStream(request.getInputStream());
 
                     if (isBatchedQuery(inputStream)) {
                         queryBatched(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readBatchedGraphQLRequest(inputStream), request), response);
@@ -229,6 +179,36 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                 response.setStatus(STATUS_BAD_REQUEST);
             }
         };
+    }
+
+    private static InputStream asMarkableInputStream(InputStream inputStream) {
+        if (!inputStream.markSupported()) {
+            inputStream = new BufferedInputStream(inputStream);
+        }
+        return inputStream;
+    }
+
+    private GraphQLRequest buildRequestFromQuery(InputStream inputStream,
+                                                 GraphQLObjectMapper graphQLObjectMapper,
+                                                 Map<String, List<Part>> fileItems) throws IOException
+    {
+        GraphQLRequest graphQLRequest;
+        String query = new String(ByteStreams.toByteArray(inputStream));
+
+        Map<String, Object> variables = null;
+        final Optional<Part> variablesItem = getFileItem(fileItems, "variables");
+        if (variablesItem.isPresent()) {
+            variables = graphQLObjectMapper.deserializeVariables(new String(ByteStreams.toByteArray(variablesItem.get().getInputStream())));
+        }
+
+        String operationName = null;
+        final Optional<Part> operationNameItem = getFileItem(fileItems, "operationName");
+        if (operationNameItem.isPresent()) {
+            operationName = new String(ByteStreams.toByteArray(operationNameItem.get().getInputStream())).trim();
+        }
+
+        graphQLRequest = new GraphQLRequest(query, variables, operationName);
+        return graphQLRequest;
     }
 
     private void mapMultipartVariables(GraphQLRequest request,
