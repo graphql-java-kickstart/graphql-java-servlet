@@ -13,6 +13,7 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     private final GraphQLQueryInvoker queryInvoker;
     private final GraphQLObjectMapper graphQLObjectMapper;
 
+    // protected to allow class to be extended
     protected SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners, boolean asyncServletMode) {
         super(listeners, asyncServletMode);
         this.invocationInputFactory = invocationInputFactory;
