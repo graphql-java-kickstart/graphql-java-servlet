@@ -1,5 +1,6 @@
 package graphql.servlet
 
+import com.google.common.io.ByteStreams
 import graphql.Scalars
 import graphql.schema.*
 
@@ -41,9 +42,31 @@ class TestUtils {
             }
             field.dataFetcher(mutationDataFetcher)
         }
+                .field { field ->
+            field.name("echoFile")
+            field.type(Scalars.GraphQLString)
+            field.argument { argument ->
+                argument.name("file")
+                argument.type(ApolloScalars.Upload)
+            }
+            field.dataFetcher( { env -> new String(ByteStreams.toByteArray(env.arguments.file.getInputStream())) } )
+        }
+                .field { field ->
+            field.name("echoFiles")
+            field.type(GraphQLList.list(Scalars.GraphQLString))
+            field.argument { argument ->
+                argument.name("files")
+                argument.type(GraphQLList.list(GraphQLNonNull.nonNull(ApolloScalars.Upload)))
+            }
+            field.dataFetcher( { env -> env.arguments.files.collect { new String(ByteStreams.toByteArray(it.getInputStream())) } } )
+        }
         .build()
 
-        return new GraphQLSchema(query, mutation, [query, mutation].toSet())
+        return GraphQLSchema.newSchema()
+                            .query(query)
+                            .mutation(mutation)
+                            .additionalType(ApolloScalars.Upload)
+                            .build()
     }
 
 }

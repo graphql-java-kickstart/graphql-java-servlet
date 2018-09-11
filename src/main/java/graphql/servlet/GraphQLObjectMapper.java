@@ -1,18 +1,17 @@
 package graphql.servlet;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.InjectableValues;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import graphql.GraphQLError;
 import graphql.servlet.internal.GraphQLRequest;
 import graphql.servlet.internal.VariablesDeserializer;
 
+import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -25,6 +24,9 @@ import java.util.function.Supplier;
  * @author Andrew Potter
  */
 public class GraphQLObjectMapper {
+    private static final TypeReference<Map<String, List<String>>>
+        MULTIPART_MAP_TYPE_REFERENCE = new TypeReference<Map<String, List<String>>>() {
+        };
     private final ObjectMapperProvider objectMapperProvider;
     private final Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier;
 
@@ -142,6 +144,14 @@ public class GraphQLObjectMapper {
     public Map<String, Object> deserializeVariables(String variables) {
         try {
             return VariablesDeserializer.deserializeVariablesObject(getJacksonMapper().readValue(variables, Object.class), getJacksonMapper());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Map<String,List<String>> deserializeMultipartMap(Part part) {
+        try {
+            return getJacksonMapper().readValue(part.getInputStream(), MULTIPART_MAP_TYPE_REFERENCE);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
