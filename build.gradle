@@ -150,6 +150,7 @@ publishing {
 release {
     tagTemplate = 'v${version}'
     failOnPublishNeeded = false
+    ignoredSnapshotDependencies = 'com.graphql-java-kickstart:graphql-java-servlet'
 }
 
 afterReleaseBuild.dependsOn bintrayUpload
