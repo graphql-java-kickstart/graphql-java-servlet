@@ -167,6 +167,7 @@ bintray {
         userOrg = 'graphql-java-kickstart'
         version {
             name = project.version
+            vcsTag = 'v${version}'
         }
     }
 }
