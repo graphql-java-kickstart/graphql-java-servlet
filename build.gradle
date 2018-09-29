@@ -155,8 +155,8 @@ release {
 afterReleaseBuild.dependsOn bintrayUpload
 
 bintray {
-    user = System.getenv('BINTRAY_USER') ?: project.findProperty('BINTRAY_USER') ?: ''
-    key = System.getenv('BINTRAY_KEY') ?: project.findProperty('BINTRAY_KEY') ?: ''
+    user = System.env.BINTRAY_USER ?: project.findProperty('BINTRAY_USER') ?: ''
+    key = System.env.BINTRAY_PASS ?: project.findProperty('BINTRAY_PASS') ?: ''
     publications = ['maven']
     publish = true
     pkg {
