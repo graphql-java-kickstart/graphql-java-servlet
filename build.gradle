@@ -9,7 +9,7 @@ buildscript {
 }
 plugins {
     id "com.jfrog.bintray" version "1.8.4"
-    id 'net.researchgate.release' version '2.3.4'
+    id 'net.researchgate.release' version '2.7.0'
 }
 
 apply plugin: 'java'
@@ -150,7 +150,7 @@ publishing {
 release {
     tagTemplate = 'v${version}'
     failOnPublishNeeded = false
-    ignoredSnapshotDependencies = 'com.graphql-java-kickstart:graphql-java-servlet'
+    ignoredSnapshotDependencies = ['com.graphql-java-kickstart:graphql-java-servlet']
 }
 
 afterReleaseBuild.dependsOn bintrayUpload
