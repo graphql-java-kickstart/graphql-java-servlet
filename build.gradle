@@ -164,11 +164,11 @@ bintray {
         repo = 'releases'
         name = project.name
         licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/graphql-java/graphql-java-servlet'
+        vcsUrl = 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
         userOrg = 'graphql-java-kickstart'
         version {
             name = project.version
-            vcsTag = 'v${version}'
+            vcsTag = 'v${project.version}'
         }
     }
 }
