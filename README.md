@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/graphql-java-kickstart/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/graphql-java/graphql-java-servlet)
+[![Build Status](https://travis-ci.org/graphql-java-kickstart/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/graphql-java-kickstart/graphql-java-servlet)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet/badge.svg?service=github)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet)
 [![Chat on Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/graphql-java-kickstart/Lobby)
 
@@ -8,24 +8,40 @@ This module implements a GraphQL Java Servlet. It also supports Relay.js, Apollo
 
 # Downloading
 
-You can download releases from maven central:
+You can download releases from jcenter and maven central:
 
 ```groovy
 repositories {
+    jcenter()
     mavenCentral()
 }
 
 dependencies {
-    compile 'com.graphql-java:graphql-java-servlet:6.0.0'
+    compile 'com.graphql-java-kickstart:graphql-java-servlet:6.1.4'
 }
 ```
 
 ```xml
 <dependency>
-    <groupId>com.graphql-java</groupId>
+    <groupId>com.graphql-java-kickstart</groupId>
     <artifactId>graphql-java-servlet</artifactId>
-    <version>6.0.0</version>
+    <version>6.1.4</version>
 </dependency>
+```
+
+```xml
+<repositories>
+    <repository>
+      <id>jcenter</id>
+      <url>https://jcenter.bintray.com/</url>
+    </repository>
+</repositories>
+```
+For Gradle:
+```groovy
+repositories {
+    jcenter()
+}
 ```
 
 # Usage
