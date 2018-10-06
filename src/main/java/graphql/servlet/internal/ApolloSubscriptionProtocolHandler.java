@@ -48,8 +48,8 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
 
         switch(message.getType()) {
             case GQL_CONNECTION_INIT:
-                sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ACK, message.getId());
-                sendMessage(session, OperationMessage.Type.GQL_CONNECTION_KEEP_ALIVE, message.getId());
+                sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ACK, message.getId(), message.getPayload());
+                sendMessage(session, OperationMessage.Type.GQL_CONNECTION_KEEP_ALIVE, message.getId(), message.getPayload());
                 break;
 
             case GQL_START:
@@ -58,7 +58,7 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
                     subscriptions,
                     message.id,
                     input.getQueryInvoker().query(input.getInvocationInputFactory().create(
-                        input.getGraphQLObjectMapper().getJacksonMapper().convertValue(message.payload, GraphQLRequest.class),
+                        input.getGraphQLObjectMapper().getJacksonMapper().convertValue(message.getPayload(), GraphQLRequest.class),
                         (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName())
                     ))
                 );
