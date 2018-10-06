@@ -81,13 +81,13 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                 path = request.getServletPath();
             }
             if (path.contentEquals("/schema.json")) {
-                query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(INTROSPECTION_REQUEST, request), response);
+                query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(INTROSPECTION_REQUEST, request, response), response);
             } else {
                 String query = request.getParameter("query");
                 if (query != null) {
 
                     if (isBatchedQuery(query)) {
-                        queryBatched(queryInvoker, graphQLObjectMapper, invocationInputFactory.createReadOnly(graphQLObjectMapper.readBatchedGraphQLRequest(query), request), response);
+                        queryBatched(queryInvoker, graphQLObjectMapper, invocationInputFactory.createReadOnly(graphQLObjectMapper.readBatchedGraphQLRequest(query), request, response), response);
                     } else {
                         final Map<String, Object> variables = new HashMap<>();
                         if (request.getParameter("variables") != null) {
@@ -96,7 +96,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
                         String operationName = request.getParameter("operationName");
 
-                        query(queryInvoker, graphQLObjectMapper, invocationInputFactory.createReadOnly(new GraphQLRequest(query, variables, operationName), request), response);
+                        query(queryInvoker, graphQLObjectMapper, invocationInputFactory.createReadOnly(new GraphQLRequest(query, variables, operationName), request, response), response);
                     }
                 } else {
                     response.setStatus(STATUS_BAD_REQUEST);
@@ -141,7 +141,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                                 graphQLObjectMapper.readBatchedGraphQLRequest(inputStream);
                             variablesMap.ifPresent(map -> graphQLRequests.forEach(r -> mapMultipartVariables(r, map, fileItems)));
                             GraphQLBatchedInvocationInput invocationInput =
-                                invocationInputFactory.create(graphQLRequests, request);
+                                invocationInputFactory.create(graphQLRequests, request, response);
                             invocationInput.getContext().setFiles(fileItems);
                             queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
                             return;
@@ -155,7 +155,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
                             variablesMap.ifPresent(m -> mapMultipartVariables(graphQLRequest, m, fileItems));
                             GraphQLSingleInvocationInput invocationInput =
-                                invocationInputFactory.create(graphQLRequest, request);
+                                invocationInputFactory.create(graphQLRequest, request, response);
                             invocationInput.getContext().setFiles(fileItems);
                             query(queryInvoker, graphQLObjectMapper, invocationInput, response);
                             return;
@@ -169,9 +169,9 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                     InputStream inputStream = asMarkableInputStream(request.getInputStream());
 
                     if (isBatchedQuery(inputStream)) {
-                        queryBatched(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readBatchedGraphQLRequest(inputStream), request), response);
+                        queryBatched(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readBatchedGraphQLRequest(inputStream), request, response), response);
                     } else {
-                        query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readGraphQLRequest(inputStream), request), response);
+                        query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readGraphQLRequest(inputStream), request, response), response);
                     }
                 }
             } catch (Exception e) {
