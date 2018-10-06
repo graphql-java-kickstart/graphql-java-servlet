@@ -60,7 +60,7 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
                     Optional<Object> connectionResponse = connectionListener.onConnect(message.getPayload());
                     connectionResponse.ifPresent(it -> session.getUserProperties().put(ApolloSubscriptionConnectionListener.CONNECT_RESULT_KEY, it));
                 } catch (Throwable t) {
-                    sendMessage(session, OperationMessage.Type.GQL_ERROR, t.getMessage());
+                    sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ERROR, t.getMessage());
                     return;
                 }
 
