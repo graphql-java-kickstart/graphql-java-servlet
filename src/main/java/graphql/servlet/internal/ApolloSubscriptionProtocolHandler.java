@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import graphql.ExecutionResult;
+import graphql.servlet.ApolloSubscriptionConnectionListener;
+import graphql.servlet.GraphQLSingleInvocationInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +15,7 @@ import javax.websocket.server.HandshakeRequest;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_COMPLETE;
 import static graphql.servlet.internal.ApolloSubscriptionProtocolHandler.OperationMessage.Type.GQL_CONNECTION_TERMINATE;
@@ -30,9 +33,14 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
     private static final CloseReason TERMINATE_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "client requested " + GQL_CONNECTION_TERMINATE.getType());
 
     private final SubscriptionHandlerInput input;
+    private final ApolloSubscriptionConnectionListener connectionListener;
 
     public ApolloSubscriptionProtocolHandler(SubscriptionHandlerInput subscriptionHandlerInput) {
         this.input = subscriptionHandlerInput;
+        this.connectionListener = subscriptionHandlerInput.getSubscriptionConnectionListener()
+                .filter(ApolloSubscriptionConnectionListener.class::isInstance)
+                .map(ApolloSubscriptionConnectionListener.class::cast)
+                .orElse(new ApolloSubscriptionConnectionListener() {});
     }
 
     @Override
@@ -48,19 +56,28 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
 
         switch(message.getType()) {
             case GQL_CONNECTION_INIT:
+                try {
+                    Optional<Object> connectionResponse = connectionListener.onConnect(message.getPayload());
+                    connectionResponse.ifPresent(it -> session.getUserProperties().put(ApolloSubscriptionConnectionListener.CONNECT_RESULT_KEY, it));
+                } catch (Throwable t) {
+                    sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ERROR, t.getMessage());
+                    return;
+                }
+
                 sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ACK, message.getId());
-                sendMessage(session, OperationMessage.Type.GQL_CONNECTION_KEEP_ALIVE, message.getId());
+
+                if (connectionListener.isKeepAliveEnabled()) {
+                    sendMessage(session, OperationMessage.Type.GQL_CONNECTION_KEEP_ALIVE, message.getId());
+                }
                 break;
 
             case GQL_START:
+                GraphQLSingleInvocationInput graphQLSingleInvocationInput = createInvocationInput(session, message);
                 handleSubscriptionStart(
                     session,
                     subscriptions,
                     message.id,
-                    input.getQueryInvoker().query(input.getInvocationInputFactory().create(
-                        input.getGraphQLObjectMapper().getJacksonMapper().convertValue(message.payload, GraphQLRequest.class),
-                        (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName())
-                    ))
+                    input.getQueryInvoker().query(graphQLSingleInvocationInput)
                 );
                 break;
 
@@ -79,6 +96,16 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
             default:
                 throw new IllegalArgumentException("Unknown message type: " + message.getType());
         }
+    }
+
+    private GraphQLSingleInvocationInput createInvocationInput(Session session, OperationMessage message) {
+        GraphQLRequest graphQLRequest = input.getGraphQLObjectMapper()
+                .getJacksonMapper()
+                .convertValue(message.getPayload(), GraphQLRequest.class);
+        HandshakeRequest handshakeRequest = (HandshakeRequest) session.getUserProperties()
+                .get(HandshakeRequest.class.getName());
+
+        return input.getInvocationInputFactory().create(graphQLRequest, session, handshakeRequest);
     }
 
     @SuppressWarnings("unchecked")
