@@ -4,6 +4,7 @@ import org.dataloader.DataLoaderRegistry;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import javax.websocket.server.HandshakeRequest;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 public class GraphQLContext {
     private HttpServletRequest httpServletRequest;
+    private HttpServletResponse httpServletResponse;
     private HandshakeRequest handshakeRequest;
 
     private Subject subject;
@@ -19,27 +21,34 @@ public class GraphQLContext {
 
     private DataLoaderRegistry dataLoaderRegistry;
 
-    public GraphQLContext(HttpServletRequest httpServletRequest, HandshakeRequest handshakeRequest, Subject subject) {
+    public GraphQLContext(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, HandshakeRequest handshakeRequest, Subject subject) {
         this.httpServletRequest = httpServletRequest;
+        this.httpServletResponse = httpServletResponse;
         this.handshakeRequest = handshakeRequest;
         this.subject = subject;
     }
 
     public GraphQLContext(HttpServletRequest httpServletRequest) {
-        this(httpServletRequest, null, null);
+        this(httpServletRequest, null);
+    }
+
+    public GraphQLContext(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        this(httpServletRequest, httpServletResponse, null, null);
     }
 
     public GraphQLContext(HandshakeRequest handshakeRequest) {
-        this(null, handshakeRequest, null);
+        this(null, null, handshakeRequest, null);
     }
 
     public GraphQLContext() {
-        this(null, null, null);
+        this(null, null, null, null);
     }
 
     public Optional<HttpServletRequest> getHttpServletRequest() {
         return Optional.ofNullable(httpServletRequest);
     }
+
+    public Optional<HttpServletResponse> getHttpServletResponse() { return Optional.ofNullable(httpServletResponse); }
 
     public Optional<Subject> getSubject() {
         return Optional.ofNullable(subject);

@@ -4,6 +4,7 @@ import graphql.schema.GraphQLSchema;
 import graphql.servlet.internal.GraphQLRequest;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.websocket.server.HandshakeRequest;
 import java.util.List;
 import java.util.function.Supplier;
@@ -26,20 +27,20 @@ public class GraphQLInvocationInputFactory {
         return schemaProviderSupplier.get();
     }
 
-    public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request) {
-        return create(graphQLRequest, request, false);
+    public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response) {
+        return create(graphQLRequest, request, response, false);
     }
 
-    public GraphQLBatchedInvocationInput create(List<GraphQLRequest> graphQLRequests, HttpServletRequest request) {
-        return create(graphQLRequests, request, false);
+    public GraphQLBatchedInvocationInput create(List<GraphQLRequest> graphQLRequests, HttpServletRequest request, HttpServletResponse response) {
+        return create(graphQLRequests, request, response, false);
     }
 
-    public GraphQLSingleInvocationInput createReadOnly(GraphQLRequest graphQLRequest, HttpServletRequest request) {
-        return create(graphQLRequest, request, true);
+    public GraphQLSingleInvocationInput createReadOnly(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response) {
+        return create(graphQLRequest, request, response, true);
     }
 
-    public GraphQLBatchedInvocationInput createReadOnly(List<GraphQLRequest> graphQLRequests, HttpServletRequest request) {
-        return create(graphQLRequests, request, true);
+    public GraphQLBatchedInvocationInput createReadOnly(List<GraphQLRequest> graphQLRequests, HttpServletRequest request, HttpServletResponse response) {
+        return create(graphQLRequests, request, response, true);
     }
 
     public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest) {
@@ -51,20 +52,20 @@ public class GraphQLInvocationInputFactory {
         );
     }
 
-    private GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, boolean readOnly) {
+    private GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response, boolean readOnly) {
         return new GraphQLSingleInvocationInput(
             graphQLRequest,
             readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request) : schemaProviderSupplier.get().getSchema(request),
-            contextBuilderSupplier.get().build(request),
+            contextBuilderSupplier.get().build(request, response),
             rootObjectBuilderSupplier.get().build(request)
         );
     }
 
-    private GraphQLBatchedInvocationInput create(List<GraphQLRequest> graphQLRequests, HttpServletRequest request, boolean readOnly) {
+    private GraphQLBatchedInvocationInput create(List<GraphQLRequest> graphQLRequests, HttpServletRequest request, HttpServletResponse response, boolean readOnly) {
         return new GraphQLBatchedInvocationInput(
             graphQLRequests,
             readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request) : schemaProviderSupplier.get().getSchema(request),
-            contextBuilderSupplier.get().build(request),
+            contextBuilderSupplier.get().build(request, response),
             rootObjectBuilderSupplier.get().build(request)
         );
     }
