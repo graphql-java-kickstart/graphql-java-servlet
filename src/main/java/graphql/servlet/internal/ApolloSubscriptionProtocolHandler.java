@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import graphql.ExecutionResult;
 import graphql.servlet.ApolloSubscriptionConnectionListener;
 import graphql.servlet.GraphQLSingleInvocationInput;
+import graphql.servlet.SubscriptionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,8 +64,8 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
                 try {
                     Optional<Object> connectionResponse = connectionListener.onConnect(message.getPayload());
                     connectionResponse.ifPresent(it -> session.getUserProperties().put(ApolloSubscriptionConnectionListener.CONNECT_RESULT_KEY, it));
-                } catch (Throwable t) {
-                    sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ERROR, message.getId(), t);
+                } catch (SubscriptionException e) {
+                    sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ERROR, message.getId(), e.getPayload());
                     return;
                 }
 

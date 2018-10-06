@@ -7,10 +7,10 @@ public interface ApolloSubscriptionConnectionListener extends SubscriptionConnec
     String CONNECT_RESULT_KEY = "CONNECT_RESULT";
 
     default boolean isKeepAliveEnabled() {
-        return false;
+        return true;
     }
 
-    default Optional<Object> onConnect(Object payload) {
+    default Optional<Object> onConnect(Object payload) throws SubscriptionException {
         return Optional.empty();
     }
 
