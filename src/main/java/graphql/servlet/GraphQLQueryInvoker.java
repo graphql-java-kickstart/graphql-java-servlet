@@ -7,6 +7,7 @@ import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.SimpleInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
@@ -28,11 +29,13 @@ public class GraphQLQueryInvoker {
     private final Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider;
     private final Supplier<Instrumentation> getInstrumentation;
     private final Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider;
+    private final Supplier<DataLoaderDispatcherInstrumentationOptions> dataLoaderDispatcherInstrumentationOptionsSupplier;
 
-    protected GraphQLQueryInvoker(Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider, Supplier<Instrumentation> getInstrumentation, Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider) {
+    protected GraphQLQueryInvoker(Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider, Supplier<Instrumentation> getInstrumentation, Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider, Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier) {
         this.getExecutionStrategyProvider = getExecutionStrategyProvider;
         this.getInstrumentation = getInstrumentation;
         this.getPreparsedDocumentProvider = getPreparsedDocumentProvider;
+        this.dataLoaderDispatcherInstrumentationOptionsSupplier = optionsSupplier;
     }
 
     public ExecutionResult query(GraphQLSingleInvocationInput singleInvocationInput) {
@@ -65,7 +68,7 @@ public class GraphQLQueryInvoker {
                     .map(registry -> {
                         List<Instrumentation> instrumentations = new ArrayList<>();
                         instrumentations.add(getInstrumentation.get());
-                        instrumentations.add(new DataLoaderDispatcherInstrumentation(registry));
+                        instrumentations.add(new DataLoaderDispatcherInstrumentation(registry, dataLoaderDispatcherInstrumentationOptionsSupplier.get()));
                         return new ChainedInstrumentation(instrumentations);
                     })
                     .map(Instrumentation.class::cast)
@@ -100,6 +103,7 @@ public class GraphQLQueryInvoker {
         private Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider = DefaultExecutionStrategyProvider::new;
         private Supplier<Instrumentation> getInstrumentation = () -> SimpleInstrumentation.INSTANCE;
         private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider = () -> NoOpPreparsedDocumentProvider.INSTANCE;
+        private Supplier<DataLoaderDispatcherInstrumentationOptions> dataLoaderDispatcherInstrumentationOptionsSupplier = DataLoaderDispatcherInstrumentationOptions::newOptions;
 
         public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
             return withExecutionStrategyProvider(() -> provider);
@@ -128,8 +132,17 @@ public class GraphQLQueryInvoker {
             return this;
         }
 
+        public Builder withDataLoaderDispatcherInstrumentationOptions(DataLoaderDispatcherInstrumentationOptions options) {
+            return withDataLoaderDispatcherInstrumentationOptions(() -> options);
+        }
+
+        public Builder withDataLoaderDispatcherInstrumentationOptions(Supplier<DataLoaderDispatcherInstrumentationOptions> supplier) {
+            this.dataLoaderDispatcherInstrumentationOptionsSupplier = supplier;
+            return this;
+        }
+
         public GraphQLQueryInvoker build() {
-            return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation, getPreparsedDocumentProvider);
+            return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation, getPreparsedDocumentProvider, dataLoaderDispatcherInstrumentationOptionsSupplier);
         }
     }
 }
