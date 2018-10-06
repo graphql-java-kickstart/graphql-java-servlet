@@ -5,6 +5,7 @@ import graphql.servlet.internal.GraphQLRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import java.util.List;
 import java.util.function.Supplier;
@@ -70,20 +71,20 @@ public class GraphQLInvocationInputFactory {
         );
     }
 
-    public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HandshakeRequest request) {
+    public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, Session session, HandshakeRequest request) {
         return new GraphQLSingleInvocationInput(
             graphQLRequest,
             schemaProviderSupplier.get().getSchema(request),
-            contextBuilderSupplier.get().build(request),
+            contextBuilderSupplier.get().build(session, request),
             rootObjectBuilderSupplier.get().build(request)
         );
     }
 
-    public GraphQLBatchedInvocationInput create(List<GraphQLRequest> graphQLRequest, HandshakeRequest request) {
+    public GraphQLBatchedInvocationInput create(List<GraphQLRequest> graphQLRequest, Session session, HandshakeRequest request) {
         return new GraphQLBatchedInvocationInput(
             graphQLRequest,
             schemaProviderSupplier.get().getSchema(request),
-            contextBuilderSupplier.get().build(request),
+            contextBuilderSupplier.get().build(session, request),
             rootObjectBuilderSupplier.get().build(request)
         );
     }
