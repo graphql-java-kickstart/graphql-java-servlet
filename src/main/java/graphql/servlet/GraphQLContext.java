@@ -64,6 +64,13 @@ public class GraphQLContext {
         return Optional.ofNullable(session);
     }
 
+    public Optional<Object> getConnectResult() {
+        if (session != null) {
+            return Optional.ofNullable(session.getUserProperties().get(ApolloSubscriptionConnectionListener.CONNECT_RESULT_KEY));
+        }
+        return Optional.empty();
+    }
+
     public Optional<HandshakeRequest> getHandshakeRequest() {
         return Optional.ofNullable(handshakeRequest);
     }
