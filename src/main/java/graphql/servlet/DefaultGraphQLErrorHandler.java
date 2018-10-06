@@ -2,6 +2,7 @@ package graphql.servlet;
 
 import graphql.ExceptionWhileDataFetching;
 import graphql.GraphQLError;
+import graphql.execution.NonNullableFieldWasNullError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,16 +25,16 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
             clientErrors.add(new GenericGraphQLError("Internal Server Error(s) while executing query"));
 
             errors.stream()
-                .filter(error -> !isClientError(error))
-                .forEach(error -> {
-                    if(error instanceof Throwable) {
-                        log.error("Error executing query!", (Throwable) error);
-                    } else if (error instanceof ExceptionWhileDataFetching) {
-                        log.error("Error executing query {}", error.getMessage(), ((ExceptionWhileDataFetching) error).getException());
-                    } else {
-                        log.error("Error executing query ({}): {}", error.getClass().getSimpleName(), error.getMessage());
-                    }
-                });
+                    .filter(error -> !isClientError(error))
+                    .forEach(error -> {
+                        if (error instanceof Throwable) {
+                            log.error("Error executing query!", (Throwable) error);
+                        } else if (error instanceof ExceptionWhileDataFetching) {
+                            log.error("Error executing query {}", error.getMessage(), ((ExceptionWhileDataFetching) error).getException());
+                        } else {
+                            log.error("Error executing query ({}): {}", error.getClass().getSimpleName(), error.getMessage());
+                        }
+                    });
         }
 
         return clientErrors;
@@ -41,8 +42,9 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
 
     protected List<GraphQLError> filterGraphQLErrors(List<GraphQLError> errors) {
         return errors.stream()
-            .filter(this::isClientError)
-            .collect(Collectors.toList());
+                .filter(this::isClientError)
+                .map(this::replaceNonNullableFieldWasNullError)
+                .collect(Collectors.toList());
     }
 
     protected boolean isClientError(GraphQLError error) {
@@ -50,5 +52,13 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
             return ((ExceptionWhileDataFetching) error).getException() instanceof GraphQLError;
         }
         return !(error instanceof Throwable);
+    }
+
+    private GraphQLError replaceNonNullableFieldWasNullError(GraphQLError error) {
+        if (error instanceof NonNullableFieldWasNullError) {
+            return new RenderableNonNullableFieldWasNullError((NonNullableFieldWasNullError) error);
+        } else {
+            return error;
+        }
     }
 }
