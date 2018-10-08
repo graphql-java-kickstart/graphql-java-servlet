@@ -38,14 +38,16 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
     private final ApolloSubscriptionKeepAliveRunner keepAliveRunner;
     private final ApolloSubscriptionConnectionListener connectionListener;
 
-    public ApolloSubscriptionProtocolHandler(SubscriptionHandlerInput subscriptionHandlerInput) {
+    public ApolloSubscriptionProtocolHandler(SubscriptionHandlerInput subscriptionHandlerInput,
+                                             SubscriptionSender subscriptionSender,
+                                             ApolloSubscriptionKeepAliveRunner keepAliveRunner) {
         this.input = subscriptionHandlerInput;
         this.connectionListener = subscriptionHandlerInput.getSubscriptionConnectionListener()
                 .filter(ApolloSubscriptionConnectionListener.class::isInstance)
                 .map(ApolloSubscriptionConnectionListener.class::cast)
                 .orElse(new ApolloSubscriptionConnectionListener() {});
-        this.sender = new SubscriptionSender(this.input.getGraphQLObjectMapper().getJacksonMapper());
-        this.keepAliveRunner = new ApolloSubscriptionKeepAliveRunner(this.sender);
+        this.sender = subscriptionSender;
+        this.keepAliveRunner = keepAliveRunner;
     }
 
     @Override
@@ -87,7 +89,6 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
                 break;
 
             case GQL_STOP:
-                keepAliveRunner.abort(session);
                 unsubscribe(subscriptions, message.id);
                 break;
 

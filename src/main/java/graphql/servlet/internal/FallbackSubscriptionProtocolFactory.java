@@ -4,12 +4,15 @@ package graphql.servlet.internal;
  * @author Andrew Potter
  */
 public class FallbackSubscriptionProtocolFactory extends SubscriptionProtocolFactory {
-    public FallbackSubscriptionProtocolFactory() {
+    private final SubscriptionHandlerInput subscriptionHandlerInput;
+
+    public FallbackSubscriptionProtocolFactory(SubscriptionHandlerInput subscriptionHandlerInput) {
         super("");
+        this.subscriptionHandlerInput = subscriptionHandlerInput;
     }
 
     @Override
-    public SubscriptionProtocolHandler createHandler(SubscriptionHandlerInput subscriptionHandlerInput) {
+    public SubscriptionProtocolHandler createHandler() {
         return new FallbackSubscriptionProtocolHandler(subscriptionHandlerInput);
     }
 }
