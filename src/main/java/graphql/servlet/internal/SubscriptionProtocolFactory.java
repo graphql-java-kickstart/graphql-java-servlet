@@ -14,5 +14,5 @@ public abstract class SubscriptionProtocolFactory {
         return protocol;
     }
 
-    public abstract SubscriptionProtocolHandler createHandler(SubscriptionHandlerInput subscriptionHandlerInput);
+    public abstract SubscriptionProtocolHandler createHandler();
 }
