@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.websocket.Session;
+import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -16,19 +18,20 @@ class ApolloSubscriptionKeepAliveRunner {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApolloSubscriptionKeepAliveRunner.class);
 
-    private static final long KEEP_ALIVE_INTERVAL_SEC = 15;
     private static final int EXECUTOR_POOL_SIZE = 10;
 
     private final ScheduledExecutorService executor;
     private final SubscriptionSender sender;
     private final ApolloSubscriptionProtocolHandler.OperationMessage keepAliveMessage;
     private final Map<Session, Future<?>> futures;
+    private final long keepAliveIntervalSeconds;
 
-    ApolloSubscriptionKeepAliveRunner(SubscriptionSender sender) {
-        this.sender = sender;
+    ApolloSubscriptionKeepAliveRunner(SubscriptionSender sender, Duration keepAliveInterval) {
+        this.sender = Objects.requireNonNull(sender);
         this.keepAliveMessage = ApolloSubscriptionProtocolHandler.OperationMessage.newKeepAliveMessage();
         this.executor = Executors.newScheduledThreadPool(EXECUTOR_POOL_SIZE);
         this.futures = new ConcurrentHashMap<>();
+        this.keepAliveIntervalSeconds = keepAliveInterval.getSeconds();
     }
 
     void keepAlive(Session session) {
@@ -48,7 +51,7 @@ class ApolloSubscriptionKeepAliveRunner {
                 LOG.error("Cannot send keep alive message. Aborting keep alive", t);
                 abort(session);
             }
-        }, 0, KEEP_ALIVE_INTERVAL_SEC, TimeUnit.SECONDS);
+        }, 0, keepAliveIntervalSeconds, TimeUnit.SECONDS);
     }
 
     void abort(Session session) {

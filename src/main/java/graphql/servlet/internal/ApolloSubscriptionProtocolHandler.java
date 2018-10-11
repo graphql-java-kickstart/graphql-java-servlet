@@ -39,13 +39,11 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
     private final ApolloSubscriptionConnectionListener connectionListener;
 
     public ApolloSubscriptionProtocolHandler(SubscriptionHandlerInput subscriptionHandlerInput,
+                                             ApolloSubscriptionConnectionListener connectionListener,
                                              SubscriptionSender subscriptionSender,
                                              ApolloSubscriptionKeepAliveRunner keepAliveRunner) {
         this.input = subscriptionHandlerInput;
-        this.connectionListener = subscriptionHandlerInput.getSubscriptionConnectionListener()
-                .filter(ApolloSubscriptionConnectionListener.class::isInstance)
-                .map(ApolloSubscriptionConnectionListener.class::cast)
-                .orElse(new ApolloSubscriptionConnectionListener() {});
+        this.connectionListener = connectionListener;
         this.sender = subscriptionSender;
         this.keepAliveRunner = keepAliveRunner;
     }
