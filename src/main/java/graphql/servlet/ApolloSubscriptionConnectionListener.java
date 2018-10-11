@@ -21,4 +21,22 @@ public interface ApolloSubscriptionConnectionListener extends SubscriptionConnec
         return Duration.ofSeconds(KEEP_ALIVE_INTERVAL_SEC);
     }
 
+    static ApolloSubscriptionConnectionListener createWithKeepAliveDisabled() {
+        return new ApolloSubscriptionConnectionListener() {
+            @Override
+            public boolean isKeepAliveEnabled() {
+                return false;
+            }
+        };
+    }
+
+    static ApolloSubscriptionConnectionListener createWithKeepAliveInterval(Duration interval) {
+        return new ApolloSubscriptionConnectionListener() {
+            @Override
+            public Duration getKeepAliveInterval() {
+                return interval;
+            }
+        };
+    }
+
 }
