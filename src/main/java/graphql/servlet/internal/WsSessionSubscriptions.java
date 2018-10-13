@@ -4,6 +4,7 @@ import org.reactivestreams.Subscription;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Andrew Potter
@@ -12,7 +13,7 @@ public class WsSessionSubscriptions {
     private final Object lock = new Object();
 
     private boolean closed = false;
-    private Map<String, Subscription> subscriptions = new HashMap<>();
+    private Map<String, Subscription> subscriptions = new ConcurrentHashMap<>();
 
     public void add(Subscription subscription) {
         add(getImplicitId(subscription), subscription);
@@ -20,7 +21,7 @@ public class WsSessionSubscriptions {
 
     public void add(String id, Subscription subscription) {
         synchronized (lock) {
-            if(closed) {
+            if (closed) {
                 throw new IllegalStateException("Websocket was already closed!");
             }
             subscriptions.put(id, subscription);
@@ -32,11 +33,9 @@ public class WsSessionSubscriptions {
     }
 
     public void cancel(String id) {
-        synchronized (lock) {
-            Subscription subscription = subscriptions.remove(id);
-            if(subscription != null) {
-                subscription.cancel();
-            }
+        Subscription subscription = subscriptions.remove(id);
+        if(subscription != null) {
+            subscription.cancel();
         }
     }
 
@@ -44,7 +43,7 @@ public class WsSessionSubscriptions {
         synchronized (lock) {
             closed = true;
             subscriptions.forEach((k, v) -> v.cancel());
-            subscriptions = new HashMap<>();
+            subscriptions.clear();
         }
     }
 

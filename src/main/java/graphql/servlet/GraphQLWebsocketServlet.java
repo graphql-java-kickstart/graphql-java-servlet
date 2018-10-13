@@ -30,15 +30,9 @@ public class GraphQLWebsocketServlet extends Endpoint {
     private static final CloseReason ERROR_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Internal Server Error");
     private static final CloseReason SHUTDOWN_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION, "Server Shut Down");
 
-    private static final List<SubscriptionProtocolFactory> subscriptionProtocolFactories = Collections.singletonList(new ApolloSubscriptionProtocolFactory());
-    private static final SubscriptionProtocolFactory fallbackSubscriptionProtocolFactory = new FallbackSubscriptionProtocolFactory();
-    private static final List<String> allSubscriptionProtocols;
-
-    static {
-        allSubscriptionProtocols = Stream.concat(subscriptionProtocolFactories.stream(), Stream.of(fallbackSubscriptionProtocolFactory))
-                .map(SubscriptionProtocolFactory::getProtocol)
-                .collect(Collectors.toList());
-    }
+    private final List<SubscriptionProtocolFactory> subscriptionProtocolFactories;
+    private final SubscriptionProtocolFactory fallbackSubscriptionProtocolFactory;
+    private final List<String> allSubscriptionProtocols;
 
     private final Map<Session, WsSessionSubscriptions> sessionSubscriptionCache = new HashMap<>();
     private final SubscriptionHandlerInput subscriptionHandlerInput;
@@ -52,6 +46,12 @@ public class GraphQLWebsocketServlet extends Endpoint {
 
     public GraphQLWebsocketServlet(GraphQLQueryInvoker queryInvoker, GraphQLInvocationInputFactory invocationInputFactory, GraphQLObjectMapper graphQLObjectMapper, SubscriptionConnectionListener subscriptionConnectionListener) {
         this.subscriptionHandlerInput = new SubscriptionHandlerInput(invocationInputFactory, queryInvoker, graphQLObjectMapper, subscriptionConnectionListener);
+
+        subscriptionProtocolFactories = Collections.singletonList(new ApolloSubscriptionProtocolFactory(subscriptionHandlerInput));
+        fallbackSubscriptionProtocolFactory = new FallbackSubscriptionProtocolFactory(subscriptionHandlerInput);
+        allSubscriptionProtocols = Stream.concat(subscriptionProtocolFactories.stream(), Stream.of(fallbackSubscriptionProtocolFactory))
+                                         .map(SubscriptionProtocolFactory::getProtocol)
+                                         .collect(Collectors.toList());
     }
 
     @Override
@@ -119,7 +119,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
         }
 
         SubscriptionProtocolFactory subscriptionProtocolFactory = getSubscriptionProtocolFactory(protocol);
-        sec.getUserProperties().put(PROTOCOL_HANDLER_REQUEST_KEY, subscriptionProtocolFactory.createHandler(subscriptionHandlerInput));
+        sec.getUserProperties().put(PROTOCOL_HANDLER_REQUEST_KEY, subscriptionProtocolFactory.createHandler());
 
         if (request.getHeaders().get(HandshakeResponse.SEC_WEBSOCKET_ACCEPT) != null) {
             response.getHeaders().put(HandshakeResponse.SEC_WEBSOCKET_ACCEPT, allSubscriptionProtocols);
@@ -165,7 +165,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
         return isShutDown.get();
     }
 
-    private static SubscriptionProtocolFactory getSubscriptionProtocolFactory(List<String> accept) {
+    private SubscriptionProtocolFactory getSubscriptionProtocolFactory(List<String> accept) {
         for (String protocol : accept) {
             for (SubscriptionProtocolFactory subscriptionProtocolFactory : subscriptionProtocolFactories) {
                 if (subscriptionProtocolFactory.getProtocol().equals(protocol)) {

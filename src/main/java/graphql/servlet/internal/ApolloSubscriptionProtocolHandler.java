@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import graphql.ExecutionResult;
 import graphql.servlet.ApolloSubscriptionConnectionListener;
 import graphql.servlet.GraphQLSingleInvocationInput;
+import graphql.servlet.SubscriptionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,14 +34,18 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
     private static final CloseReason TERMINATE_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.NORMAL_CLOSURE, "client requested " + GQL_CONNECTION_TERMINATE.getType());
 
     private final SubscriptionHandlerInput input;
+    private final SubscriptionSender sender;
+    private final ApolloSubscriptionKeepAliveRunner keepAliveRunner;
     private final ApolloSubscriptionConnectionListener connectionListener;
 
-    public ApolloSubscriptionProtocolHandler(SubscriptionHandlerInput subscriptionHandlerInput) {
+    public ApolloSubscriptionProtocolHandler(SubscriptionHandlerInput subscriptionHandlerInput,
+                                             ApolloSubscriptionConnectionListener connectionListener,
+                                             SubscriptionSender subscriptionSender,
+                                             ApolloSubscriptionKeepAliveRunner keepAliveRunner) {
         this.input = subscriptionHandlerInput;
-        this.connectionListener = subscriptionHandlerInput.getSubscriptionConnectionListener()
-                .filter(ApolloSubscriptionConnectionListener.class::isInstance)
-                .map(ApolloSubscriptionConnectionListener.class::cast)
-                .orElse(new ApolloSubscriptionConnectionListener() {});
+        this.connectionListener = connectionListener;
+        this.sender = subscriptionSender;
+        this.keepAliveRunner = keepAliveRunner;
     }
 
     @Override
@@ -54,20 +59,20 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
             return;
         }
 
-        switch(message.getType()) {
+        switch (message.getType()) {
             case GQL_CONNECTION_INIT:
                 try {
                     Optional<Object> connectionResponse = connectionListener.onConnect(message.getPayload());
                     connectionResponse.ifPresent(it -> session.getUserProperties().put(ApolloSubscriptionConnectionListener.CONNECT_RESULT_KEY, it));
-                } catch (Throwable t) {
-                    sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ERROR, t.getMessage());
+                } catch (SubscriptionException e) {
+                    sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ERROR, message.getId(), e.getPayload());
                     return;
                 }
 
                 sendMessage(session, OperationMessage.Type.GQL_CONNECTION_ACK, message.getId());
 
                 if (connectionListener.isKeepAliveEnabled()) {
-                    sendMessage(session, OperationMessage.Type.GQL_CONNECTION_KEEP_ALIVE, message.getId());
+                    keepAliveRunner.keepAlive(session);
                 }
                 break;
 
@@ -86,6 +91,7 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
                 break;
 
             case GQL_CONNECTION_TERMINATE:
+                keepAliveRunner.abort(session);
                 try {
                     session.close(TERMINATE_CLOSE_REASON);
                 } catch (IOException e) {
@@ -112,7 +118,7 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
     private void handleSubscriptionStart(Session session, WsSessionSubscriptions subscriptions, String id, ExecutionResult executionResult) {
         executionResult = input.getGraphQLObjectMapper().sanitizeErrors(executionResult);
 
-        if(input.getGraphQLObjectMapper().areErrorsPresent(executionResult)) {
+        if (input.getGraphQLObjectMapper().areErrorsPresent(executionResult)) {
             sendMessage(session, OperationMessage.Type.GQL_ERROR, id, input.getGraphQLObjectMapper().convertSanitizedExecutionResult(executionResult, false));
             return;
         }
@@ -127,11 +133,13 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
 
     @Override
     protected void sendErrorMessage(Session session, String id) {
+        keepAliveRunner.abort(session);
         sendMessage(session, GQL_ERROR, id);
     }
 
     @Override
     protected void sendCompleteMessage(Session session, String id) {
+        keepAliveRunner.abort(session);
         sendMessage(session, GQL_COMPLETE, id);
     }
 
@@ -140,13 +148,7 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
     }
 
     private void sendMessage(Session session, OperationMessage.Type type, String id, Object payload) {
-        try {
-            session.getBasicRemote().sendText(input.getGraphQLObjectMapper().getJacksonMapper().writeValueAsString(
-                new OperationMessage(type, id, payload)
-            ));
-        } catch (IOException e) {
-            throw new RuntimeException("Error sending subscription response", e);
-        }
+        sender.send(session, new OperationMessage(type, id, payload));
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -162,6 +164,10 @@ public class ApolloSubscriptionProtocolHandler extends SubscriptionProtocolHandl
             this.type = type;
             this.id = id;
             this.payload = payload;
+        }
+
+        static OperationMessage newKeepAliveMessage() {
+            return new OperationMessage(Type.GQL_CONNECTION_KEEP_ALIVE, null, null);
         }
 
         public Type getType() {

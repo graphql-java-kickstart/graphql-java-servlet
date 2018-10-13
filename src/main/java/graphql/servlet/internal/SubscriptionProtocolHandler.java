@@ -55,13 +55,13 @@ public abstract class SubscriptionProtocolHandler {
                 @Override
                 public void onError(Throwable throwable) {
                     log.error("Subscription error", throwable);
-                    subscriptions.cancel(id);
+                    unsubscribe(subscriptions, id);
                     sendErrorMessage(session, id);
                 }
 
                 @Override
                 public void onComplete() {
-                    subscriptions.cancel(id);
+                    unsubscribe(subscriptions, id);
                     sendCompleteMessage(session, id);
                 }
             });

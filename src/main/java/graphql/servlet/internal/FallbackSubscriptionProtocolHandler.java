@@ -11,9 +11,11 @@ import java.util.UUID;
 public class FallbackSubscriptionProtocolHandler extends SubscriptionProtocolHandler {
 
     private final SubscriptionHandlerInput input;
+    private final SubscriptionSender sender;
 
     public FallbackSubscriptionProtocolHandler(SubscriptionHandlerInput subscriptionHandlerInput) {
         this.input = subscriptionHandlerInput;
+        sender = new SubscriptionSender(subscriptionHandlerInput.getGraphQLObjectMapper().getJacksonMapper());
     }
 
     @Override
@@ -32,11 +34,7 @@ public class FallbackSubscriptionProtocolHandler extends SubscriptionProtocolHan
 
     @Override
     protected void sendDataMessage(Session session, String id, Object payload) {
-        try {
-            session.getBasicRemote().sendText(input.getGraphQLObjectMapper().getJacksonMapper().writeValueAsString(payload));
-        } catch (IOException e) {
-            throw new RuntimeException("Error sending subscription response", e);
-        }
+        sender.send(session, payload);
     }
 
     @Override
