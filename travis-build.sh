@@ -22,6 +22,6 @@ if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; 
         ./gradlew clean assemble release -Prelease.useAutomaticVersion=true && ./gradlew check --info
     else
         echo "Deploying snapshot to Bintray"
-        ./gradlew clean assemble bintrayPublish && ./gradlew check --info
+        ./gradlew clean assemble bintrayUpload && ./gradlew check --info
     fi
 fi
