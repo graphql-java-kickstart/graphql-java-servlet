@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.graphql-java-kickstart:graphql-java-servlet:6.1.4'
+    compile 'com.graphql-java-kickstart:graphql-java-servlet:6.2.0'
 }
 ```
 
@@ -25,7 +25,7 @@ dependencies {
 <dependency>
     <groupId>com.graphql-java-kickstart</groupId>
     <artifactId>graphql-java-servlet</artifactId>
-    <version>6.1.4</version>
+    <version>6.2.0</version>
 </dependency>
 ```
 
