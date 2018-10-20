@@ -51,7 +51,7 @@ dependencies {
     compileOnly 'biz.aQute.bnd:biz.aQute.bndlib:3.1.0'
 
     // Servlet
-    compile 'javax.servlet:javax.servlet-api:4.0.0'
+    compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile 'javax.websocket:javax.websocket-api:1.1'
 
     // GraphQL

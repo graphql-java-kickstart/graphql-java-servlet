@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.graphql-java</groupId>
+        <groupId>com.graphql-java-kickstart</groupId>
         <artifactId>graphql-java-servlet-osgi-examples</artifactId>
-        <version>3.0.1</version>
+        <version>6.2.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>graphql-java-servlet-osgi-examples-apache-karaf-package</artifactId>
@@ -40,7 +40,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.graphql-java</groupId>
+            <groupId>com.graphql-java-kickstart</groupId>
             <artifactId>graphql-java-servlet-osgi-examples-karaf-feature</artifactId>
             <version>${project.version}</version>
             <classifier>features</classifier>
@@ -99,6 +99,17 @@
                     </installedFeatures>
                 </configuration>
             </plugin>
-        </plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>2.5.2</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>2.8.2</version>
+			</plugin>
+		</plugins>
     </build>
 </project>
