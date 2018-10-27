@@ -94,6 +94,7 @@ public class GraphQLContext {
      * That's why this method has been deprecated in favor of the ones that communicate their intent more clearly.
      *
      * @deprecated use {@link #getParts()} or {@link #getFileParts()} instead
+     * @return optional map of all form fields
      */
     @Deprecated
     public Optional<Map<String, List<Part>>> getFiles() {
