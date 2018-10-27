@@ -1,25 +1,29 @@
 package graphql.servlet;
 
-import graphql.execution.instrumentation.ChainedInstrumentation;
-import graphql.execution.instrumentation.Instrumentation;
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
-import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
-import graphql.execution.preparsed.PreparsedDocumentProvider;
-import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLType;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
+import static graphql.schema.GraphQLObjectType.newObject;
+import static graphql.schema.GraphQLSchema.newSchema;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
-import static graphql.schema.GraphQLObjectType.newObject;
-import static graphql.schema.GraphQLSchema.newSchema;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+
+import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
+import graphql.execution.preparsed.PreparsedDocumentProvider;
+import graphql.schema.GraphQLObjectType;
+import graphql.schema.GraphQLType;
 
 @Component(
         service={javax.servlet.http.HttpServlet.class,javax.servlet.Servlet.class},
@@ -43,7 +47,27 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
 
     private GraphQLSchemaProvider schemaProvider;
+    
+	private ScheduledExecutorService executor;
+	private ScheduledFuture<?> updateFuture;    
+    private int schemaUpdateDelay;
 
+	@interface Config {
+		int schema_update_delay() default 0;
+	}
+	
+	@Activate
+	public void activate(Config config) {
+		this.schemaUpdateDelay = config.schema_update_delay();
+		if (schemaUpdateDelay!=0)
+			executor = Executors.newSingleThreadScheduledExecutor(); 
+	}
+	
+	@Deactivate
+	public void deactivate() {
+		if (executor!=null) executor.shutdown();
+	}
+	
     @Override
     protected GraphQLQueryInvoker getQueryInvoker() {
         return queryInvoker;
@@ -78,6 +102,23 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     }
 
     protected void updateSchema() {
+    	if (schemaUpdateDelay==0) {
+    		doUpdateSchema();
+    	}
+    	else {
+    		if (updateFuture!=null) 
+    			updateFuture.cancel(true);
+    		
+    		updateFuture = executor.schedule(new Runnable() {
+				@Override
+				public void run() {
+					doUpdateSchema();
+				}
+			}, schemaUpdateDelay, TimeUnit.MILLISECONDS);    		
+    	}
+    }
+    
+    private void doUpdateSchema() {
         final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query").description("Root query type");
 
         for (GraphQLQueryProvider provider : queryProviders) {
@@ -108,7 +149,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         this.schemaProvider = new DefaultGraphQLSchemaProvider(newSchema().query(queryTypeBuilder.build()).mutation(mutationType).build(types));
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     public void bindProvider(GraphQLProvider provider) {
         if (provider instanceof GraphQLQueryProvider) {
             queryProviders.add((GraphQLQueryProvider) provider);
@@ -134,7 +175,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         updateSchema();
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     public void bindQueryProvider(GraphQLQueryProvider queryProvider) {
         queryProviders.add(queryProvider);
         updateSchema();
@@ -144,7 +185,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         updateSchema();
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     public void bindMutationProvider(GraphQLMutationProvider mutationProvider) {
         mutationProviders.add(mutationProvider);
         updateSchema();
@@ -154,8 +195,8 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         updateSchema();
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
-    public void typesProviders(GraphQLTypesProvider typesProvider) {
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    public void bindTypesProvider(GraphQLTypesProvider typesProvider) {
         typesProviders.add(typesProvider);
         updateSchema();
     }
@@ -164,7 +205,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         updateSchema();
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     public void bindServletListener(GraphQLServletListener listener) {
         this.addListener(listener);
     }
@@ -172,7 +213,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         this.removeListener(listener);
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     public void setContextProvider(GraphQLContextBuilder contextBuilder) {
         this.contextBuilder = contextBuilder;
     }
@@ -180,7 +221,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         this.contextBuilder = new DefaultGraphQLContextBuilder();
     }
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policyOption = ReferencePolicyOption.GREEDY)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
     public void setRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
         this.rootObjectBuilder = rootObjectBuilder;
     }
