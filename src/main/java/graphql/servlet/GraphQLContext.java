@@ -78,6 +78,9 @@ public class GraphQLContext {
         return Optional.ofNullable(handshakeRequest);
     }
 
+    /**
+     * @return list of all parts representing files
+     */
     public List<Part> getFileParts() {
         return getParts().values()
                 .stream()
@@ -97,6 +100,9 @@ public class GraphQLContext {
         return Optional.ofNullable(parts);
     }
 
+    /**
+     * @return map representing all form fields
+     */
     public Map<String, List<Part>> getParts() {
         return parts != null ? parts : new HashMap<>();
     }
