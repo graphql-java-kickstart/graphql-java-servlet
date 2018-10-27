@@ -8,9 +8,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class GraphQLContext {
 
@@ -20,7 +23,7 @@ public class GraphQLContext {
     private HandshakeRequest handshakeRequest;
 
     private Subject subject;
-    private Map<String, List<Part>> files;
+    private Map<String, List<Part>> parts;
 
     private DataLoaderRegistry dataLoaderRegistry;
 
@@ -75,12 +78,37 @@ public class GraphQLContext {
         return Optional.ofNullable(handshakeRequest);
     }
 
-    public Optional<Map<String, List<Part>>> getFiles() {
-        return Optional.ofNullable(files);
+    /**
+     * @return list of all parts representing files
+     */
+    public List<Part> getFileParts() {
+        return getParts().values()
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(part -> part.getContentType() != null)
+                .collect(Collectors.toList());
     }
 
-    public void setFiles(Map<String, List<Part>> files) {
-        this.files = files;
+    /**
+     * Contrary what the name implies this method returns all parts and not just the ones that represent actual files.
+     * That's why this method has been deprecated in favor of the ones that communicate their intent more clearly.
+     *
+     * @deprecated use {@link #getParts()} or {@link #getFileParts()} instead
+     */
+    @Deprecated
+    public Optional<Map<String, List<Part>>> getFiles() {
+        return Optional.ofNullable(parts);
+    }
+
+    /**
+     * @return map representing all form fields
+     */
+    public Map<String, List<Part>> getParts() {
+        return parts != null ? parts : new HashMap<>();
+    }
+
+    public void setParts(Map<String, List<Part>> parts) {
+        this.parts = parts;
     }
 
     public Optional<DataLoaderRegistry> getDataLoaderRegistry() {
