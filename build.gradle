@@ -182,8 +182,8 @@ artifactory {
         repository {
             repoKey = 'oss-snapshot-local'
 
-            username = System.getProperty('BINTRAY_USER')
-            password = System.getProperty('BINTRAY_PASS')
+            username = System.env.BINTRAY_USER ?: System.getProperty('BINTRAY_USER')
+            password = System.env.BINTRAY_PASS ?: System.getProperty('BINTRAY_PASS')
 
             maven = true
         }
