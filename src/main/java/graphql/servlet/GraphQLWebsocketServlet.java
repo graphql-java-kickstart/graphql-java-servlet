@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,7 +35,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
     private final SubscriptionProtocolFactory fallbackSubscriptionProtocolFactory;
     private final List<String> allSubscriptionProtocols;
 
-    private final Map<Session, WsSessionSubscriptions> sessionSubscriptionCache = new HashMap<>();
+    private final Map<Session, WsSessionSubscriptions> sessionSubscriptionCache = new ConcurrentHashMap<>();
     private final SubscriptionHandlerInput subscriptionHandlerInput;
     private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
     private final AtomicBoolean isShutDown = new AtomicBoolean(false);
@@ -175,5 +176,9 @@ public class GraphQLWebsocketServlet extends Endpoint {
         }
 
         return fallbackSubscriptionProtocolFactory;
+    }
+
+    public int getSessionCount() {
+        return sessionSubscriptionCache.size();
     }
 }
