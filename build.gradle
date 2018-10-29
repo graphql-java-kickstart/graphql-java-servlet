@@ -55,15 +55,15 @@ dependencies {
     compile 'javax.websocket:javax.websocket-api:1.1'
 
     // GraphQL
-    compile 'com.graphql-java:graphql-java:10.0'
+    compile "com.graphql-java:graphql-java:$LIB_GRAPHQL_JAVA_VER"
 
     testCompile 'io.github.graphql-java:graphql-java-annotations:5.2'
 
     // JSON
-    compile 'com.fasterxml.jackson.core:jackson-core:2.8.11'
-    compile 'com.fasterxml.jackson.core:jackson-annotations:2.8.11'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.11'
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.8.11'
+    compile "com.fasterxml.jackson.core:jackson-core:$LIB_JACKSON_VER"
+    compile "com.fasterxml.jackson.core:jackson-annotations:$LIB_JACKSON_VER"
+    compile "com.fasterxml.jackson.core:jackson-databind:$LIB_JACKSON_VER"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$LIB_JACKSON_VER"
 }
 
 apply plugin: 'osgi'

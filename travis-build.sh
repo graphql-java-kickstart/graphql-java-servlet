@@ -20,8 +20,8 @@ if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; 
     if [ "${RELEASE}" = "true" ]; then
         echo "Deploying release to Bintray"
         ./gradlew clean assemble release -Prelease.useAutomaticVersion=true && ./gradlew check --info
-#    else
-#        echo "Deploying snapshot to Bintray"
-#        ./gradlew artifactoryPublish && ./gradlew check --info
+    else
+        echo "Deploying snapshot to Bintray"
+        ./gradlew artifactoryPublish && ./gradlew check --info
     fi
 fi
