@@ -47,27 +47,27 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
 
     private GraphQLSchemaProvider schemaProvider;
-    
+
 	private ScheduledExecutorService executor;
-	private ScheduledFuture<?> updateFuture;    
+	private ScheduledFuture<?> updateFuture;
     private int schemaUpdateDelay;
 
 	@interface Config {
 		int schema_update_delay() default 0;
 	}
-	
+
 	@Activate
 	public void activate(Config config) {
 		this.schemaUpdateDelay = config.schema_update_delay();
 		if (schemaUpdateDelay!=0)
-			executor = Executors.newSingleThreadScheduledExecutor(); 
+			executor = Executors.newSingleThreadScheduledExecutor();
 	}
-	
+
 	@Deactivate
 	public void deactivate() {
 		if (executor!=null) executor.shutdown();
 	}
-	
+
     @Override
     protected GraphQLQueryInvoker getQueryInvoker() {
         return queryInvoker;
@@ -106,18 +106,18 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     		doUpdateSchema();
     	}
     	else {
-    		if (updateFuture!=null) 
+    		if (updateFuture!=null)
     			updateFuture.cancel(true);
-    		
+
     		updateFuture = executor.schedule(new Runnable() {
 				@Override
 				public void run() {
 					doUpdateSchema();
 				}
-			}, schemaUpdateDelay, TimeUnit.MILLISECONDS);    		
+			}, schemaUpdateDelay, TimeUnit.MILLISECONDS);
     	}
     }
-    
+
     private void doUpdateSchema() {
         final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query").description("Root query type");
 
@@ -146,7 +146,10 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
             }
         }
 
-        this.schemaProvider = new DefaultGraphQLSchemaProvider(newSchema().query(queryTypeBuilder.build()).mutation(mutationType).build(types));
+        this.schemaProvider = new DefaultGraphQLSchemaProvider(newSchema().query(queryTypeBuilder.build())
+                .mutation(mutationType)
+                .additionalTypes(types)
+                .build());
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)

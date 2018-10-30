@@ -68,7 +68,7 @@ public class GraphQLQueryInvoker {
                     .map(registry -> {
                         List<Instrumentation> instrumentations = new ArrayList<>();
                         instrumentations.add(getInstrumentation.get());
-                        instrumentations.add(new DataLoaderDispatcherInstrumentation(registry, dataLoaderDispatcherInstrumentationOptionsSupplier.get()));
+                        instrumentations.add(new DataLoaderDispatcherInstrumentation(dataLoaderDispatcherInstrumentationOptionsSupplier.get()));
                         return new ChainedInstrumentation(instrumentations);
                     })
                     .map(Instrumentation.class::cast)
