@@ -11,7 +11,8 @@ public interface GraphQLSchemaProvider {
         return GraphQLSchema.newSchema()
                 .query(schema.getQueryType())
                 .subscription(schema.getSubscriptionType())
-                .build(schema.getAdditionalTypes());
+                .additionalTypes(schema.getAdditionalTypes())
+                .build();
     }
 
     /**

@@ -3,6 +3,7 @@ package graphql.servlet;
 import graphql.ExecutionInput;
 import graphql.schema.GraphQLSchema;
 import graphql.servlet.internal.GraphQLRequest;
+import org.dataloader.DataLoaderRegistry;
 
 import javax.security.auth.Subject;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Optional;
  * @author Andrew Potter
  */
 public abstract class GraphQLInvocationInput {
+
     private final GraphQLSchema schema;
     private final GraphQLContext context;
     private final Object root;
@@ -39,12 +41,14 @@ public abstract class GraphQLInvocationInput {
     }
 
     protected ExecutionInput createExecutionInput(GraphQLRequest graphQLRequest) {
-        return new ExecutionInput(
-            graphQLRequest.getQuery(),
-            graphQLRequest.getOperationName(),
-            context,
-            root,
-            graphQLRequest.getVariables()
-        );
+        return ExecutionInput.newExecutionInput()
+                .query(graphQLRequest.getQuery())
+                .operationName(graphQLRequest.getOperationName())
+                .context(context)
+                .root(root)
+                .variables(graphQLRequest.getVariables())
+                .dataLoaderRegistry(context.getDataLoaderRegistry().orElse(new DataLoaderRegistry()))
+                .build();
     }
+
 }
