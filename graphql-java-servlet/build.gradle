@@ -1,0 +1,23 @@
+dependencies {
+    compile(project(':graphql-java-common-http'))
+
+    // Servlet
+    compile 'javax.servlet:javax.servlet-api:3.1.0'
+    compile 'javax.websocket:javax.websocket-api:1.1'
+
+    // OSGi
+    compileOnly 'org.osgi:org.osgi.core:6.0.0'
+    compileOnly 'org.osgi:org.osgi.service.cm:1.5.0'
+    compileOnly 'org.osgi:org.osgi.service.component:1.3.0'
+    compileOnly 'biz.aQute.bnd:biz.aQute.bndlib:3.1.0'
+}
+
+apply plugin: 'osgi'
+apply plugin: 'java-library-distribution'
+apply plugin: 'biz.aQute.bnd.builder'
+
+jar {
+    manifest {
+        instruction 'Require-Capability', 'osgi.extender'
+    }
+}
