@@ -1,1 +1,3 @@
 rootProject.name = 'graphql-java-servlet'
+include 'graphql-java-common-http',
+        'graphql-java-servlet'
