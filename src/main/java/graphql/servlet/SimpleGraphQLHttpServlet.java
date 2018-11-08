@@ -3,22 +3,48 @@ package graphql.servlet;
 import graphql.schema.GraphQLSchema;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Andrew Potter
  */
 public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
-    private final GraphQLInvocationInputFactory invocationInputFactory;
-    private final GraphQLQueryInvoker queryInvoker;
-    private final GraphQLObjectMapper graphQLObjectMapper;
+    private GraphQLConfiguration configuration;
 
-    // protected to allow class to be extended
-    protected SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners, boolean asyncServletMode) {
-        super(listeners, asyncServletMode);
-        this.invocationInputFactory = invocationInputFactory;
-        this.queryInvoker = queryInvoker;
-        this.graphQLObjectMapper = graphQLObjectMapper;
+//    private GraphQLInvocationInputFactory invocationInputFactory;
+//    private GraphQLQueryInvoker queryInvoker;
+//    private GraphQLObjectMapper graphQLObjectMapper;
+//    private boolean asyncServletMode;
+
+    public SimpleGraphQLHttpServlet() {
+        super(null);
+    }
+
+    /**
+     * @param invocationInputFactory
+     * @param queryInvoker
+     * @param graphQLObjectMapper
+     * @param listeners
+     * @param asyncServletMode
+     * @deprecated
+     */
+    @Deprecated
+    public SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners, boolean asyncServletMode) {
+        super(listeners);
+        this.configuration = GraphQLConfiguration.with(invocationInputFactory)
+                .with(queryInvoker)
+                .with(graphQLObjectMapper)
+                .with(asyncServletMode);
+    }
+
+    private SimpleGraphQLHttpServlet(GraphQLConfiguration configuration) {
+        this.configuration = Objects.requireNonNull(configuration, "configuration is required");
+    }
+
+    @Override
+    protected GraphQLConfiguration getConfiguration() {
+        return configuration;
     }
 
     @Override
@@ -34,6 +60,11 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     @Override
     protected GraphQLObjectMapper getGraphQLObjectMapper() {
         return graphQLObjectMapper;
+    }
+
+    @Override
+    protected boolean isAsyncServletMode() {
+        return asyncServletMode;
     }
 
     public static Builder newBuilder(GraphQLSchema schema) {
@@ -79,6 +110,7 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
             return this;
         }
 
+        @Deprecated
         public SimpleGraphQLHttpServlet build() {
             return new SimpleGraphQLHttpServlet(invocationInputFactory, queryInvoker, graphQLObjectMapper, listeners, asyncServletMode);
         }
