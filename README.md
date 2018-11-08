@@ -6,9 +6,7 @@
 
 Implementation of GraphQL Java Servlet including support for Relay.js, Apollo and OSGi out of the box.
 This project wraps the Java implementation of GraphQL provided by [GraphQL Java](https://www.graphql-java.com).
-The documentation on this site focuses around the usage of the servlet. Although some parts may dive deeper
-into the aspects of GraphQL Java as well, make sure to look at the 
-[GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
+See [GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
 regarding GraphQL Java itself. 
 
 We try to stay up to date with GraphQL Java as much as possible. The current version supports **GraphQL Java 10.0**.
@@ -51,7 +49,7 @@ Add the `graphql-java-servlet` dependency:
 ### Create a Servlet class
 
 Creating the Servlet class requires various parameters to be provided at the moment. We're working on simplifying
-this, to make it easier to get started. For now, take a look at [Create a Servlet class]({{< ref "getting-started/#create-a-servlet-class" >}})
+this, to make it easier to get started. For now, take a look at [Create a Servlet class](https://www.graphql-java-kickstart.com/docs/graphql-java-servlet/getting-started/#create-a-servlet-class)
 to see what's needed to create a Servlet with a schema.
 
 ## Using the latest development build
