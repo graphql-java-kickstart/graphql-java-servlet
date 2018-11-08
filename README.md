@@ -64,14 +64,7 @@ The servlet supports the following request formats:
 
 ## Standalone servlet
 
-The simplest form of the servlet takes a graphql-java `GraphQLSchema` and an `ExecutionStrategy`:
-```java
-GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy);
-
-// or
-
-GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy, operationListeners, servletListeners);
-```
+See the updated [Getting started guide](https://www.graphql-java-kickstart.com/docs/graphql-java-servlet/getting-started/). 
 
 ## Servlet Listeners
 
