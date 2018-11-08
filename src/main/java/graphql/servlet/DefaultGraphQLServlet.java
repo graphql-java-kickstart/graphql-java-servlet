@@ -5,9 +5,9 @@ import javax.servlet.ServletConfig;
 public class DefaultGraphQLServlet extends AbstractGraphQLHttpServlet {
 
     @Override
-    public void init(ServletConfig config) {
+    public void init(ServletConfig servletConfig) {
 
-        super.init(config);
+        super.init(servletConfig);
     }
 
     @Override

@@ -893,6 +893,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         servlet = SimpleGraphQLHttpServlet.newBuilder(GraphQLInvocationInputFactory.newBuilder {
             throw new TestException()
         }.build()).build()
+        servlet.init(null)
 
         request.setPathInfo('/schema.json')
 
@@ -992,7 +993,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "typeInfo is serialized correctly"() {
         expect:
-        servlet.getGraphQLObjectMapper().getJacksonMapper().writeValueAsString(ExecutionStepInfo.newExecutionStepInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
+        servlet.getConfiguration().getObjectMapper().getJacksonMapper().writeValueAsString(ExecutionStepInfo.newExecutionStepInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
     }
 
     @Ignore
