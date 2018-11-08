@@ -9,8 +9,8 @@ import java.util.Objects;
 public class GraphQLConfiguration {
 
     private GraphQLInvocationInputFactory invocationInputFactory;
-    private GraphQLQueryInvoker queryInvoker = GraphQLQueryInvoker.newBuilder().build();
-    private GraphQLObjectMapper objectMapper = GraphQLObjectMapper.newBuilder().build();
+    private GraphQLQueryInvoker queryInvoker;
+    private GraphQLObjectMapper objectMapper;
     private List<GraphQLServletListener> listeners;
     private boolean asyncServletModeEnabled;
 
