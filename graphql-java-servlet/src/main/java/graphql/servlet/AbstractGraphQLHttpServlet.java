@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.Servlet;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +25,6 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,31 +50,66 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     private static final GraphQLRequest INTROSPECTION_REQUEST = new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), null);
     private static final String[] MULTIPART_KEYS = new String[]{"operations", "graphql", "query"};
 
+    private GraphQLConfiguration configuration;
+
+    /**
+     * @deprecated override {@link #getConfiguration()} instead
+     */
+    @Deprecated
     protected abstract GraphQLQueryInvoker getQueryInvoker();
 
+    /**
+     * @deprecated override {@link #getConfiguration()} instead
+     */
+    @Deprecated
     protected abstract GraphQLInvocationInputFactory getInvocationInputFactory();
 
+    /**
+     * @deprecated override {@link #getConfiguration()} instead
+     */
+    @Deprecated
     protected abstract GraphQLObjectMapper getGraphQLObjectMapper();
 
-    private final List<GraphQLServletListener> listeners;
+    /**
+     * @deprecated override {@link #getConfiguration()} instead
+     */
+    @Deprecated
+    protected abstract boolean isAsyncServletMode();
 
-    private final HttpRequestHandler getHandler;
-    private final HttpRequestHandler postHandler;
-
-    private final boolean asyncServletMode;
-
-    public AbstractGraphQLHttpServlet() {
-        this(null, false);
+    protected GraphQLConfiguration getConfiguration() {
+        return GraphQLConfiguration.with(getInvocationInputFactory())
+                .with(getQueryInvoker())
+                .with(getGraphQLObjectMapper())
+                .with(isAsyncServletMode())
+                .with(listeners)
+                .build();
     }
 
-    public AbstractGraphQLHttpServlet(List<GraphQLServletListener> listeners, boolean asyncServletMode) {
+    /**
+     * @deprecated use {@link #getConfiguration()} instead
+     */
+    @Deprecated
+    private final List<GraphQLServletListener> listeners;
+
+    private HttpRequestHandler getHandler;
+    private HttpRequestHandler postHandler;
+
+    public AbstractGraphQLHttpServlet() {
+        this(null);
+    }
+
+    public AbstractGraphQLHttpServlet(List<GraphQLServletListener> listeners) {
         this.listeners = listeners != null ? new ArrayList<>(listeners) : new ArrayList<>();
-        this.asyncServletMode = asyncServletMode;
+    }
+
+    @Override
+    public void init(ServletConfig servletConfig) {
+        this.configuration = getConfiguration();
 
         this.getHandler = (request, response) -> {
-            GraphQLInvocationInputFactory invocationInputFactory = getInvocationInputFactory();
-            GraphQLObjectMapper graphQLObjectMapper = getGraphQLObjectMapper();
-            GraphQLQueryInvoker queryInvoker = getQueryInvoker();
+            GraphQLInvocationInputFactory invocationInputFactory = configuration.getInvocationInputFactory();
+            GraphQLObjectMapper graphQLObjectMapper = configuration.getObjectMapper();
+            GraphQLQueryInvoker queryInvoker = configuration.getQueryInvoker();
 
             String path = request.getPathInfo();
             if (path == null) {
@@ -106,9 +141,9 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         };
 
         this.postHandler = (request, response) -> {
-            GraphQLInvocationInputFactory invocationInputFactory = getInvocationInputFactory();
-            GraphQLObjectMapper graphQLObjectMapper = getGraphQLObjectMapper();
-            GraphQLQueryInvoker queryInvoker = getQueryInvoker();
+            GraphQLInvocationInputFactory invocationInputFactory = configuration.getInvocationInputFactory();
+            GraphQLObjectMapper graphQLObjectMapper = configuration.getObjectMapper();
+            GraphQLQueryInvoker queryInvoker = configuration.getQueryInvoker();
 
             try {
                 if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
@@ -116,12 +151,12 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                     query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(new GraphQLRequest(query, null, null)), response);
                 } else if (request.getContentType() != null && request.getContentType().startsWith("multipart/form-data") && !request.getParts().isEmpty()) {
                     final Map<String, List<Part>> fileItems = request.getParts()
-                                                                     .stream()
-                                                                     .collect(Collectors.groupingBy(Part::getName));
+                            .stream()
+                            .collect(Collectors.groupingBy(Part::getName));
 
                     for (String key : MULTIPART_KEYS) {
                         // Check to see if there is a part under the key we seek
-                        if(!fileItems.containsKey(key)) {
+                        if (!fileItems.containsKey(key)) {
                             continue;
                         }
 
@@ -134,20 +169,20 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                         InputStream inputStream = asMarkableInputStream(queryItem.get().getInputStream());
 
                         final Optional<Map<String, List<String>>> variablesMap =
-                            getFileItem(fileItems, "map").map(graphQLObjectMapper::deserializeMultipartMap);
+                                getFileItem(fileItems, "map").map(graphQLObjectMapper::deserializeMultipartMap);
 
                         if (isBatchedQuery(inputStream)) {
                             List<GraphQLRequest> graphQLRequests =
-                                graphQLObjectMapper.readBatchedGraphQLRequest(inputStream);
+                                    graphQLObjectMapper.readBatchedGraphQLRequest(inputStream);
                             variablesMap.ifPresent(map -> graphQLRequests.forEach(r -> mapMultipartVariables(r, map, fileItems)));
                             GraphQLBatchedInvocationInput invocationInput =
-                                invocationInputFactory.create(graphQLRequests, request, response);
+                                    invocationInputFactory.create(graphQLRequests, request, response);
                             invocationInput.getContext().setParts(fileItems);
                             queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
                             return;
                         } else {
                             GraphQLRequest graphQLRequest;
-                            if("query".equals(key)) {
+                            if ("query".equals(key)) {
                                 graphQLRequest = buildRequestFromQuery(inputStream, graphQLObjectMapper, fileItems);
                             } else {
                                 graphQLRequest = graphQLObjectMapper.readGraphQLRequest(inputStream);
@@ -155,7 +190,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
                             variablesMap.ifPresent(m -> mapMultipartVariables(graphQLRequest, m, fileItems));
                             GraphQLSingleInvocationInput invocationInput =
-                                invocationInputFactory.create(graphQLRequest, request, response);
+                                    invocationInputFactory.create(graphQLRequest, request, response);
                             invocationInput.getContext().setParts(fileItems);
                             query(queryInvoker, graphQLObjectMapper, invocationInput, response);
                             return;
@@ -190,8 +225,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
     private GraphQLRequest buildRequestFromQuery(InputStream inputStream,
                                                  GraphQLObjectMapper graphQLObjectMapper,
-                                                 Map<String, List<Part>> fileItems) throws IOException
-    {
+                                                 Map<String, List<Part>> fileItems) throws IOException {
         GraphQLRequest graphQLRequest;
         String query = new String(ByteStreams.toByteArray(inputStream));
 
@@ -213,49 +247,48 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
     private void mapMultipartVariables(GraphQLRequest request,
                                        Map<String, List<String>> variablesMap,
-                                       Map<String, List<Part>> fileItems)
-    {
+                                       Map<String, List<Part>> fileItems) {
         Map<String, Object> variables = request.getVariables();
 
         variablesMap.forEach((partName, objectPaths) -> {
             Part part = getFileItem(fileItems, partName)
-                            .orElseThrow(() -> new RuntimeException("unable to find part name " +
-                                                                    partName +
-                                                                    " as referenced in the variables map"));
+                    .orElseThrow(() -> new RuntimeException("unable to find part name " +
+                            partName +
+                            " as referenced in the variables map"));
 
             objectPaths.forEach(objectPath -> VariableMapper.mapVariable(objectPath, variables, part));
         });
     }
 
     public void addListener(GraphQLServletListener servletListener) {
-        listeners.add(servletListener);
+        configuration.add(servletListener);
     }
 
     public void removeListener(GraphQLServletListener servletListener) {
-        listeners.remove(servletListener);
+        configuration.remove(servletListener);
     }
 
     @Override
     public String[] getQueries() {
-        return getInvocationInputFactory().getSchemaProvider().getSchema().getQueryType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
+        return configuration.getInvocationInputFactory().getSchemaProvider().getSchema().getQueryType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
     }
 
     @Override
     public String[] getMutations() {
-        return getInvocationInputFactory().getSchemaProvider().getSchema().getMutationType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
+        return configuration.getInvocationInputFactory().getSchemaProvider().getSchema().getMutationType().getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
     }
 
     @Override
     public String executeQuery(String query) {
         try {
-            return getGraphQLObjectMapper().serializeResultAsJson(getQueryInvoker().query(getInvocationInputFactory().create(new GraphQLRequest(query, new HashMap<>(), null))));
+            return configuration.getObjectMapper().serializeResultAsJson(configuration.getQueryInvoker().query(configuration.getInvocationInputFactory().create(new GraphQLRequest(query, new HashMap<>(), null))));
         } catch (Exception e) {
             return e.getMessage();
         }
     }
 
     private void doRequestAsync(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler) {
-        if (asyncServletMode) {
+        if (configuration.isAsyncServletModeEnabled()) {
             AsyncContext asyncContext = request.startAsync();
             HttpServletRequest asyncRequest = (HttpServletRequest) asyncContext.getRequest();
             HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
@@ -324,11 +357,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     }
 
     private <R> List<R> runListeners(Function<? super GraphQLServletListener, R> action) {
-        if (listeners == null) {
-            return Collections.emptyList();
-        }
-
-        return listeners.stream()
+        return configuration.getListeners().stream()
                 .map(listener -> {
                     try {
                         return action.apply(listener);

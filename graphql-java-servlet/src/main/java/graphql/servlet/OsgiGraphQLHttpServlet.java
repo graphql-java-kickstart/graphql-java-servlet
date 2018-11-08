@@ -83,6 +83,11 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         return graphQLObjectMapper;
     }
 
+    @Override
+    protected boolean isAsyncServletMode() {
+        return false;
+    }
+
     public OsgiGraphQLHttpServlet() {
         updateSchema();
 
