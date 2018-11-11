@@ -15,7 +15,7 @@ This project requires at least Java 8.
 
 ## Quick start
 
-See [Getting started](https://www.graphql-java-kickstart.com/docs/graphql-java-servlet/getting-started/) for more detailed instructions.
+See [Getting started](https://www.graphql-java-kickstart.com/servlet/getting-started/) for more detailed instructions.
 
 To add `graphql-java-servlet` to your project and get started quickly, do the following.
 
@@ -49,7 +49,7 @@ Add the `graphql-java-servlet` dependency:
 ### Create a Servlet class
 
 Creating the Servlet class requires various parameters to be provided at the moment. We're working on simplifying
-this, to make it easier to get started. For now, take a look at [Create a Servlet class](https://www.graphql-java-kickstart.com/docs/graphql-java-servlet/getting-started/#create-a-servlet-class)
+this, to make it easier to get started. For now, take a look at [Create a Servlet class](https://www.graphql-java-kickstart.com/servlet/getting-started/#create-a-servlet-class)
 to see what's needed to create a Servlet with a schema.
 
 ## Using the latest development build
