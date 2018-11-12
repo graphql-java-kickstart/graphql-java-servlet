@@ -5,7 +5,7 @@ build/
 *.iws
 .idea/
 target/
-/out/
+out/
 .classpath
 .project
 .settings

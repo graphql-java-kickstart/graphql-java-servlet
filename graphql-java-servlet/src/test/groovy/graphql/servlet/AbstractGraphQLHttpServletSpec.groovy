@@ -2,10 +2,8 @@ package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
-import graphql.annotations.annotationTypes.GraphQLType
 import graphql.execution.ExecutionStepInfo
 import graphql.execution.instrumentation.ChainedInstrumentation
-
 import graphql.execution.instrumentation.Instrumentation
 import graphql.schema.GraphQLNonNull
 import org.dataloader.DataLoaderRegistry

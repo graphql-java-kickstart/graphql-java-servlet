@@ -77,6 +77,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     protected abstract boolean isAsyncServletMode();
 
     protected GraphQLConfiguration getConfiguration() {
+        // temporarily constructs a GraphQLConfiguration using deprecated methods, should be made abstract in future version
         return GraphQLConfiguration.with(getInvocationInputFactory())
                 .with(getQueryInvoker())
                 .with(getGraphQLObjectMapper())
