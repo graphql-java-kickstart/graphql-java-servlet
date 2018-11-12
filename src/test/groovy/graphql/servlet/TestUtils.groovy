@@ -8,7 +8,9 @@ class TestUtils {
 
     static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                              DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
-        return SimpleGraphQLHttpServlet.newBuilder(createGraphQlSchema(queryDataFetcher, mutationDataFetcher)).build()
+        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher))
+        servlet.init(null)
+        return servlet
     }
 
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
