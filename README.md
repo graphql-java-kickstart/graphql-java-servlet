@@ -9,7 +9,7 @@ This project wraps the Java implementation of GraphQL provided by [GraphQL Java]
 See [GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
 regarding GraphQL Java itself. 
 
-We try to stay up to date with GraphQL Java as much as possible. The current version supports **GraphQL Java 10.0**.
+We try to stay up to date with GraphQL Java as much as possible. The current version supports **GraphQL Java 11.0**.
  
 This project requires at least Java 8.
 
