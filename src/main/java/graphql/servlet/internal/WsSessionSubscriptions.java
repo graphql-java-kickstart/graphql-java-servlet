@@ -50,4 +50,6 @@ public class WsSessionSubscriptions {
     private String getImplicitId(Subscription subscription) {
         return String.valueOf(subscription.hashCode());
     }
+
+    public int getSubscriptionCount() { return subscriptions.size(); }
 }
