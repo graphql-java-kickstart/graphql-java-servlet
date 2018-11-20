@@ -99,6 +99,16 @@ public class GraphQLConfiguration {
             return this;
         }
 
+        public Builder with(GraphQLContextBuilder contextBuilder) {
+            this.invocationInputFactoryBuilder.withGraphQLContextBuilder(contextBuilder);
+            return this;
+        }
+
+        public Builder with(GraphQLRootObjectBuilder rootObjectBuilder) {
+            this.invocationInputFactoryBuilder.withGraphQLRootObjectBuilder(rootObjectBuilder);
+            return this;
+        }
+
         public GraphQLConfiguration build() {
             return new GraphQLConfiguration(
                     this.invocationInputFactory != null ? this.invocationInputFactory : invocationInputFactoryBuilder.build(),
