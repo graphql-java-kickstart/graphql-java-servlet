@@ -9,7 +9,7 @@ This project wraps the Java implementation of GraphQL provided by [GraphQL Java]
 See [GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
 regarding GraphQL Java itself. 
 
-We try to stay up to date with GraphQL Java as much as possible. The current version supports **GraphQL Java 10.0**.
+We try to stay up to date with GraphQL Java as much as possible. The current version supports **GraphQL Java 11.0**.
  
 This project requires at least Java 8.
 
@@ -31,7 +31,7 @@ repositories {
 Add the `graphql-java-servlet` dependency:
 ```gradle
 dependencies {
-    compile 'com.graphql-java-kickstart:graphql-java-servlet:6.2.0'
+    compile 'com.graphql-java-kickstart:graphql-java-servlet:7.0.0'
 }
 ```
 
@@ -42,7 +42,7 @@ Add the `graphql-java-servlet` dependency:
 <dependency>
   <groupId>com.graphql-java-kickstart</groupId>
   <artifactId>graphql-java-servlet</artifactId>
-  <version>6.2.0</version>
+  <version>7.0.0</version>
 </dependency>
 ```
 
