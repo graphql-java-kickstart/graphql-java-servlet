@@ -123,6 +123,18 @@ public class GraphQLQueryInvoker {
             return this;
         }
 
+        public Builder with(List<Instrumentation> instrumentations) {
+            if (instrumentations.isEmpty()) {
+                return this;
+            }
+            if (instrumentations.size() == 1) {
+                withInstrumentation(instrumentations.get(0));
+            } else {
+                withInstrumentation(new ChainedInstrumentation(instrumentations));
+            }
+            return this;
+        }
+
         public Builder withPreparsedDocumentProvider(PreparsedDocumentProvider provider) {
             return withPreparsedDocumentProvider(() -> provider);
         }

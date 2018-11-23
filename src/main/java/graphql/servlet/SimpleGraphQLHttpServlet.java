@@ -17,12 +17,7 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     }
 
     /**
-     * @param invocationInputFactory
-     * @param queryInvoker
-     * @param graphQLObjectMapper
-     * @param listeners
-     * @param asyncServletMode
-     * @deprecated
+     * @deprecated use {@link GraphQLHttpServlet} instead
      */
     @Deprecated
     public SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners, boolean asyncServletMode) {

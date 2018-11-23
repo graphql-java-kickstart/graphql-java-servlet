@@ -14,6 +14,7 @@ import java.util.function.Supplier;
  * @author Andrew Potter
  */
 public class GraphQLInvocationInputFactory {
+
     private final Supplier<GraphQLSchemaProvider> schemaProviderSupplier;
     private final Supplier<GraphQLContextBuilder> contextBuilderSupplier;
     private final Supplier<GraphQLRootObjectBuilder> rootObjectBuilderSupplier;
