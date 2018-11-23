@@ -6,7 +6,6 @@ import graphql.servlet.internal.GraphQLRequest;
 import org.dataloader.DataLoaderRegistry;
 
 import javax.security.auth.Subject;
-import java.util.List;
 import java.util.Optional;
 
 /**

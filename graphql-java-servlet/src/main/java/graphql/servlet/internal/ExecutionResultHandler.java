@@ -3,7 +3,6 @@ package graphql.servlet.internal;
 import graphql.ExecutionResult;
 
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * @author Andrew Potter
