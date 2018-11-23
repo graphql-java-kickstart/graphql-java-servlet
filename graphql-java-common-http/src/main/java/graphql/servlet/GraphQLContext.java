@@ -9,6 +9,6 @@ interface GraphQLContext {
 
     Optional<Subject> getSubject();
 
-    Optional<DataLoaderRegistry> getDataLoaderRegistry();
+    DataLoaderRegistry getDataLoaderRegistry();
 
 }

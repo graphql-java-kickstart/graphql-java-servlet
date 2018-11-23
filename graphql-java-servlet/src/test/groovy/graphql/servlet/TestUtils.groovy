@@ -49,7 +49,7 @@ class TestUtils {
             field.type(Scalars.GraphQLString)
             field.argument { argument ->
                 argument.name("file")
-                argument.type(ApolloScalars.Upload)
+                argument.type(ApolloScalars.UPLOAD)
             }
             field.dataFetcher( { env -> new String(ByteStreams.toByteArray(env.arguments.file.getInputStream())) } )
         }
@@ -58,7 +58,7 @@ class TestUtils {
             field.type(GraphQLList.list(Scalars.GraphQLString))
             field.argument { argument ->
                 argument.name("files")
-                argument.type(GraphQLList.list(GraphQLNonNull.nonNull(ApolloScalars.Upload)))
+                argument.type(GraphQLList.list(GraphQLNonNull.nonNull(ApolloScalars.UPLOAD)))
             }
             field.dataFetcher( { env -> env.arguments.files.collect { new String(ByteStreams.toByteArray(it.getInputStream())) } } )
         }
@@ -67,7 +67,7 @@ class TestUtils {
         return GraphQLSchema.newSchema()
                             .query(query)
                             .mutation(mutation)
-                            .additionalType(ApolloScalars.Upload)
+                            .additionalType(ApolloScalars.UPLOAD)
                             .build()
     }
 

@@ -39,7 +39,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     private final GraphQLInvocationInputFactory invocationInputFactory;
     private final GraphQLObjectMapper graphQLObjectMapper;
 
-    private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
+    private GraphQLContextBuilder contextBuilder = new GraphQLHttpContextBuilder();
     private GraphQLRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
     private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
@@ -226,7 +226,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         this.contextBuilder = contextBuilder;
     }
     public void unsetContextProvider(GraphQLContextBuilder contextBuilder) {
-        this.contextBuilder = new DefaultGraphQLContextBuilder();
+        this.contextBuilder = new GraphQLHttpContextBuilder();
     }
 
     @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)

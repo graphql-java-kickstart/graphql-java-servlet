@@ -46,7 +46,7 @@ public abstract class GraphQLInvocationInput {
                 .context(context)
                 .root(root)
                 .variables(graphQLRequest.getVariables())
-                .dataLoaderRegistry(context.getDataLoaderRegistry().orElse(new DataLoaderRegistry()))
+                .dataLoaderRegistry(context.getDataLoaderRegistry())
                 .build();
     }
 

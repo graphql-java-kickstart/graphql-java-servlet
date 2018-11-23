@@ -64,15 +64,10 @@ public class GraphQLQueryInvoker {
 
     protected Instrumentation getInstrumentation(Object context) {
         if (context instanceof GraphQLContext) {
-            return ((GraphQLContext) context).getDataLoaderRegistry()
-                    .map(registry -> {
-                        List<Instrumentation> instrumentations = new ArrayList<>();
-                        instrumentations.add(getInstrumentation.get());
-                        instrumentations.add(new DataLoaderDispatcherInstrumentation(dataLoaderDispatcherInstrumentationOptionsSupplier.get()));
-                        return new ChainedInstrumentation(instrumentations);
-                    })
-                    .map(Instrumentation.class::cast)
-                    .orElse(getInstrumentation.get());
+            List<Instrumentation> instrumentations = new ArrayList<>();
+            instrumentations.add(getInstrumentation.get());
+            instrumentations.add(new DataLoaderDispatcherInstrumentation(dataLoaderDispatcherInstrumentationOptionsSupplier.get()));
+            return new ChainedInstrumentation(instrumentations);
         }
         return getInstrumentation.get();
     }

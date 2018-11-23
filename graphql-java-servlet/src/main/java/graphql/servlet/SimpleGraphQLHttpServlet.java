@@ -8,26 +8,13 @@ import java.util.Objects;
 
 /**
  * @author Andrew Potter
+ * @deprecated Use {@link GraphQLHttpServlet} instead
  */
 public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
     private GraphQLConfiguration configuration;
 
     public SimpleGraphQLHttpServlet() {
-    }
-
-    /**
-     * @deprecated use {@link GraphQLHttpServlet} instead
-     */
-    @Deprecated
-    public SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners, boolean asyncServletMode) {
-        super(listeners);
-        this.configuration = GraphQLConfiguration.with(invocationInputFactory)
-                .with(queryInvoker)
-                .with(graphQLObjectMapper)
-                .with(listeners != null ? listeners : new ArrayList<>())
-                .with(asyncServletMode)
-                .build();
     }
 
     private SimpleGraphQLHttpServlet(GraphQLConfiguration configuration) {
@@ -37,26 +24,6 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     @Override
     protected GraphQLConfiguration getConfiguration() {
         return configuration;
-    }
-
-    @Override
-    protected GraphQLQueryInvoker getQueryInvoker() {
-        return configuration.getQueryInvoker();
-    }
-
-    @Override
-    protected GraphQLInvocationInputFactory getInvocationInputFactory() {
-        return configuration.getInvocationInputFactory();
-    }
-
-    @Override
-    protected GraphQLObjectMapper getGraphQLObjectMapper() {
-        return configuration.getObjectMapper();
-    }
-
-    @Override
-    protected boolean isAsyncServletMode() {
-        return configuration.isAsyncServletModeEnabled();
     }
 
     public static Builder newBuilder(GraphQLSchema schema) {

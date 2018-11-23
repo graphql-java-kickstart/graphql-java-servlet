@@ -52,56 +52,10 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
     private GraphQLConfiguration configuration;
 
-    /**
-     * @deprecated override {@link #getConfiguration()} instead
-     */
-    @Deprecated
-    protected abstract GraphQLQueryInvoker getQueryInvoker();
-
-    /**
-     * @deprecated override {@link #getConfiguration()} instead
-     */
-    @Deprecated
-    protected abstract GraphQLInvocationInputFactory getInvocationInputFactory();
-
-    /**
-     * @deprecated override {@link #getConfiguration()} instead
-     */
-    @Deprecated
-    protected abstract GraphQLObjectMapper getGraphQLObjectMapper();
-
-    /**
-     * @deprecated override {@link #getConfiguration()} instead
-     */
-    @Deprecated
-    protected abstract boolean isAsyncServletMode();
-
-    protected GraphQLConfiguration getConfiguration() {
-        // temporarily constructs a GraphQLConfiguration using deprecated methods, should be made abstract in future version
-        return GraphQLConfiguration.with(getInvocationInputFactory())
-                .with(getQueryInvoker())
-                .with(getGraphQLObjectMapper())
-                .with(isAsyncServletMode())
-                .with(listeners)
-                .build();
-    }
-
-    /**
-     * @deprecated use {@link #getConfiguration()} instead
-     */
-    @Deprecated
-    private final List<GraphQLServletListener> listeners;
+    protected abstract GraphQLConfiguration getConfiguration();
 
     private HttpRequestHandler getHandler;
     private HttpRequestHandler postHandler;
-
-    public AbstractGraphQLHttpServlet() {
-        this(null);
-    }
-
-    public AbstractGraphQLHttpServlet(List<GraphQLServletListener> listeners) {
-        this.listeners = listeners != null ? new ArrayList<>(listeners) : new ArrayList<>();
-    }
 
     @Override
     public void init(ServletConfig servletConfig) {

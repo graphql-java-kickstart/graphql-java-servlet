@@ -104,7 +104,7 @@ public class GraphQLInvocationInputFactory {
 
     public static class Builder {
         private final Supplier<GraphQLSchemaProvider> schemaProviderSupplier;
-        private Supplier<GraphQLContextBuilder> contextBuilderSupplier = DefaultGraphQLContextBuilder::new;
+        private Supplier<GraphQLContextBuilder> contextBuilderSupplier = GraphQLHttpContextBuilder::new;
         private Supplier<GraphQLRootObjectBuilder> rootObjectBuilderSupplier = DefaultGraphQLRootObjectBuilder::new;
 
         public Builder(GraphQLSchemaProvider schemaProvider) {
