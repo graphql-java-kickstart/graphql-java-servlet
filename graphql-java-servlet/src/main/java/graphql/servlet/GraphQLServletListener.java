@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Andrew Potter
  */
 public interface GraphQLServletListener {
+
     default RequestCallback onRequest(HttpServletRequest request, HttpServletResponse response) {
         return null;
     }
@@ -16,4 +17,5 @@ public interface GraphQLServletListener {
         default void onError(HttpServletRequest request, HttpServletResponse response, Throwable throwable) {}
         default void onFinally(HttpServletRequest request, HttpServletResponse response) {}
     }
+
 }

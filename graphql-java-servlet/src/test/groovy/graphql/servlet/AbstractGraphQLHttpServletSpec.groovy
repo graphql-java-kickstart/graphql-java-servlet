@@ -1018,7 +1018,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         1 * mockInputStream.reset()
     }
 
-    def "getInstrumentation returns the set Instrumentation if none is provided in the context"() {
+    def "getInstrumentation returns the set Instrumentation in ChainedInstrumentation if none is provided in the context"() {
 
         setup:
         Instrumentation expectedInstrumentation = Mock()
@@ -1028,25 +1028,24 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(expectedInstrumentation).build())
                 .build()
         when:
-        Instrumentation actualInstrumentation = simpleGraphQLServlet.getQueryInvoker().getInstrumentation(context)
+        Instrumentation actualInstrumentation = simpleGraphQLServlet.getConfiguration().getQueryInvoker().getInstrumentation(context)
         then:
-        actualInstrumentation == expectedInstrumentation;
-        !(actualInstrumentation instanceof ChainedInstrumentation)
-
+        actualInstrumentation instanceof ChainedInstrumentation
+        List<Instrumentation> instrumentations = ((ChainedInstrumentation) actualInstrumentation).getInstrumentations()
+        instrumentations.contains(expectedInstrumentation)
     }
 
     def "getInstrumentation returns the ChainedInstrumentation if DataLoader provided in context"() {
         setup:
         Instrumentation servletInstrumentation = Mock()
-        GraphQLHttpContext context = new GraphQLHttpContext(null, null)
         DataLoaderRegistry dlr = Mock()
-        context.setDataLoaderRegistry(dlr)
+        GraphQLHttpContext context = new GraphQLHttpContext(null, dlr)
         SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
                 .newBuilder(TestUtils.createGraphQlSchema())
                 .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(servletInstrumentation).build())
                 .build();
         when:
-        Instrumentation actualInstrumentation = simpleGraphQLServlet.getQueryInvoker().getInstrumentation(context)
+        Instrumentation actualInstrumentation = simpleGraphQLServlet.getConfiguration().getQueryInvoker().getInstrumentation(context)
         then:
         actualInstrumentation instanceof ChainedInstrumentation
         actualInstrumentation != servletInstrumentation

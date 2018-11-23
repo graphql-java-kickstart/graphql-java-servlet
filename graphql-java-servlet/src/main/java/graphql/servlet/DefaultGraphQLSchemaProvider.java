@@ -42,4 +42,5 @@ public class DefaultGraphQLSchemaProvider implements GraphQLSchemaProvider {
     public GraphQLSchema getReadOnlySchema(HttpServletRequest request) {
         return readOnlySchema;
     }
+
 }
