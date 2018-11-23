@@ -24,4 +24,5 @@ public class GraphQLBatchedInvocationInput extends GraphQLInvocationInput {
                 .map(this::createExecutionInput)
                 .collect(Collectors.toList());
     }
+
 }

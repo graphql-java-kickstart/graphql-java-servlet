@@ -16,4 +16,5 @@ public interface GraphQLContextBuilder {
      * @return the graphql context
      */
     GraphQLContext build();
+
 }

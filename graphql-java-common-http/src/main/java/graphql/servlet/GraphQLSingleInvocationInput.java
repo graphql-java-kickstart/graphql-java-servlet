@@ -20,4 +20,5 @@ public class GraphQLSingleInvocationInput extends GraphQLInvocationInput {
     public ExecutionInput getExecutionInput() {
         return createExecutionInput(request);
     }
+
 }

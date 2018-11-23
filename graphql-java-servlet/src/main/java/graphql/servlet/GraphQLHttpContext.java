@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class GraphQLContext {
+public class GraphQLHttpContext implements GraphQLContext {
 
     private HttpServletRequest httpServletRequest;
     private HttpServletResponse httpServletResponse;
@@ -27,7 +27,7 @@ public class GraphQLContext {
 
     private DataLoaderRegistry dataLoaderRegistry;
 
-    public GraphQLContext(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Session session, HandshakeRequest handshakeRequest, Subject subject) {
+    public GraphQLHttpContext(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Session session, HandshakeRequest handshakeRequest, Subject subject) {
         this.httpServletRequest = httpServletRequest;
         this.httpServletResponse = httpServletResponse;
         this.session = session;
@@ -35,19 +35,19 @@ public class GraphQLContext {
         this.subject = subject;
     }
 
-    public GraphQLContext(HttpServletRequest httpServletRequest) {
+    public GraphQLHttpContext(HttpServletRequest httpServletRequest) {
         this(httpServletRequest, null);
     }
 
-    public GraphQLContext(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    public GraphQLHttpContext(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         this(httpServletRequest, httpServletResponse, null, null, null);
     }
 
-    public GraphQLContext(Session session, HandshakeRequest handshakeRequest) {
+    public GraphQLHttpContext(Session session, HandshakeRequest handshakeRequest) {
         this(null, null, session, handshakeRequest, null);
     }
 
-    public GraphQLContext() {
+    public GraphQLHttpContext() {
         this(null, null, null, null, null);
     }
 
@@ -59,6 +59,7 @@ public class GraphQLContext {
         return Optional.ofNullable(httpServletResponse);
     }
 
+    @Override
     public Optional<Subject> getSubject() {
         return Optional.ofNullable(subject);
     }
@@ -112,6 +113,7 @@ public class GraphQLContext {
         this.parts = parts;
     }
 
+    @Override
     public Optional<DataLoaderRegistry> getDataLoaderRegistry() {
         return Optional.ofNullable(dataLoaderRegistry);
     }

@@ -54,12 +54,12 @@ public class GraphQLQueryInvoker {
     private GraphQL newGraphQL(GraphQLSchema schema, Object context) {
         ExecutionStrategyProvider executionStrategyProvider = getExecutionStrategyProvider.get();
         return GraphQL.newGraphQL(schema)
-            .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
-            .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
-            .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
-            .instrumentation(getInstrumentation(context))
-            .preparsedDocumentProvider(getPreparsedDocumentProvider.get())
-            .build();
+                .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
+                .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
+                .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
+                .instrumentation(getInstrumentation(context))
+                .preparsedDocumentProvider(getPreparsedDocumentProvider.get())
+                .build();
     }
 
     protected Instrumentation getInstrumentation(Object context) {

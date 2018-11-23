@@ -178,7 +178,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                             variablesMap.ifPresent(map -> graphQLRequests.forEach(r -> mapMultipartVariables(r, map, fileItems)));
                             GraphQLBatchedInvocationInput invocationInput =
                                     invocationInputFactory.create(graphQLRequests, request, response);
-                            invocationInput.getContext().setParts(fileItems);
+                            ((GraphQLHttpContext) invocationInput.getContext()).setParts(fileItems);
                             queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
                             return;
                         } else {
@@ -192,7 +192,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                             variablesMap.ifPresent(m -> mapMultipartVariables(graphQLRequest, m, fileItems));
                             GraphQLSingleInvocationInput invocationInput =
                                     invocationInputFactory.create(graphQLRequest, request, response);
-                            invocationInput.getContext().setParts(fileItems);
+                            ((GraphQLHttpContext) invocationInput.getContext()).setParts(fileItems);
                             query(queryInvoker, graphQLObjectMapper, invocationInput, response);
                             return;
                         }

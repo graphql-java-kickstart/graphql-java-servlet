@@ -9,16 +9,17 @@ public class DefaultGraphQLContextBuilder implements GraphQLContextBuilder {
 
     @Override
     public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        return new GraphQLContext(httpServletRequest, httpServletResponse);
+        return new GraphQLHttpContext(httpServletRequest, httpServletResponse);
     }
 
     @Override
     public GraphQLContext build(Session session, HandshakeRequest handshakeRequest) {
-        return new GraphQLContext(session, handshakeRequest);
+        return new GraphQLHttpContext(session, handshakeRequest);
     }
 
     @Override
     public GraphQLContext build() {
-        return new GraphQLContext();
+        return new GraphQLHttpContext();
     }
+
 }

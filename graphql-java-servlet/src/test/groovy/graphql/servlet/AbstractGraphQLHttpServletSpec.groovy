@@ -1022,7 +1022,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
         setup:
         Instrumentation expectedInstrumentation = Mock()
-        GraphQLContext context = new GraphQLContext(request, response, null, null, null)
+        GraphQLHttpContext context = new GraphQLHttpContext(request, response, null, null, null)
         SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
                 .newBuilder(TestUtils.createGraphQlSchema())
                 .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(expectedInstrumentation).build())
@@ -1038,7 +1038,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def "getInstrumentation returns the ChainedInstrumentation if DataLoader provided in context"() {
         setup:
         Instrumentation servletInstrumentation = Mock()
-        GraphQLContext context = new GraphQLContext(request, response, null, null, null)
+        GraphQLHttpContext context = new GraphQLHttpContext(request, response, null, null, null)
         DataLoaderRegistry dlr = Mock()
         context.setDataLoaderRegistry(dlr)
         SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
