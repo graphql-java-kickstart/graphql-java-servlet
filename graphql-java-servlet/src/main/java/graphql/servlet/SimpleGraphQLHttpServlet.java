@@ -8,7 +8,6 @@ import java.util.Objects;
 
 /**
  * @author Andrew Potter
- * @deprecated Use {@link GraphQLHttpServlet} instead
  */
 public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 

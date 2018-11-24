@@ -3,7 +3,11 @@ package graphql.servlet;
 import org.dataloader.DataLoaderRegistry;
 
 import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
+import javax.websocket.Session;
+import javax.websocket.server.HandshakeRequest;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +24,14 @@ public class GraphQLHttpContext extends DefaultGraphQLContext {
 
     public GraphQLHttpContext(Subject subject, DataLoaderRegistry dataLoaderRegistry) {
         super(subject, dataLoaderRegistry);
+    }
+
+    public static GraphQLContext create(HttpServletRequest request, HttpServletResponse response) {
+        return new GraphQLHttpServletContext(request, response);
+    }
+
+    public static GraphQLContext create(Session session, HandshakeRequest request) {
+        return new GraphQLWebsocketContext(session, request);
     }
 
     /**

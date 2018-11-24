@@ -5,10 +5,14 @@ import org.dataloader.DataLoaderRegistry;
 import javax.security.auth.Subject;
 import java.util.Optional;
 
-interface GraphQLContext {
+public interface GraphQLContext {
 
     Optional<Subject> getSubject();
 
+    void setSubject(Subject subject);
+
     DataLoaderRegistry getDataLoaderRegistry();
+
+    void setDataLoaderRegistry(DataLoaderRegistry dataLoaderRegistry);
 
 }
