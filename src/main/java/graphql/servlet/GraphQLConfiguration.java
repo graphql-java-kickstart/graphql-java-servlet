@@ -80,17 +80,23 @@ public class GraphQLConfiguration {
         }
 
         public Builder with(GraphQLQueryInvoker queryInvoker) {
-            this.queryInvoker = queryInvoker;
+            if (queryInvoker != null) {
+                this.queryInvoker = queryInvoker;
+            }
             return this;
         }
 
         public Builder with(GraphQLObjectMapper objectMapper) {
-            this.objectMapper = objectMapper;
+            if (objectMapper != null) {
+                this.objectMapper = objectMapper;
+            }
             return this;
         }
 
         public Builder with(List<GraphQLServletListener> listeners) {
-            this.listeners = Objects.requireNonNull(listeners, "listeners must not be null");
+            if (listeners != null) {
+                this.listeners = listeners;
+            }
             return this;
         }
 
