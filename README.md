@@ -157,7 +157,7 @@ servlet.addListener(new GraphQLServletListener() {
 Relay.js support is provided by the [EnhancedExecutionStrategy](https://github.com/graphql-java/graphql-java-annotations/blob/master/src/main/java/graphql/annotations/EnhancedExecutionStrategy.java) of [graphql-java-annotations](https://github.com/graphql-java/graphql-java-annotations).
 You **MUST** pass this execution strategy to the servlet for Relay.js support.
 
-This is the default execution strategy for the `OsgiGraphQLServlet`, and must be added as a dependency when using that servlet.
+This is the default execution strategy for the `OsgiGraphQLHttpServlet`, and must be added as a dependency when using that servlet.
 
 ## Apollo support
 
@@ -175,7 +175,7 @@ ServletRegistrationBean graphQLServletRegistrationBean(GraphQLSchema schema, Exe
 
 ## OSGI support
 
-The [OsgiGraphQLServlet](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/OsgiGraphQLServlet.java) uses a "provider" model to supply the servlet with the required objects:
+The [OsgiGraphQLHttpServlet](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/OsgiGraphQLHttpServlet.java) uses a "provider" model to supply the servlet with the required objects:
 * [GraphQLQueryProvider](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLQueryProvider.java): Provides query fields to the GraphQL schema.
 * [GraphQLMutationProvider](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLMutationProvider.java): Provides mutation fields to the GraphQL schema.
 * [GraphQLTypesProvider](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLTypesProvider.java): Provides type information to the GraphQL schema.
