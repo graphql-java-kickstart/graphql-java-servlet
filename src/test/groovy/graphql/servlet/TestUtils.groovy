@@ -2,15 +2,23 @@ package graphql.servlet
 
 import com.google.common.io.ByteStreams
 import graphql.Scalars
+import graphql.execution.instrumentation.Instrumentation
 import graphql.schema.*
 
 class TestUtils {
 
     static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                              DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
-        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher))
+        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
+                .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher))
+                .with(createInstrumentedQueryInvoker()).build())
         servlet.init(null)
         return servlet
+    }
+
+    static def createInstrumentedQueryInvoker() {
+        Instrumentation instrumentation = new TestInstrumentation()
+        GraphQLQueryInvoker.newBuilder().with([instrumentation]).build()
     }
 
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
