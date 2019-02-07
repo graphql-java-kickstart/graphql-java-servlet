@@ -148,7 +148,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             try {
                 if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
                     String query = CharStreams.toString(request.getReader());
-                    query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(new GraphQLRequest(query, null, null)), response);
+                    query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(new GraphQLRequest(query, null, null), request, response), response);
                 } else if (request.getContentType() != null && request.getContentType().startsWith("multipart/form-data") && !request.getParts().isEmpty()) {
                     final Map<String, List<Part>> fileItems = request.getParts()
                             .stream()
