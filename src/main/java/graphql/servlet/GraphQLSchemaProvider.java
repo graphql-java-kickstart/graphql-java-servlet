@@ -34,7 +34,7 @@ public interface GraphQLSchemaProvider {
 
     /**
      * @param request the http request
-     * @return a read-only schema based on the request (auth, etc).  Should return the same schema (query-only version) as {@link #getSchema(HttpServletRequest)} for a given request.
+     * @return a read-only schema based on the request (auth, etc).  Should return the same schema (query/subscription-only version) as {@link #getSchema(HttpServletRequest)} for a given request.
      */
     GraphQLSchema getReadOnlySchema(HttpServletRequest request);
 

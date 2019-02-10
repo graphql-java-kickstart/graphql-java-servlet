@@ -2,11 +2,10 @@ package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
-import graphql.annotations.annotationTypes.GraphQLType
 import graphql.execution.ExecutionStepInfo
 import graphql.execution.instrumentation.ChainedInstrumentation
-
 import graphql.execution.instrumentation.Instrumentation
+import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.GraphQLNonNull
 import org.dataloader.DataLoaderRegistry
 import org.springframework.mock.web.MockHttpServletRequest
@@ -17,6 +16,9 @@ import spock.lang.Specification
 
 import javax.servlet.ServletInputStream
 import javax.servlet.http.HttpServletRequest
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * @author Andrew Potter
@@ -27,6 +29,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     public static final int STATUS_BAD_REQUEST = 400
     public static final int STATUS_ERROR = 500
     public static final String CONTENT_TYPE_JSON_UTF8 = 'application/json;charset=UTF-8'
+    public static final String CONTENT_TYPE_SERVER_SENT_EVENTS = 'text/event-stream;charset=UTF-8'
 
     @Shared
     ObjectMapper mapper = new ObjectMapper()
@@ -34,16 +37,41 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     AbstractGraphQLHttpServlet servlet
     MockHttpServletRequest request
     MockHttpServletResponse response
+    CountDownLatch subscriptionLatch
 
     def setup() {
-        servlet = TestUtils.createServlet()
+        subscriptionLatch = new CountDownLatch(1)
+        servlet = TestUtils.createServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
+            AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>()
+            publisherRef.set(new SingleSubscriberPublisher<String>({
+                SingleSubscriberPublisher<String> publisher = publisherRef.get()
+                publisher.offer("First\n\n" + env.arguments.arg)
+                publisher.offer("Second\n\n" + env.arguments.arg)
+                publisher.noMoreData()
+                subscriptionLatch.countDown()
+            }))
+            return publisherRef.get()
+        })
+
         request = new MockHttpServletRequest()
+        request.asyncSupported = true
         response = new MockHttpServletResponse()
     }
 
 
     Map<String, Object> getResponseContent() {
         mapper.readValue(response.getContentAsByteArray(), Map)
+    }
+
+    List<Map<String, Object>> getSubscriptionResponseContent() {
+        String[] data = response.getContentAsString().split("\n\n")
+        return data.collect { dataLine ->
+            if (dataLine.startsWith("data: ")) {
+                return mapper.readValue(dataLine.substring(5), Map)
+            } else {
+                throw new IllegalStateException("Could not read event stream")
+            }
+        }
     }
 
     List<Map<String, Object>> getBatchedResponseContent() {
@@ -261,6 +289,26 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
         getBatchedResponseContent()[0].errors.size() == 1
         getBatchedResponseContent()[1].errors.size() == 1
+    }
+
+    def "subscription query over HTTP GET with variables as string returns data"() {
+        setup:
+        request.addParameter('query', 'subscription Subscription($arg: String!) { echo(arg: $arg) }')
+        request.addParameter('operationName', 'Subscription')
+        request.addParameter( 'variables', '{"arg": "test"}')
+        request.setAsyncSupported(true)
+
+        when:
+        servlet.doGet(request, response)
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
+
+        when:
+        subscriptionLatch.await(1, TimeUnit.SECONDS)
+        then:
+        getSubscriptionResponseContent()[0].data.echo == "First\n\ntest"
+        getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
     }
 
     def "query over HTTP POST without part or body returns bad request"() {
@@ -901,6 +949,24 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
         getBatchedResponseContent()[0].data.echo == "test"
         getBatchedResponseContent()[1].data.echo == "test"
+    }
+
+    def "subscription query over HTTP POST with variables as string returns data"() {
+        setup:
+        request.setContent('{"query": "subscription Subscription($arg: String!) { echo(arg: $arg) }", "operationName": "Subscription", "variables": {"arg": "test"}}'.bytes)
+        request.setAsyncSupported(true)
+
+        when:
+        servlet.doPost(request, response)
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
+
+        when:
+        subscriptionLatch.await(1, TimeUnit.SECONDS)
+        then:
+        getSubscriptionResponseContent()[0].data.echo == "First\n\ntest"
+        getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
     }
 
     def "errors before graphql schema execution return internal server error"() {

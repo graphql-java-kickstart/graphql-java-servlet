@@ -33,6 +33,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
     private final List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
     private final List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
+    private final List<GraphQLSubscriptionProvider> subscriptionProviders = new ArrayList<>();
     private final List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
 
     private final GraphQLQueryInvoker queryInvoker;
@@ -151,8 +152,23 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
             }
         }
 
+        GraphQLObjectType subscriptionType = null;
+
+        if (!subscriptionProviders.isEmpty()) {
+            final GraphQLObjectType.Builder subscriptionTypeBuilder = newObject().name("Subscription").description("Root subscription type");
+
+            for (GraphQLSubscriptionProvider provider : subscriptionProviders) {
+                provider.getSubscriptions().forEach(subscriptionTypeBuilder::field);
+            }
+
+            if (!subscriptionTypeBuilder.build().getFieldDefinitions().isEmpty()) {
+                subscriptionType = subscriptionTypeBuilder.build();
+            }
+        }
+
         this.schemaProvider = new DefaultGraphQLSchemaProvider(newSchema().query(queryTypeBuilder.build())
                 .mutation(mutationType)
+                .subscription(subscriptionType)
                 .additionalTypes(types)
                 .build());
     }
@@ -165,6 +181,9 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         if (provider instanceof GraphQLMutationProvider) {
             mutationProviders.add((GraphQLMutationProvider) provider);
         }
+        if (provider instanceof GraphQLSubscriptionProvider) {
+            subscriptionProviders.add((GraphQLSubscriptionProvider) provider);
+        }
         if (provider instanceof GraphQLTypesProvider) {
             typesProviders.add((GraphQLTypesProvider) provider);
         }
@@ -176,6 +195,9 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         }
         if (provider instanceof GraphQLMutationProvider) {
             mutationProviders.remove(provider);
+        }
+        if (provider instanceof GraphQLSubscriptionProvider) {
+            subscriptionProviders.remove(provider);
         }
         if (provider instanceof GraphQLTypesProvider) {
             typesProviders.remove(provider);
@@ -200,6 +222,16 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     }
     public void unbindMutationProvider(GraphQLMutationProvider mutationProvider) {
         mutationProviders.remove(mutationProvider);
+        updateSchema();
+    }
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    public void bindSubscriptionProvider(GraphQLSubscriptionProvider subscriptionProvider) {
+        subscriptionProviders.add(subscriptionProvider);
+        updateSchema();
+    }
+    public void unbindSubscriptionProvider(GraphQLSubscriptionProvider subscriptionProvider) {
+        subscriptionProviders.remove(subscriptionProvider);
         updateSchema();
     }
 

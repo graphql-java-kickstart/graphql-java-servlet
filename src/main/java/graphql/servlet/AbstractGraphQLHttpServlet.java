@@ -7,13 +7,13 @@ import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.servlet.internal.GraphQLRequest;
 import graphql.servlet.internal.VariableMapper;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
+import javax.servlet.*;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -43,6 +44,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     public static final Logger log = LoggerFactory.getLogger(AbstractGraphQLHttpServlet.class);
 
     public static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
+    public static final String APPLICATION_EVENT_STREAM_UTF8 = "text/event-stream;charset=UTF-8";
     public static final String APPLICATION_GRAPHQL = "application/graphql";
     public static final int STATUS_OK = 200;
     public static final int STATUS_BAD_REQUEST = 400;
@@ -334,9 +336,21 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     private void query(GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, GraphQLSingleInvocationInput invocationInput, HttpServletResponse resp) throws IOException {
         ExecutionResult result = queryInvoker.query(invocationInput);
 
-        resp.setContentType(APPLICATION_JSON_UTF8);
-        resp.setStatus(STATUS_OK);
-        resp.getWriter().write(graphQLObjectMapper.serializeResultAsJson(result));
+        if (!(result.getData() instanceof Publisher)) {
+            resp.setContentType(APPLICATION_JSON_UTF8);
+            resp.setStatus(STATUS_OK);
+            resp.getWriter().write(graphQLObjectMapper.serializeResultAsJson(result));
+        } else {
+            resp.setContentType(APPLICATION_EVENT_STREAM_UTF8);
+            resp.setStatus(STATUS_OK);
+
+            HttpServletRequest req = invocationInput.getContext().getHttpServletRequest().get();
+            AsyncContext asyncContext = req.startAsync(req, resp);
+            asyncContext.setTimeout(60 * 1000);
+            AtomicReference<Subscription> subscriptionRef = new AtomicReference<>();
+            asyncContext.addListener(new SubscriptionAsyncListener(subscriptionRef));
+            ((Publisher<ExecutionResult>) result.getData()).subscribe(new ExecutionResultSubscriber(subscriptionRef, asyncContext, graphQLObjectMapper));
+        }
     }
 
     private void queryBatched(GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, GraphQLBatchedInvocationInput invocationInput, HttpServletResponse resp) throws Exception {
@@ -436,5 +450,68 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         }
 
         void handle(HttpServletRequest request, HttpServletResponse response) throws Exception;
+    }
+
+    private static class SubscriptionAsyncListener implements AsyncListener {
+        private final AtomicReference<Subscription> subscriptionRef;
+        public SubscriptionAsyncListener(AtomicReference<Subscription> subscriptionRef) {
+            this.subscriptionRef = subscriptionRef;
+        }
+
+        @Override public void onComplete(AsyncEvent event) {
+            subscriptionRef.get().cancel();
+        }
+
+        @Override public void onTimeout(AsyncEvent event) {
+            subscriptionRef.get().cancel();
+        }
+
+        @Override public void onError(AsyncEvent event) {
+            subscriptionRef.get().cancel();
+        }
+
+        @Override public void onStartAsync(AsyncEvent event) {
+        }
+    }
+
+
+    private static class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
+
+        private final AtomicReference<Subscription> subscriptionRef;
+        private final AsyncContext asyncContext;
+        private final GraphQLObjectMapper graphQLObjectMapper;
+
+        public ExecutionResultSubscriber(AtomicReference<Subscription> subscriptionRef, AsyncContext asyncContext, GraphQLObjectMapper graphQLObjectMapper) {
+            this.subscriptionRef = subscriptionRef;
+            this.asyncContext = asyncContext;
+            this.graphQLObjectMapper = graphQLObjectMapper;
+        }
+
+        @Override
+        public void onSubscribe(Subscription subscription) {
+            subscriptionRef.set(subscription);
+            subscriptionRef.get().request(1);
+        }
+
+        @Override
+        public void onNext(ExecutionResult executionResult) {
+            try {
+                Writer writer = asyncContext.getResponse().getWriter();
+                writer.write("data: " + graphQLObjectMapper.serializeResultAsJson(executionResult) + "\n\n");
+                writer.flush();
+                subscriptionRef.get().request(1);
+            } catch (IOException ignored) {
+            }
+        }
+
+        @Override
+        public void onError(Throwable t) {
+            asyncContext.complete();
+        }
+
+        @Override
+        public void onComplete() {
+            asyncContext.complete();
+        }
     }
 }
