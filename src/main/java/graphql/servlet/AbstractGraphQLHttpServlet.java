@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -291,7 +292,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
     private void doRequestAsync(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler) {
         if (configuration.isAsyncServletModeEnabled()) {
-            AsyncContext asyncContext = request.startAsync();
+            AsyncContext asyncContext = request.startAsync(request, response);
             HttpServletRequest asyncRequest = (HttpServletRequest) asyncContext.getRequest();
             HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
             new Thread(() -> doRequest(asyncRequest, asyncResponse, handler, asyncContext)).start();
@@ -344,12 +345,22 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             resp.setContentType(APPLICATION_EVENT_STREAM_UTF8);
             resp.setStatus(STATUS_OK);
 
-            HttpServletRequest req = invocationInput.getContext().getHttpServletRequest().get();
-            AsyncContext asyncContext = req.startAsync(req, resp);
-            asyncContext.setTimeout(60 * 1000);
+            HttpServletRequest req = invocationInput.getContext().getHttpServletRequest().orElseThrow(IllegalStateException::new);
+            boolean isInAsyncThread = req.isAsyncStarted();
+            AsyncContext asyncContext = isInAsyncThread ? req.getAsyncContext() : req.startAsync(req, resp);
+            asyncContext.setTimeout(configuration.getSubscriptionTimeout());
             AtomicReference<Subscription> subscriptionRef = new AtomicReference<>();
             asyncContext.addListener(new SubscriptionAsyncListener(subscriptionRef));
-            ((Publisher<ExecutionResult>) result.getData()).subscribe(new ExecutionResultSubscriber(subscriptionRef, asyncContext, graphQLObjectMapper));
+            ExecutionResultSubscriber subscriber = new ExecutionResultSubscriber(subscriptionRef, asyncContext, graphQLObjectMapper);
+            ((Publisher<ExecutionResult>) result.getData()).subscribe(subscriber);
+            if (isInAsyncThread) {
+                // We need to delay the completion of async context until after the subscription has terminated, otherwise the AsyncContext is prematurely closed.
+                try {
+                    subscriber.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 
@@ -480,6 +491,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         private final AtomicReference<Subscription> subscriptionRef;
         private final AsyncContext asyncContext;
         private final GraphQLObjectMapper graphQLObjectMapper;
+        private final CountDownLatch completedLatch = new CountDownLatch(1);
 
         public ExecutionResultSubscriber(AtomicReference<Subscription> subscriptionRef, AsyncContext asyncContext, GraphQLObjectMapper graphQLObjectMapper) {
             this.subscriptionRef = subscriptionRef;
@@ -507,11 +519,17 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         @Override
         public void onError(Throwable t) {
             asyncContext.complete();
+            completedLatch.countDown();
         }
 
         @Override
         public void onComplete() {
             asyncContext.complete();
+            completedLatch.countDown();
+        }
+
+        public void await() throws InterruptedException {
+            completedLatch.await();
         }
     }
 }
