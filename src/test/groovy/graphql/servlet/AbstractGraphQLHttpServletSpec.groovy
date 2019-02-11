@@ -7,6 +7,7 @@ import graphql.execution.ExecutionStepInfo
 import graphql.execution.instrumentation.ChainedInstrumentation
 
 import graphql.execution.instrumentation.Instrumentation
+import graphql.schema.DataFetcher
 import graphql.schema.GraphQLNonNull
 import org.dataloader.DataLoaderRegistry
 import org.springframework.mock.web.MockHttpServletRequest
@@ -38,6 +39,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def setup() {
         servlet = TestUtils.createServlet()
         request = new MockHttpServletRequest()
+        request.setAsyncSupported(true)
         response = new MockHttpServletResponse()
     }
 
@@ -82,6 +84,18 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
         getResponseContent().data.echo == "test"
+    }
+
+    def "async query over HTTP GET starts async request"() {
+        setup:
+        servlet = TestUtils.createServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, true)
+        request.addParameter('query', 'query { echo(arg:"test") }')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        request.asyncStarted == true
     }
 
     def "query over HTTP GET with variables returns data"() {
@@ -284,6 +298,20 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
         getResponseContent().data.echo == "test"
+    }
+
+    def "async query over HTTP POST starts async request"() {
+        setup:
+        servlet = TestUtils.createServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, true)
+		request.setContent(mapper.writeValueAsBytes([
+				query: 'query { echo(arg:"test") }'
+		]))
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        request.asyncStarted == true
     }
 
     def "query over HTTP POST body with graphql contentType returns data"() {

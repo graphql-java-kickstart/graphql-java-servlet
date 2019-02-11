@@ -8,10 +8,13 @@ import graphql.schema.*
 class TestUtils {
 
     static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
-                             DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
+                             DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
+                             boolean asyncServletModeEnabled = false) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher))
-                .with(createInstrumentedQueryInvoker()).build())
+                .with(createInstrumentedQueryInvoker())
+                .with(asyncServletModeEnabled)
+                .build())
         servlet.init(null)
         return servlet
     }
