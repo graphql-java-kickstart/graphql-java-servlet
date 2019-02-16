@@ -5,7 +5,6 @@ import graphql.Scalars
 import graphql.execution.instrumentation.Instrumentation
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.*
-import org.reactivestreams.Publisher
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -13,15 +12,15 @@ class TestUtils {
 
     static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                              DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
-                             boolean asyncServletModeEnabled = false) {
-         DataFetcher subscriptionDataFetcher = { env ->
-             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
-             publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
-                 publisherRef.get().offer(env.arguments.arg)
-                 publisherRef.get().noMoreData()
-             }))
-             return publisherRef.get()
-         }) {
+                             boolean asyncServletModeEnabled = false,
+                             DataFetcher subscriptionDataFetcher = { env ->
+                                 AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                 publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                                     publisherRef.get().offer(env.arguments.arg)
+                                     publisherRef.get().noMoreData()
+                                 }))
+                                 return publisherRef.get()
+                             }) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
                 .with(createInstrumentedQueryInvoker())
@@ -75,23 +74,27 @@ class TestUtils {
             }
             field.dataFetcher(mutationDataFetcher)
         }
-                .field { field ->
+        .field { field ->
             field.name("echoFile")
             field.type(Scalars.GraphQLString)
             field.argument { argument ->
                 argument.name("file")
                 argument.type(ApolloScalars.Upload)
             }
-            field.dataFetcher( { env -> new String(ByteStreams.toByteArray(env.arguments.file.getInputStream())) } )
+            field.dataFetcher({ env -> new String(ByteStreams.toByteArray(env.arguments.file.getInputStream())) })
         }
-                .field { field ->
+        .field { field ->
             field.name("echoFiles")
             field.type(GraphQLList.list(Scalars.GraphQLString))
             field.argument { argument ->
                 argument.name("files")
                 argument.type(GraphQLList.list(GraphQLNonNull.nonNull(ApolloScalars.Upload)))
             }
-            field.dataFetcher( { env -> env.arguments.files.collect { new String(ByteStreams.toByteArray(it.getInputStream())) } } )
+            field.dataFetcher({ env ->
+                env.arguments.files.collect {
+                    new String(ByteStreams.toByteArray(it.getInputStream()))
+                }
+            })
         }
         .build()
 
@@ -110,11 +113,11 @@ class TestUtils {
 
 
         return GraphQLSchema.newSchema()
-                            .query(query)
-                            .mutation(mutation)
-                            .subscription(subscription)
-                            .additionalType(ApolloScalars.Upload)
-                            .build()
+                .query(query)
+                .mutation(mutation)
+                .subscription(subscription)
+                .additionalType(ApolloScalars.Upload)
+                .build()
     }
 
 }

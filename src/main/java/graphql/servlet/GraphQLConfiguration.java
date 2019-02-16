@@ -30,7 +30,7 @@ public class GraphQLConfiguration {
         return new Builder(invocationInputFactory);
     }
 
-    private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled, Executor asyncExecutor, , long subscriptionTimeout) {
+    private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled, Executor asyncExecutor, long subscriptionTimeout) {
         this.invocationInputFactory = invocationInputFactory;
         this.queryInvoker = queryInvoker;
         this.objectMapper = objectMapper;
