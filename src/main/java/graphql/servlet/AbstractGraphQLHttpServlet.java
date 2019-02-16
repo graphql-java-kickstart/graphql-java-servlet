@@ -54,7 +54,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     private static final String[] MULTIPART_KEYS = new String[]{"operations", "graphql", "query"};
 
     private GraphQLConfiguration configuration;
-
+    
     /**
      * @deprecated override {@link #getConfiguration()} instead
      */
@@ -295,7 +295,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             AsyncContext asyncContext = request.startAsync(request, response);
             HttpServletRequest asyncRequest = (HttpServletRequest) asyncContext.getRequest();
             HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
-            new Thread(() -> doRequest(asyncRequest, asyncResponse, handler, asyncContext)).start();
+            configuration.getAsyncExecutor().execute(() -> doRequest(asyncRequest, asyncResponse, handler, asyncContext));
         } else {
             doRequest(request, response, handler, null);
         }

@@ -1,10 +1,12 @@
 package graphql.servlet;
 
 import graphql.schema.GraphQLSchema;
+import graphql.servlet.internal.GraphQLThreadFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class GraphQLConfiguration {
 
@@ -13,6 +15,7 @@ public class GraphQLConfiguration {
     private GraphQLObjectMapper objectMapper;
     private List<GraphQLServletListener> listeners;
     private boolean asyncServletModeEnabled;
+    private Executor asyncExecutor;
     private long subscriptionTimeout;
 
     public static GraphQLConfiguration.Builder with(GraphQLSchema schema) {
@@ -27,12 +30,13 @@ public class GraphQLConfiguration {
         return new Builder(invocationInputFactory);
     }
 
-    private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled, long subscriptionTimeout) {
+    private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled, Executor asyncExecutor, long subscriptionTimeout) {
         this.invocationInputFactory = invocationInputFactory;
         this.queryInvoker = queryInvoker;
         this.objectMapper = objectMapper;
         this.listeners = listeners;
         this.asyncServletModeEnabled = asyncServletModeEnabled;
+        this.asyncExecutor = asyncExecutor;
         this.subscriptionTimeout = subscriptionTimeout;
     }
 
@@ -56,6 +60,10 @@ public class GraphQLConfiguration {
         return asyncServletModeEnabled;
     }
 
+    public Executor getAsyncExecutor() {
+        return asyncExecutor;
+    }
+
     public void add(GraphQLServletListener listener) {
         listeners.add(listener);
     }
@@ -76,6 +84,7 @@ public class GraphQLConfiguration {
         private GraphQLObjectMapper objectMapper = GraphQLObjectMapper.newBuilder().build();
         private List<GraphQLServletListener> listeners = new ArrayList<>();
         private boolean asyncServletModeEnabled = false;
+        private Executor asyncExecutor = Executors.newCachedThreadPool(new GraphQLThreadFactory());
         private long subscriptionTimeout = 0;
 
         private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
@@ -112,6 +121,13 @@ public class GraphQLConfiguration {
             return this;
         }
 
+        public Builder with(Executor asyncExecutor) {
+            if (asyncExecutor != null) {
+            	this.asyncExecutor = asyncExecutor;
+            }
+            return this;
+        }
+
         public Builder with(GraphQLContextBuilder contextBuilder) {
             this.invocationInputFactoryBuilder.withGraphQLContextBuilder(contextBuilder);
             return this;
@@ -134,6 +150,7 @@ public class GraphQLConfiguration {
                     objectMapper,
                     listeners,
                     asyncServletModeEnabled,
+                    asyncExecutor,
                     subscriptionTimeout
             );
         }
