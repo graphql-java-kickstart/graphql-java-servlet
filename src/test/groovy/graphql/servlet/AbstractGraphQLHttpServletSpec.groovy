@@ -116,7 +116,14 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "async query over HTTP GET starts async request"() {
         setup:
-        servlet = TestUtils.createServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, true)
+        servlet = TestUtils.createServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
+            AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+            publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                publisherRef.get().offer(env.arguments.arg)
+                publisherRef.get().noMoreData()
+            }))
+            return publisherRef.get()
+        }, true)
         request.addParameter('query', 'query { echo(arg:"test") }')
 
         when:
@@ -350,7 +357,14 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "async query over HTTP POST starts async request"() {
         setup:
-        servlet = TestUtils.createServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, true)
+        servlet = TestUtils.createServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
+            AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+            publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                publisherRef.get().offer(env.arguments.arg)
+                publisherRef.get().noMoreData()
+            }))
+            return publisherRef.get()
+        }, true)
 		request.setContent(mapper.writeValueAsBytes([
 				query: 'query { echo(arg:"test") }'
 		]))

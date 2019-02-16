@@ -12,7 +12,6 @@ class TestUtils {
 
     static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                              DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
-                             boolean asyncServletModeEnabled = false,
                              DataFetcher subscriptionDataFetcher = { env ->
                                  AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
                                  publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
@@ -20,7 +19,7 @@ class TestUtils {
                                      publisherRef.get().noMoreData()
                                  }))
                                  return publisherRef.get()
-                             }) {
+                             }, boolean asyncServletModeEnabled = false) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
                 .with(createInstrumentedQueryInvoker())
