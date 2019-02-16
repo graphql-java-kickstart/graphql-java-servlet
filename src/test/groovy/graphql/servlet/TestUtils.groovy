@@ -3,14 +3,26 @@ package graphql.servlet
 import com.google.common.io.ByteStreams
 import graphql.Scalars
 import graphql.execution.instrumentation.Instrumentation
+import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.*
+import org.reactivestreams.Publisher
+
+import java.util.concurrent.atomic.AtomicReference
 
 class TestUtils {
 
     static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
-                             DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
+                             DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
+                             DataFetcher subscriptionDataFetcher = { env ->
+                                 AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                 publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                                     publisherRef.get().offer(env.arguments.arg)
+                                     publisherRef.get().noMoreData()
+                                 }))
+                                 return publisherRef.get()
+                             }) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
-                .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher))
+                .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
                 .with(createInstrumentedQueryInvoker()).build())
         servlet.init(null)
         return servlet
@@ -22,7 +34,15 @@ class TestUtils {
     }
 
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
-                                   DataFetcher mutationDataFetcher = { env -> env.arguments.arg }) {
+                                   DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
+                                   DataFetcher subscriptionDataFetcher = { env ->
+                                       AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                       publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                                           publisherRef.get().offer(env.arguments.arg)
+                                           publisherRef.get().noMoreData()
+                                       }))
+                                       return publisherRef.get()
+                                   }) {
         GraphQLObjectType query = GraphQLObjectType.newObject()
                 .name("Query")
                 .field { GraphQLFieldDefinition.Builder field ->
@@ -72,9 +92,24 @@ class TestUtils {
         }
         .build()
 
+        GraphQLObjectType subscription = GraphQLObjectType.newObject()
+                .name("Subscription")
+                .field { field ->
+            field.name("echo")
+            field.type(Scalars.GraphQLString)
+            field.argument { argument ->
+                argument.name("arg")
+                argument.type(Scalars.GraphQLString)
+            }
+            field.dataFetcher(subscriptionDataFetcher)
+        }
+        .build()
+
+
         return GraphQLSchema.newSchema()
                             .query(query)
                             .mutation(mutation)
+                            .subscription(subscription)
                             .additionalType(ApolloScalars.Upload)
                             .build()
     }

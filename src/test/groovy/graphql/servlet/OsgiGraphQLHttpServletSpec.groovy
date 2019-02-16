@@ -79,4 +79,41 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         then:
             servlet.getSchemaProvider().getSchema().getMutationType() == null
     }
+
+    static class TestSubscriptionProvider implements GraphQLSubscriptionProvider {
+        @Override
+        Collection<GraphQLFieldDefinition> getSubscriptions() {
+            return Collections.singletonList(newFieldDefinition().name("subscription").type(GraphQLAnnotations.object(Subscription.class)).build())
+        }
+
+
+        @GraphQLName("subscription")
+        static class Subscription {
+            @GraphQLField
+            public String field;
+        }
+    }
+
+    def "subscription provider adds subscription objects"() {
+        setup:
+            OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
+            TestSubscriptionProvider subscriptionProvider = new TestSubscriptionProvider()
+            servlet.bindSubscriptionProvider(subscriptionProvider)
+            GraphQLFieldDefinition subscription
+
+        when:
+            subscription = servlet.getSchemaProvider().getSchema().getSubscriptionType().getFieldDefinition("subscription")
+        then:
+            subscription.getType().getName() == "subscription"
+
+        when:
+            subscription = servlet.getSchemaProvider().getReadOnlySchema(null).getSubscriptionType().getFieldDefinition("subscription")
+        then:
+            subscription.getType().getName() == "subscription"
+
+        when:
+            servlet.unbindSubscriptionProvider(subscriptionProvider)
+        then:
+            servlet.getSchemaProvider().getSchema().getSubscriptionType() == null
+    }
 }

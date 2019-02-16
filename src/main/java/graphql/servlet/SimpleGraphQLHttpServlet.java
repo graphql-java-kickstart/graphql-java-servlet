@@ -30,6 +30,21 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
                 .build();
     }
 
+    /**
+     * @deprecated use {@link GraphQLHttpServlet} instead
+     */
+    @Deprecated
+    public SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners, boolean asyncServletMode, long subscriptionTimeout) {
+        super(listeners);
+        this.configuration = GraphQLConfiguration.with(invocationInputFactory)
+                .with(queryInvoker)
+                .with(graphQLObjectMapper)
+                .with(listeners != null ? listeners : new ArrayList<>())
+                .with(asyncServletMode)
+                .with(subscriptionTimeout)
+                .build();
+    }
+
     private SimpleGraphQLHttpServlet(GraphQLConfiguration configuration) {
         this.configuration = Objects.requireNonNull(configuration, "configuration is required");
     }
@@ -77,6 +92,7 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         private GraphQLObjectMapper graphQLObjectMapper = GraphQLObjectMapper.newBuilder().build();
         private List<GraphQLServletListener> listeners;
         private boolean asyncServletMode;
+        private long subscriptionTimeout;
 
         Builder(GraphQLInvocationInputFactory invocationInputFactory) {
             this.invocationInputFactory = invocationInputFactory;
@@ -102,6 +118,11 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
             return this;
         }
 
+        public Builder withSubscriptionTimeout(long subscriptionTimeout) {
+            this.subscriptionTimeout = subscriptionTimeout;
+            return this;
+        }
+
         @Deprecated
         public SimpleGraphQLHttpServlet build() {
             GraphQLConfiguration configuration = GraphQLConfiguration.with(invocationInputFactory)
@@ -109,6 +130,7 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
                     .with(graphQLObjectMapper)
                     .with(listeners != null ? listeners : new ArrayList<>())
                     .with(asyncServletMode)
+                    .with(subscriptionTimeout)
                     .build();
             return new SimpleGraphQLHttpServlet(configuration);
         }
