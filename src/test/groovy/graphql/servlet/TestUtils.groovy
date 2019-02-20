@@ -24,6 +24,7 @@ class TestUtils {
                 .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
                 .with(createInstrumentedQueryInvoker())
                 .with(asyncServletModeEnabled)
+                .with(createBatchInputHandlerFactory())
                 .build())
         servlet.init(null)
         return servlet
@@ -32,6 +33,10 @@ class TestUtils {
     static def createInstrumentedQueryInvoker() {
         Instrumentation instrumentation = new TestInstrumentation()
         GraphQLQueryInvoker.newBuilder().with([instrumentation]).build()
+    }
+
+    static def createBatchInputHandlerFactory() {
+        new TestBatchInputHandlerFactory()
     }
 
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },

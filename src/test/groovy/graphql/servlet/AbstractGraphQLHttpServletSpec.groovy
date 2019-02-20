@@ -285,6 +285,19 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
+    def "Execution Result Handler allows limiting number of queries"() {
+        setup:
+        request.addParameter('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent().size() == 2
+    }
+
     def "mutation over HTTP GET returns errors"() {
         setup:
         request.addParameter('query', 'mutation { echo(arg:"test") }')
