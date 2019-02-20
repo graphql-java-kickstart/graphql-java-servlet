@@ -38,6 +38,11 @@ public abstract class GraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     }
 
     @Override
+    protected GraphQLExecutionResultHandlerFactory getBatchInputHandler() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     protected boolean isAsyncServletMode() {
         throw new UnsupportedOperationException();
     }

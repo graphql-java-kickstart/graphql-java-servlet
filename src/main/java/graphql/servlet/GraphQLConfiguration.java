@@ -13,6 +13,7 @@ public class GraphQLConfiguration {
     private GraphQLInvocationInputFactory invocationInputFactory;
     private GraphQLQueryInvoker queryInvoker;
     private GraphQLObjectMapper objectMapper;
+    private GraphQLExecutionResultHandlerFactory batchInputHandlerFactory;
     private List<GraphQLServletListener> listeners;
     private boolean asyncServletModeEnabled;
     private Executor asyncExecutor;
@@ -30,10 +31,11 @@ public class GraphQLConfiguration {
         return new Builder(invocationInputFactory);
     }
 
-    private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled, Executor asyncExecutor, long subscriptionTimeout) {
+    private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper objectMapper, GraphQLExecutionResultHandlerFactory batchInputHandlerFactory, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled, Executor asyncExecutor, long subscriptionTimeout) {
         this.invocationInputFactory = invocationInputFactory;
         this.queryInvoker = queryInvoker;
         this.objectMapper = objectMapper;
+        this.batchInputHandlerFactory = batchInputHandlerFactory;
         this.listeners = listeners;
         this.asyncServletModeEnabled = asyncServletModeEnabled;
         this.asyncExecutor = asyncExecutor;
@@ -50,6 +52,10 @@ public class GraphQLConfiguration {
 
     public GraphQLObjectMapper getObjectMapper() {
         return objectMapper;
+    }
+
+    public GraphQLExecutionResultHandlerFactory getBatchInputHandlerFactory() {
+        return batchInputHandlerFactory;
     }
 
     public List<GraphQLServletListener> getListeners() {
@@ -82,6 +88,7 @@ public class GraphQLConfiguration {
         private GraphQLInvocationInputFactory invocationInputFactory;
         private GraphQLQueryInvoker queryInvoker = GraphQLQueryInvoker.newBuilder().build();
         private GraphQLObjectMapper objectMapper = GraphQLObjectMapper.newBuilder().build();
+        private GraphQLExecutionResultHandlerFactory batchInputHandler = new DefaultGraphQLExecutionResultHandlerFactory();
         private List<GraphQLServletListener> listeners = new ArrayList<>();
         private boolean asyncServletModeEnabled = false;
         private Executor asyncExecutor = Executors.newCachedThreadPool(new GraphQLThreadFactory());
@@ -105,6 +112,13 @@ public class GraphQLConfiguration {
         public Builder with(GraphQLObjectMapper objectMapper) {
             if (objectMapper != null) {
                 this.objectMapper = objectMapper;
+            }
+            return this;
+        }
+
+        public Builder with(GraphQLExecutionResultHandlerFactory batchInputHandlerFactory) {
+            if (batchInputHandlerFactory != null) {
+                this.batchInputHandler = batchInputHandlerFactory;
             }
             return this;
         }
@@ -148,6 +162,7 @@ public class GraphQLConfiguration {
                     this.invocationInputFactory != null ? this.invocationInputFactory : invocationInputFactoryBuilder.build(),
                     queryInvoker,
                     objectMapper,
+                    batchInputHandler,
                     listeners,
                     asyncServletModeEnabled,
                     asyncExecutor,

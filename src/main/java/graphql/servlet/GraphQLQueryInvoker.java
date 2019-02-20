@@ -11,7 +11,6 @@ import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrume
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
-import graphql.servlet.internal.ExecutionResultHandler;
 
 import javax.security.auth.Subject;
 import java.security.AccessController;
@@ -45,10 +44,12 @@ public class GraphQLQueryInvoker {
     public void query(GraphQLBatchedInvocationInput batchedInvocationInput, ExecutionResultHandler executionResultHandler) {
         Iterator<ExecutionInput> executionInputIterator = batchedInvocationInput.getExecutionInputs().iterator();
 
-        while (executionInputIterator.hasNext()) {
+        while (executionResultHandler.shouldContinue(executionInputIterator)) {
             ExecutionResult result = query(batchedInvocationInput, executionInputIterator.next());
-            executionResultHandler.accept(result, executionInputIterator.hasNext());
+            executionResultHandler.accept(result);
         }
+
+        executionResultHandler.finalizeResults();
     }
 
     private GraphQL newGraphQL(GraphQLSchema schema, Object context) {
