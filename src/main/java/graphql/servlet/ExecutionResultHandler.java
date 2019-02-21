@@ -3,14 +3,17 @@ package graphql.servlet;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 
-import java.util.Iterator;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 /**
  * @author Andrew Potter
  */
 public interface ExecutionResultHandler {
+    /**
+     * Allows separating the logic of handling batch queries from how each individual query is resolved.
+     * @param batchedInvocationInput the batch query input
+     * @param queryFunction Function to produce query results.
+     */
     void handleBatch(GraphQLBatchedInvocationInput batchedInvocationInput, BiFunction<GraphQLInvocationInput, ExecutionInput, ExecutionResult> queryFunction);
 }
 

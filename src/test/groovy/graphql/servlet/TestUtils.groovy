@@ -10,7 +10,34 @@ import java.util.concurrent.atomic.AtomicReference
 
 class TestUtils {
 
-    static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
+    static def createDefaultServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
+                                    DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
+                                    DataFetcher subscriptionDataFetcher = { env ->
+                                        AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                        publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                                            publisherRef.get().offer(env.arguments.arg)
+                                            publisherRef.get().noMoreData()
+                                        }))
+                                        return publisherRef.get()
+                                    }, boolean asyncServletModeEnabled = false) {
+        GraphQLExecutionResultHandlerFactory defaultHandler = new DefaultGraphQLExecutionResultHandlerFactory();
+        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, defaultHandler)
+    }
+
+    static def createBatchCustomizedServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
+                                            DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
+                                            DataFetcher subscriptionDataFetcher = { env ->
+                                                AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                                publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                                                    publisherRef.get().offer(env.arguments.arg)
+                                                    publisherRef.get().noMoreData()
+                                                }))
+                                                return publisherRef.get()
+                                            }, boolean asyncServletModeEnabled = false) {
+        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, createBatchInputHandlerFactory())
+    }
+
+    private static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                              DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
                              DataFetcher subscriptionDataFetcher = { env ->
                                  AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
@@ -19,12 +46,13 @@ class TestUtils {
                                      publisherRef.get().noMoreData()
                                  }))
                                  return publisherRef.get()
-                             }, boolean asyncServletModeEnabled = false) {
+                             }, boolean asyncServletModeEnabled = false,
+                             GraphQLExecutionResultHandlerFactory batchHandlerFactory) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
                 .with(createInstrumentedQueryInvoker())
                 .with(asyncServletModeEnabled)
-                .with(createBatchInputHandlerFactory())
+                .with(batchHandlerFactory)
                 .build())
         servlet.init(null)
         return servlet
