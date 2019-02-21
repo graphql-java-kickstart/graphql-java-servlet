@@ -1,12 +1,12 @@
 package graphql.servlet;
 
+import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.function.BiFunction;
 
 public class DefaultGraphQLExecutionResultHandlerFactory implements GraphQLExecutionResultHandlerFactory {
     @Override
@@ -15,8 +15,6 @@ public class DefaultGraphQLExecutionResultHandlerFactory implements GraphQLExecu
     }
 
     private class DefaultGraphQLExecutionResultHandler implements ExecutionResultHandler {
-
-        private final List<ExecutionResult> results = new ArrayList<>();
 
         private final Writer respWriter;
 
@@ -28,19 +26,16 @@ public class DefaultGraphQLExecutionResultHandlerFactory implements GraphQLExecu
         }
 
         @Override
-        public void accept(ExecutionResult result) {
-            results.add(result);
-        }
-
-        @Override
-        public void finalizeResults() {
+        public void handleBatch(GraphQLBatchedInvocationInput batchedInvocationInput, BiFunction<GraphQLInvocationInput, ExecutionInput,
+            ExecutionResult> queryFunction) {
+            Iterator<ExecutionInput> executionInputIterator = batchedInvocationInput.getExecutionInputs().iterator();
             try {
                 respWriter.write("[");
-                Iterator<ExecutionResult> iterator = results.iterator();
-                while (iterator.hasNext()) {
-                    respWriter.write(graphQLObjectMapper.serializeResultAsJson(iterator.next()));
-                    if (iterator.hasNext()) {
-                        respWriter.write(",");
+                while (executionInputIterator.hasNext()) {
+                    ExecutionResult result = queryFunction.apply(batchedInvocationInput, executionInputIterator.next());
+                    respWriter.write(graphQLObjectMapper.serializeResultAsJson(result));
+                    if (executionInputIterator.hasNext()) {
+                       respWriter.write(",");
                     }
                 }
                 respWriter.write("]");

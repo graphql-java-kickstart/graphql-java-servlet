@@ -42,14 +42,7 @@ public class GraphQLQueryInvoker {
     }
 
     public void query(GraphQLBatchedInvocationInput batchedInvocationInput, ExecutionResultHandler executionResultHandler) {
-        Iterator<ExecutionInput> executionInputIterator = batchedInvocationInput.getExecutionInputs().iterator();
-
-        while (executionResultHandler.shouldContinue(executionInputIterator)) {
-            ExecutionResult result = query(batchedInvocationInput, executionInputIterator.next());
-            executionResultHandler.accept(result);
-        }
-
-        executionResultHandler.finalizeResults();
+        executionResultHandler.handleBatch(batchedInvocationInput, this::query);
     }
 
     private GraphQL newGraphQL(GraphQLSchema schema, Object context) {
