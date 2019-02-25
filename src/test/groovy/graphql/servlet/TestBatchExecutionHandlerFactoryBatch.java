@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-public class TestBatchInputHandlerFactory implements GraphQLExecutionResultHandlerFactory {
+public class TestBatchExecutionHandlerFactoryBatch implements GraphQLBatchExecutionHandlerFactory {
     @Override
-    public ExecutionResultHandler getBatchHandler(Writer respWriter, GraphQLObjectMapper graphQLObjectMapper) {
-        return new LimitedBatchSizeHandler(respWriter, graphQLObjectMapper);
+    public BatchExecutionHandler getBatchHandler(Writer respWriter, GraphQLObjectMapper graphQLObjectMapper) {
+        return new LimitedBatchSizeHandlerBatch(respWriter, graphQLObjectMapper);
     }
 
-    private class LimitedBatchSizeHandler implements ExecutionResultHandler {
+    private class LimitedBatchSizeHandlerBatch implements BatchExecutionHandler {
 
         Writer writer;
         GraphQLObjectMapper mapper;
 
-        private LimitedBatchSizeHandler(Writer respWriter, GraphQLObjectMapper graphQLObjectMapper) {
+        private LimitedBatchSizeHandlerBatch(Writer respWriter, GraphQLObjectMapper graphQLObjectMapper) {
             this.mapper = graphQLObjectMapper;
             this.writer = respWriter;
         }

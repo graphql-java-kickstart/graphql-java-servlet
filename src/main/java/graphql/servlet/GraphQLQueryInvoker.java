@@ -16,7 +16,6 @@ import javax.security.auth.Subject;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -41,8 +40,8 @@ public class GraphQLQueryInvoker {
         return query(singleInvocationInput, singleInvocationInput.getExecutionInput());
     }
 
-    public void query(GraphQLBatchedInvocationInput batchedInvocationInput, ExecutionResultHandler executionResultHandler) {
-        executionResultHandler.handleBatch(batchedInvocationInput, this::query);
+    public void query(GraphQLBatchedInvocationInput batchedInvocationInput, BatchExecutionHandler batchExecutionHandler) {
+        batchExecutionHandler.handleBatch(batchedInvocationInput, this::query);
     }
 
     private GraphQL newGraphQL(GraphQLSchema schema, Object context) {

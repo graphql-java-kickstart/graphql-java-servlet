@@ -8,19 +8,19 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.function.BiFunction;
 
-public class DefaultGraphQLExecutionResultHandlerFactory implements GraphQLExecutionResultHandlerFactory {
+public class DefaultGraphQLBatchExecutionHandlerFactory implements GraphQLBatchExecutionHandlerFactory {
     @Override
-    public ExecutionResultHandler getBatchHandler(Writer respWriter, GraphQLObjectMapper graphQLObjectMapper) {
-        return new DefaultGraphQLExecutionResultHandler(respWriter, graphQLObjectMapper);
+    public BatchExecutionHandler getBatchHandler(Writer respWriter, GraphQLObjectMapper graphQLObjectMapper) {
+        return new DefaultGraphQLBatchExecutionHandler(respWriter, graphQLObjectMapper);
     }
 
-    private class DefaultGraphQLExecutionResultHandler implements ExecutionResultHandler {
+    private class DefaultGraphQLBatchExecutionHandler implements BatchExecutionHandler {
 
         private final Writer respWriter;
 
         private final GraphQLObjectMapper graphQLObjectMapper;
 
-        private DefaultGraphQLExecutionResultHandler(Writer respWriter, GraphQLObjectMapper graphQLObjectMapper) {
+        private DefaultGraphQLBatchExecutionHandler(Writer respWriter, GraphQLObjectMapper graphQLObjectMapper) {
             this.respWriter = respWriter;
             this.graphQLObjectMapper = graphQLObjectMapper;
         }

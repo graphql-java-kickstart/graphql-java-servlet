@@ -20,7 +20,7 @@ class TestUtils {
                                         }))
                                         return publisherRef.get()
                                     }, boolean asyncServletModeEnabled = false) {
-        GraphQLExecutionResultHandlerFactory defaultHandler = new DefaultGraphQLExecutionResultHandlerFactory();
+        GraphQLBatchExecutionHandlerFactory defaultHandler = new DefaultGraphQLBatchExecutionHandlerFactory();
         createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, defaultHandler)
     }
 
@@ -34,12 +34,12 @@ class TestUtils {
                                                 }))
                                                 return publisherRef.get()
                                             }, boolean asyncServletModeEnabled = false) {
-        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, createBatchInputHandlerFactory())
+        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, createBatchExecutionHandlerFactory())
     }
 
     private static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
-                             DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
-                             DataFetcher subscriptionDataFetcher = { env ->
+                                     DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
+                                     DataFetcher subscriptionDataFetcher = { env ->
                                  AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
                                  publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                                      publisherRef.get().offer(env.arguments.arg)
@@ -47,7 +47,7 @@ class TestUtils {
                                  }))
                                  return publisherRef.get()
                              }, boolean asyncServletModeEnabled = false,
-                             GraphQLExecutionResultHandlerFactory batchHandlerFactory) {
+                                     GraphQLBatchExecutionHandlerFactory batchHandlerFactory) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
                 .with(createInstrumentedQueryInvoker())
@@ -63,8 +63,8 @@ class TestUtils {
         GraphQLQueryInvoker.newBuilder().with([instrumentation]).build()
     }
 
-    static def createBatchInputHandlerFactory() {
-        new TestBatchInputHandlerFactory()
+    static def createBatchExecutionHandlerFactory() {
+        new TestBatchExecutionHandlerFactoryBatch()
     }
 
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
