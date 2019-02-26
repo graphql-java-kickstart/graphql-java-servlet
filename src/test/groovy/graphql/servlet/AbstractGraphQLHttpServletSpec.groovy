@@ -42,7 +42,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def setup() {
         subscriptionLatch = new CountDownLatch(1)
-        servlet = TestUtils.createServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
+        servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>()
             publisherRef.set(new SingleSubscriberPublisher<String>({
                 SingleSubscriberPublisher<String> publisher = publisherRef.get()
@@ -116,7 +116,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "async query over HTTP GET starts async request"() {
         setup:
-        servlet = TestUtils.createServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
+        servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
             publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                 publisherRef.get().offer(env.arguments.arg)
@@ -285,6 +285,43 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
+    def "Execution Result Handler allows limiting number of queries"() {
+        setup:
+        servlet = TestUtils.createBatchCustomizedServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
+            AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>()
+            publisherRef.set(new SingleSubscriberPublisher<String>({
+                SingleSubscriberPublisher<String> publisher = publisherRef.get()
+                publisher.offer("First\n\n" + env.arguments.arg)
+                publisher.offer("Second\n\n" + env.arguments.arg)
+                publisher.noMoreData()
+                subscriptionLatch.countDown()
+            }))
+            return publisherRef.get()
+        })
+        request.addParameter('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent().size() == 2
+    }
+
+    def "Default Execution Result Handler does not limit number of queries"() {
+        setup:
+        request.addParameter('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        getBatchedResponseContent().size() == 3
+    }
+
     def "mutation over HTTP GET returns errors"() {
         setup:
         request.addParameter('query', 'mutation { echo(arg:"test") }')
@@ -357,7 +394,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "async query over HTTP POST starts async request"() {
         setup:
-        servlet = TestUtils.createServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
+        servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
             publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                 publisherRef.get().offer(env.arguments.arg)
@@ -1030,7 +1067,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "errors while data fetching are masked in the response"() {
         setup:
-        servlet = TestUtils.createServlet({ throw new TestException() })
+        servlet = TestUtils.createDefaultServlet({ throw new TestException() })
         request.addParameter('query', 'query { echo(arg:"test") }')
 
         when:
@@ -1046,7 +1083,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "errors that also implement GraphQLError thrown while data fetching are passed to caller"() {
         setup:
-        servlet = TestUtils.createServlet({ throw new TestGraphQLErrorException("This is a test message") })
+        servlet = TestUtils.createDefaultServlet({ throw new TestGraphQLErrorException("This is a test message") })
         request.addParameter('query', 'query { echo(arg:"test") }')
 
         when:
@@ -1063,7 +1100,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "batched errors while data fetching are masked in the response"() {
         setup:
-        servlet = TestUtils.createServlet({ throw new TestException() })
+        servlet = TestUtils.createDefaultServlet({ throw new TestException() })
         request.addParameter('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
 
         when:

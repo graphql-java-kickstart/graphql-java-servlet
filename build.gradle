@@ -33,7 +33,7 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.21'
 
     // Useful utilities
-    compile 'com.google.guava:guava:20.0'
+    compile 'com.google.guava:guava:24.1.1-jre'
 
     // Unit testing
     testCompile "org.codehaus.groovy:groovy-all:2.4.1"

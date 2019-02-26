@@ -2,10 +2,6 @@ package graphql.servlet;
 
 import graphql.schema.GraphQLSchema;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 /**
  * @author Michiel Oliemans
  */
@@ -34,6 +30,11 @@ public abstract class GraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
     @Override
     protected GraphQLObjectMapper getGraphQLObjectMapper() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected GraphQLBatchExecutionHandlerFactory getBatchExecutionHandlerFactory() {
         throw new UnsupportedOperationException();
     }
 

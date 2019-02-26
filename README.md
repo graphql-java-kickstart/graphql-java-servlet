@@ -54,7 +54,7 @@ to see what's needed to create a Servlet with a schema.
 
 ## Using the latest development build
 
-Snapshot versions of the current `master` branch are availble on JFrog. Check the next snapshot version in 
+Snapshot versions of the current `master` branch are available on JFrog. Check the next snapshot version in
 [gradle.properties](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/gradle.properties).
 
 ### Build with Gradle
