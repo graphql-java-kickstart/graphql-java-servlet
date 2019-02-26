@@ -70,6 +70,11 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     }
 
     @Override
+    protected GraphQLBatchExecutionHandlerFactory getBatchExecutionHandlerFactory() {
+        return configuration.getBatchExecutionHandlerFactory();
+    }
+
+    @Override
     protected boolean isAsyncServletMode() {
         return configuration.isAsyncServletModeEnabled();
     }

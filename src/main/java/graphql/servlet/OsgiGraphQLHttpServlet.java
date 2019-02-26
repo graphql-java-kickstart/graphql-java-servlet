@@ -46,6 +46,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
     private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
     private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
+    private GraphQLBatchExecutionHandlerFactory executionResultHandlerFactory = new DefaultGraphQLBatchExecutionHandlerFactory();
 
     private GraphQLSchemaProvider schemaProvider;
 
@@ -82,6 +83,11 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     @Override
     protected GraphQLObjectMapper getGraphQLObjectMapper() {
         return graphQLObjectMapper;
+    }
+
+    @Override
+    protected GraphQLBatchExecutionHandlerFactory getBatchExecutionHandlerFactory() {
+        return executionResultHandlerFactory;
     }
 
     @Override
