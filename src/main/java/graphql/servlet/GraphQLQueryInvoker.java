@@ -13,6 +13,7 @@ import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
 
 import javax.security.auth.Subject;
+import java.io.Writer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -28,20 +29,22 @@ public class GraphQLQueryInvoker {
     private final Supplier<Instrumentation> getInstrumentation;
     private final Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider;
     private final Supplier<DataLoaderDispatcherInstrumentationOptions> dataLoaderDispatcherInstrumentationOptionsSupplier;
+    private final BatchExecutionHandler batchExecutionHandler;
 
-    protected GraphQLQueryInvoker(Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider, Supplier<Instrumentation> getInstrumentation, Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider, Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier) {
+    protected GraphQLQueryInvoker(Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider, Supplier<Instrumentation> getInstrumentation, Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider, Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier, BatchExecutionHandler batchExecutionHandler) {
         this.getExecutionStrategyProvider = getExecutionStrategyProvider;
         this.getInstrumentation = getInstrumentation;
         this.getPreparsedDocumentProvider = getPreparsedDocumentProvider;
         this.dataLoaderDispatcherInstrumentationOptionsSupplier = optionsSupplier;
+        this.batchExecutionHandler = batchExecutionHandler;
     }
 
     public ExecutionResult query(GraphQLSingleInvocationInput singleInvocationInput) {
         return query(singleInvocationInput, singleInvocationInput.getExecutionInput());
     }
 
-    public void query(GraphQLBatchedInvocationInput batchedInvocationInput, BatchExecutionHandler batchExecutionHandler) {
-        batchExecutionHandler.handleBatch(batchedInvocationInput, this::query);
+    public void query(GraphQLBatchedInvocationInput batchedInvocationInput, Writer writer, GraphQLObjectMapper graphQLObjectMapper) {
+        batchExecutionHandler.handleBatch(batchedInvocationInput, writer, graphQLObjectMapper, this::query);
     }
 
     private GraphQL newGraphQL(GraphQLSchema schema, Object context) {
@@ -97,6 +100,7 @@ public class GraphQLQueryInvoker {
         private Supplier<Instrumentation> getInstrumentation = () -> SimpleInstrumentation.INSTANCE;
         private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider = () -> NoOpPreparsedDocumentProvider.INSTANCE;
         private Supplier<DataLoaderDispatcherInstrumentationOptions> dataLoaderDispatcherInstrumentationOptionsSupplier = DataLoaderDispatcherInstrumentationOptions::newOptions;
+        private BatchExecutionHandler batchExecutionHandler = new DeafultBatchExecutionHandler();
 
         public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
             return withExecutionStrategyProvider(() -> provider);
@@ -128,6 +132,13 @@ public class GraphQLQueryInvoker {
             return this;
         }
 
+        public Builder withBatchExeuctionHandler(BatchExecutionHandler batchExeuctionHandler) {
+            if (batchExeuctionHandler != null) {
+                this.batchExecutionHandler = batchExeuctionHandler;
+            }
+            return this;
+        }
+
         public Builder withPreparsedDocumentProvider(PreparsedDocumentProvider provider) {
             return withPreparsedDocumentProvider(() -> provider);
         }
@@ -147,7 +158,7 @@ public class GraphQLQueryInvoker {
         }
 
         public GraphQLQueryInvoker build() {
-            return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation, getPreparsedDocumentProvider, dataLoaderDispatcherInstrumentationOptionsSupplier);
+            return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation, getPreparsedDocumentProvider, dataLoaderDispatcherInstrumentationOptionsSupplier, batchExecutionHandler);
         }
     }
 }

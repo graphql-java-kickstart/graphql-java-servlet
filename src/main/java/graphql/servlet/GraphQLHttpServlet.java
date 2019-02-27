@@ -34,11 +34,6 @@ public abstract class GraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     }
 
     @Override
-    protected GraphQLBatchExecutionHandlerFactory getBatchExecutionHandlerFactory() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     protected boolean isAsyncServletMode() {
         throw new UnsupportedOperationException();
     }
