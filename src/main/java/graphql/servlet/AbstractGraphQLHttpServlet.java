@@ -77,12 +77,6 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
      * @deprecated override {@link #getConfiguration()} instead
      */
     @Deprecated
-    protected abstract GraphQLBatchExecutionHandlerFactory getBatchExecutionHandlerFactory();
-
-    /**
-     * @deprecated override {@link #getConfiguration()} instead
-     */
-    @Deprecated
     protected abstract boolean isAsyncServletMode();
 
     protected GraphQLConfiguration getConfiguration() {
@@ -91,7 +85,6 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                 .with(getGraphQLObjectMapper())
                 .with(isAsyncServletMode())
                 .with(listeners)
-                .with(getBatchExecutionHandlerFactory())
                 .build();
     }
 
@@ -120,7 +113,6 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             GraphQLInvocationInputFactory invocationInputFactory = configuration.getInvocationInputFactory();
             GraphQLObjectMapper graphQLObjectMapper = configuration.getObjectMapper();
             GraphQLQueryInvoker queryInvoker = configuration.getQueryInvoker();
-            GraphQLBatchExecutionHandlerFactory batchExecutionHandlerFactory = configuration.getBatchExecutionHandlerFactory();
 
             String path = request.getPathInfo();
             if (path == null) {
@@ -133,7 +125,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                 if (query != null) {
 
                     if (isBatchedQuery(query)) {
-                        queryBatched(batchExecutionHandlerFactory, queryInvoker, graphQLObjectMapper, invocationInputFactory.createReadOnly(graphQLObjectMapper.readBatchedGraphQLRequest(query), request, response), response);
+                        queryBatched(queryInvoker, graphQLObjectMapper, invocationInputFactory.createReadOnly(graphQLObjectMapper.readBatchedGraphQLRequest(query), request, response), response);
                     } else {
                         final Map<String, Object> variables = new HashMap<>();
                         if (request.getParameter("variables") != null) {
@@ -155,7 +147,6 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             GraphQLInvocationInputFactory invocationInputFactory = configuration.getInvocationInputFactory();
             GraphQLObjectMapper graphQLObjectMapper = configuration.getObjectMapper();
             GraphQLQueryInvoker queryInvoker = configuration.getQueryInvoker();
-            GraphQLBatchExecutionHandlerFactory batchExecutionHandlerFactory = configuration.getBatchExecutionHandlerFactory();
 
             try {
                 if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
@@ -190,7 +181,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                             GraphQLBatchedInvocationInput invocationInput =
                                     invocationInputFactory.create(graphQLRequests, request, response);
                             invocationInput.getContext().setParts(fileItems);
-                            queryBatched(batchExecutionHandlerFactory, queryInvoker, graphQLObjectMapper, invocationInput, response);
+                            queryBatched(queryInvoker, graphQLObjectMapper, invocationInput, response);
                             return;
                         } else {
                             GraphQLRequest graphQLRequest;
@@ -216,7 +207,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                     InputStream inputStream = asMarkableInputStream(request.getInputStream());
 
                     if (isBatchedQuery(inputStream)) {
-                        queryBatched(batchExecutionHandlerFactory, queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readBatchedGraphQLRequest(inputStream), request, response), response);
+                        queryBatched(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readBatchedGraphQLRequest(inputStream), request, response), response);
                     } else {
                         query(queryInvoker, graphQLObjectMapper, invocationInputFactory.create(graphQLObjectMapper.readGraphQLRequest(inputStream), request, response), response);
                     }
@@ -373,13 +364,13 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         }
     }
 
-    private void queryBatched(GraphQLBatchExecutionHandlerFactory batchInputHandlerFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, GraphQLBatchedInvocationInput invocationInput, HttpServletResponse resp) throws Exception {
+    private void queryBatched(GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, GraphQLBatchedInvocationInput invocationInput, HttpServletResponse resp) throws Exception {
         resp.setContentType(APPLICATION_JSON_UTF8);
         resp.setStatus(STATUS_OK);
 
         Writer respWriter = resp.getWriter();
 
-        queryInvoker.query(invocationInput, batchInputHandlerFactory.getBatchHandler(respWriter, graphQLObjectMapper));
+        queryInvoker.query(invocationInput, respWriter, graphQLObjectMapper);
     }
 
     private <R> List<R> runListeners(Function<? super GraphQLServletListener, R> action) {

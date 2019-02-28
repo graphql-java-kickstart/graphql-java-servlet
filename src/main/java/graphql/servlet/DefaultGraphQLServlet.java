@@ -26,11 +26,6 @@ public class DefaultGraphQLServlet extends AbstractGraphQLHttpServlet {
     }
 
     @Override
-    protected GraphQLBatchExecutionHandlerFactory getBatchExecutionHandlerFactory() {
-        return null;
-    }
-
-    @Override
     protected boolean isAsyncServletMode() {
         return false;
     }

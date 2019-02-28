@@ -20,8 +20,7 @@ class TestUtils {
                                         }))
                                         return publisherRef.get()
                                     }, boolean asyncServletModeEnabled = false) {
-        GraphQLBatchExecutionHandlerFactory defaultHandler = new DefaultGraphQLBatchExecutionHandlerFactory();
-        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, defaultHandler)
+        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, null)
     }
 
     static def createBatchCustomizedServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
@@ -34,7 +33,7 @@ class TestUtils {
                                                 }))
                                                 return publisherRef.get()
                                             }, boolean asyncServletModeEnabled = false) {
-        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, createBatchExecutionHandlerFactory())
+        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, createBatchExecutionHandler())
     }
 
     private static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
@@ -47,24 +46,23 @@ class TestUtils {
                                  }))
                                  return publisherRef.get()
                              }, boolean asyncServletModeEnabled = false,
-                                     GraphQLBatchExecutionHandlerFactory batchHandlerFactory) {
+                                     BatchExecutionHandler batchHandler) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
-                .with(createInstrumentedQueryInvoker())
+                .with(createInstrumentedQueryInvoker(batchHandler))
                 .with(asyncServletModeEnabled)
-                .with(batchHandlerFactory)
                 .build())
         servlet.init(null)
         return servlet
     }
 
-    static def createInstrumentedQueryInvoker() {
+    static def createInstrumentedQueryInvoker(BatchExecutionHandler batchExecutionHandler) {
         Instrumentation instrumentation = new TestInstrumentation()
-        GraphQLQueryInvoker.newBuilder().with([instrumentation]).build()
+        GraphQLQueryInvoker.newBuilder().with([instrumentation]).withBatchExeuctionHandler(batchExecutionHandler).build()
     }
 
-    static def createBatchExecutionHandlerFactory() {
-        new TestBatchExecutionHandlerFactoryBatch()
+    static def createBatchExecutionHandler() {
+        new TestBatchExecutionHandler()
     }
 
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
