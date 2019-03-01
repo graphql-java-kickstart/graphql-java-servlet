@@ -8,7 +8,7 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.function.BiFunction;
 
-public class DeafultBatchExecutionHandler implements BatchExecutionHandler {
+public class DefaultBatchExecutionHandler implements BatchExecutionHandler {
 
     @Override
     public void handleBatch(GraphQLBatchedInvocationInput batchedInvocationInput, Writer writer, GraphQLObjectMapper graphQLObjectMapper,

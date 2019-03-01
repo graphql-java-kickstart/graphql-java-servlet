@@ -100,7 +100,7 @@ public class GraphQLQueryInvoker {
         private Supplier<Instrumentation> getInstrumentation = () -> SimpleInstrumentation.INSTANCE;
         private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider = () -> NoOpPreparsedDocumentProvider.INSTANCE;
         private Supplier<DataLoaderDispatcherInstrumentationOptions> dataLoaderDispatcherInstrumentationOptionsSupplier = DataLoaderDispatcherInstrumentationOptions::newOptions;
-        private BatchExecutionHandler batchExecutionHandler = new DeafultBatchExecutionHandler();
+        private BatchExecutionHandler batchExecutionHandler = new DefaultBatchExecutionHandler();
 
         public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
             return withExecutionStrategyProvider(() -> provider);
