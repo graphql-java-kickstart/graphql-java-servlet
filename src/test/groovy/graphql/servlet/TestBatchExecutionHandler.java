@@ -13,14 +13,27 @@ import java.util.stream.Collectors;
 
 public class TestBatchExecutionHandler implements BatchExecutionHandler {
 
+    public static String BATCH_ERROR_MESSAGE = "Batch limit exceeded";
+
     @Override
     public void handleBatch(GraphQLBatchedInvocationInput batchedInvocationInput, HttpServletResponse response, GraphQLObjectMapper graphQLObjectMapper,
                             BiFunction<GraphQLInvocationInput, ExecutionInput, ExecutionResult> queryFunction) {
-        List<ExecutionResult> results = batchedInvocationInput.getExecutionInputs().parallelStream()
-            .limit(2)
+        List<ExecutionInput> inputs = batchedInvocationInput.getExecutionInputs();
+        if (inputs.size() > 2) {
+            handleBadInput(response);
+        }
+        List<ExecutionResult> results = inputs.parallelStream()
             .map(input -> queryFunction.apply(batchedInvocationInput, input))
             .collect(Collectors.toList());
         writeResults(results, response, graphQLObjectMapper);
+    }
+
+    private void handleBadInput(HttpServletResponse response) {
+        try {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, BATCH_ERROR_MESSAGE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void writeResults(List<ExecutionResult> results, HttpServletResponse response, GraphQLObjectMapper mapper) {
