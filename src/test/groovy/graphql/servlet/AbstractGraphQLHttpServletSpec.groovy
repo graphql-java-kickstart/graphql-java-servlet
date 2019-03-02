@@ -285,7 +285,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
-    def "Execution Result Handler allows limiting number of queries"() {
+    def "Batch Execution Handler allows limiting batches and sending error messages."() {
         setup:
         servlet = TestUtils.createBatchCustomizedServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>()
@@ -304,9 +304,8 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         servlet.doGet(request, response)
 
         then:
-        response.getStatus() == STATUS_OK
-        response.getContentType() == CONTENT_TYPE_JSON_UTF8
-        getBatchedResponseContent().size() == 2
+        response.getStatus() == STATUS_BAD_REQUEST
+        response.getErrorMessage() == TestBatchExecutionHandler.BATCH_ERROR_MESSAGE
     }
 
     def "Default Execution Result Handler does not limit number of queries"() {

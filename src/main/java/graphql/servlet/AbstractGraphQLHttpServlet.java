@@ -365,12 +365,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     }
 
     private void queryBatched(GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, GraphQLBatchedInvocationInput invocationInput, HttpServletResponse resp) throws Exception {
-        resp.setContentType(APPLICATION_JSON_UTF8);
-        resp.setStatus(STATUS_OK);
-
-        Writer respWriter = resp.getWriter();
-
-        queryInvoker.query(invocationInput, respWriter, graphQLObjectMapper);
+        queryInvoker.query(invocationInput, resp, graphQLObjectMapper);
     }
 
     private <R> List<R> runListeners(Function<? super GraphQLServletListener, R> action) {

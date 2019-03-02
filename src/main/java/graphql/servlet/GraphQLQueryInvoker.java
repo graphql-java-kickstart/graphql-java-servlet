@@ -13,6 +13,7 @@ import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
 
 import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletResponse;
 import java.io.Writer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -43,8 +44,8 @@ public class GraphQLQueryInvoker {
         return query(singleInvocationInput, singleInvocationInput.getExecutionInput());
     }
 
-    public void query(GraphQLBatchedInvocationInput batchedInvocationInput, Writer writer, GraphQLObjectMapper graphQLObjectMapper) {
-        batchExecutionHandler.handleBatch(batchedInvocationInput, writer, graphQLObjectMapper, this::query);
+    public void query(GraphQLBatchedInvocationInput batchedInvocationInput, HttpServletResponse response, GraphQLObjectMapper graphQLObjectMapper) {
+        batchExecutionHandler.handleBatch(batchedInvocationInput, response, graphQLObjectMapper, this::query);
     }
 
     private GraphQL newGraphQL(GraphQLSchema schema, Object context) {
