@@ -129,16 +129,16 @@ public class GraphQLObjectMapper {
     public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult, boolean includeData) {
         final Map<String, Object> result = new LinkedHashMap<>();
 
-        if(includeData) {
-            result.put("data", executionResult.getData());
-        }
-
         if (areErrorsPresent(executionResult)) {
             result.put("errors", executionResult.getErrors());
         }
 
         if(executionResult.getExtensions() != null){
             result.put("extensions", executionResult.getExtensions());
+        }
+
+        if(includeData) {
+            result.put("data", executionResult.getData());
         }
 
         return result;
