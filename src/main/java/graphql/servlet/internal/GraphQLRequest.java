@@ -13,7 +13,7 @@ import java.util.Map;
 public class GraphQLRequest {
     private String query;
     @JsonDeserialize(using = VariablesDeserializer.class)
-    private Map<String, Object> variables = new HashMap<>();
+    private Map<String, Object> variables;
     private String operationName;
 
     public GraphQLRequest() {
@@ -21,8 +21,9 @@ public class GraphQLRequest {
 
     public GraphQLRequest(String query, Map<String, Object> variables, String operationName) {
         this.query = query;
-        this.variables = variables;
         this.operationName = operationName;
+
+        setVariables(variables);
     }
 
     public String getQuery() {
@@ -38,7 +39,11 @@ public class GraphQLRequest {
     }
 
     public void setVariables(Map<String, Object> variables) {
-        this.variables = variables;
+        if (variables == null) {
+            this.variables = new HashMap<>();
+        } else {
+            this.variables = variables;
+        }
     }
 
     public String getOperationName() {
