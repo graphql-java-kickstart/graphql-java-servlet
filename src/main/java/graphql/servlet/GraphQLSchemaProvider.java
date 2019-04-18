@@ -1,22 +1,41 @@
-/**
- * Copyright 2016 Yurii Rashkovskii
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- */
 package graphql.servlet;
 
 import graphql.schema.GraphQLSchema;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.websocket.server.HandshakeRequest;
+
 public interface GraphQLSchemaProvider {
+
+    static GraphQLSchema copyReadOnly(GraphQLSchema schema) {
+        return GraphQLSchema.newSchema()
+                .query(schema.getQueryType())
+                .subscription(schema.getSubscriptionType())
+                .additionalTypes(schema.getAdditionalTypes())
+                .build();
+    }
+
+    /**
+     * @param request the http request
+     * @return a schema based on the request (auth, etc).
+     */
+    GraphQLSchema getSchema(HttpServletRequest request);
+
+    /**
+     * @param request the http request used to create a websocket
+     * @return a schema based on the request (auth, etc).
+     */
+    GraphQLSchema getSchema(HandshakeRequest request);
+
+    /**
+     * @return a schema for handling mbean calls.
+     */
     GraphQLSchema getSchema();
-    GraphQLSchema getReadOnlySchema();
+
+    /**
+     * @param request the http request
+     * @return a read-only schema based on the request (auth, etc).  Should return the same schema (query/subscription-only version) as {@link #getSchema(HttpServletRequest)} for a given request.
+     */
+    GraphQLSchema getReadOnlySchema(HttpServletRequest request);
+
 }

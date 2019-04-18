@@ -1,37 +1,94 @@
-[![Build Status](https://travis-ci.org/graphql-java/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/graphql-java/graphql-java-servlet)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java/graphql-java-servlet)
-[![Chat on Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/graphql-java/graphql-java)
+[![Build Status](https://travis-ci.org/graphql-java-kickstart/graphql-java-servlet.svg?branch=master)](https://travis-ci.org/graphql-java-kickstart/graphql-java-servlet)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet/badge.svg?service=github)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet)
+[![Chat on Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/graphql-java-kickstart/Lobby)
 
 # GraphQL Servlet
 
-This module implements a GraphQL Java Servlet. It also supports Relay.js and OSGi out of the box.
+Implementation of GraphQL Java Servlet including support for Relay.js, Apollo and OSGi out of the box.
+This project wraps the Java implementation of GraphQL provided by [GraphQL Java](https://www.graphql-java.com).
+See [GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
+regarding GraphQL Java itself. 
 
-# Downloading
+We try to stay up to date with GraphQL Java as much as possible. The current version supports **GraphQL Java 11.0**.
+ 
+This project requires at least Java 8.
 
-You can download releases from maven central:
+## Quick start
 
-```groovy
+See [Getting started](https://www.graphql-java-kickstart.com/servlet/getting-started/) for more detailed instructions.
+
+To add `graphql-java-servlet` to your project and get started quickly, do the following.
+
+### Build with Gradle
+
+Make sure `mavenCentral` is amongst your repositories:
+```gradle
 repositories {
     mavenCentral()
 }
+```
 
+Add the `graphql-java-servlet` dependency:
+```gradle
 dependencies {
-    compile 'com.graphql-java:graphql-java-servlet:2.1.0'
+    compile 'com.graphql-java-kickstart:graphql-java-servlet:7.3.0'
 }
 ```
 
+### Build with Maven
+
+Add the `graphql-java-servlet` dependency:
 ```xml
 <dependency>
-    <groupId>com.graphql-java</groupId>
-    <artifactId>graphql-java-servlet</artifactId>
-    <version>2.1.0</version>
+  <groupId>com.graphql-java-kickstart</groupId>
+  <artifactId>graphql-java-servlet</artifactId>
+  <version>7.3.0</version>
 </dependency>
+```
+
+### Create a Servlet class
+
+Creating the Servlet class requires various parameters to be provided at the moment. We're working on simplifying
+this, to make it easier to get started. For now, take a look at [Create a Servlet class](https://www.graphql-java-kickstart.com/servlet/getting-started/#create-a-servlet-class)
+to see what's needed to create a Servlet with a schema.
+
+## Using the latest development build
+
+Snapshot versions of the current `master` branch are available on JFrog. Check the next snapshot version in
+[gradle.properties](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/gradle.properties).
+
+### Build with Gradle
+
+Add the Snapshot repository:
+```gradle
+repositories {
+    mavenCentral()
+    maven { url "http://oss.jfrog.org/artifactory/oss-snapshot-local" }
+}
+```
+
+### Build with Maven
+
+Add the Snapshot repository:
+```xml
+<repositories>
+  <repository>
+    <id>oss-snapshot-local</id>
+    <name>jfrog</name>
+    <url>http://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+    <snapshots>
+      <enabled>true</enabled>
+      <updatePolicy>always</updatePolicy>
+    </snapshots>
+  </repository>
+</repositories>
 ```
 
 # Usage
 
 The servlet supports the following request formats:
-* GET request with query parameters:
+* GET request to `../schema.json`: Get the result of an introspection query.
+* GET request with query parameters (query only, no mutation):
     * query
     * operationName (optional)
     * variables (optional)
@@ -45,51 +102,52 @@ The servlet supports the following request formats:
     * variables (optional)
 * POST multipart parts named "query", "operationName" (optional), and "variables" (optional)
 
-## Standalone servlet
+## Servlet Listeners
 
-The simplest form of the servlet takes a graphql-java `GraphQLSchema` and an `ExecutionStrategy`:
+You can also add [servlet listeners](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLServletListener.java) to an existing servlet.
+These listeners provide hooks into query execution (before, success, failure, and finally) and servlet execution (before, success, error, and finally):
 ```java
-GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy);
-
-// or
-
-GraphQLServlet servlet = new SimpleGraphQLServlet(schema, executionStrategy, operationListeners, servletListeners);
-```
-
-You can also add [operation listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLOperationListener.java) and [servlet listeners](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLServletListener.java) to an existing servlet.
-These listeners provide hooks into query execution (before, on success, and on failure) and servlet execution (before, on error, and finally):
-```java
-servlet.addOperationListener(new GraphQLOperationListener() {
+servlet.addListener(new GraphQLServletListener() {
     @Override
-    void beforeGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {
+    GraphQLServletListener.RequestCallback onRequest(HttpServletRequest request, HttpServletResponse response) {
 
+        return new GraphQLServletListener.RequestCallback() {
+            @Override
+            void onSuccess(HttpServletRequest request, HttpServletResponse response) {
+
+            }
+
+            @Override
+            void onError(HttpServletRequest request, HttpServletResponse response, Throwable throwable) {
+
+            }
+
+            @Override
+            void onFinally(HttpServletRequest request, HttpServletResponse response) {
+
+            }
+        }
     }
 
     @Override
-    void onSuccessfulGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
+    GraphQLServletListener.OperationCallback onOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {
 
-    }
+        return new GraphQLServletListener.OperationCallback() {
+            @Override
+            void onSuccess(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
 
-    @Override
-    void onFailedGraphQLOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data, List<GraphQLError> errors) {
+            }
 
-    }
-})
+            @Override
+            void onError(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data, List<GraphQLError> errors) {
 
-servlet.addServletListener(new GraphQLServletListener() {
-    @Override
-    void onStart(HttpServletRequest request, HttpServletResponse response) {
+            }
 
-    }
+            @Override
+            void onFinally(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
 
-    @Override
-    void onError(HttpServletRequest request, HttpServletResponse response, Throwable throwable) {
-
-    }
-
-    @Override
-    void onFinally(HttpServletRequest request, HttpServletResponse response) {
-
+            }
+        }
     }
 })
 ```
@@ -99,7 +157,11 @@ servlet.addServletListener(new GraphQLServletListener() {
 Relay.js support is provided by the [EnhancedExecutionStrategy](https://github.com/graphql-java/graphql-java-annotations/blob/master/src/main/java/graphql/annotations/EnhancedExecutionStrategy.java) of [graphql-java-annotations](https://github.com/graphql-java/graphql-java-annotations).
 You **MUST** pass this execution strategy to the servlet for Relay.js support.
 
-This is the default execution strategy for the `OsgiGraphQLServlet`, and must be added as a dependency when using that servlet.
+This is the default execution strategy for the `OsgiGraphQLHttpServlet`, and must be added as a dependency when using that servlet.
+
+## Apollo support
+
+Query batching is supported, no configuration required.
 
 ## Spring Framework support
 
@@ -113,12 +175,12 @@ ServletRegistrationBean graphQLServletRegistrationBean(GraphQLSchema schema, Exe
 
 ## OSGI support
 
-The [OsgiGraphQLServlet](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/OsgiGraphQLServlet.java) uses a "provider" model to supply the servlet with the required objects:
-* [GraphQLQueryProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLQueryProvider.java): Provides query fields to the GraphQL schema.
-* [GraphQLMutationProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLMutationProvider.java): Provides mutation fields to the GraphQL schema.
-* [GraphQLTypesProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLTypesProvider.java): Provides type information to the GraphQL schema.
-* [ExecutionStrategyProvider](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/ExecutionStrategyProvider.java): Provides an execution strategy for running each query.
-* [GraphQLContextBuilder](https://github.com/graphql-java/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLContextBuilder.java): Builds a context for running each query.
+The [OsgiGraphQLHttpServlet](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/OsgiGraphQLHttpServlet.java) uses a "provider" model to supply the servlet with the required objects:
+* [GraphQLQueryProvider](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLQueryProvider.java): Provides query fields to the GraphQL schema.
+* [GraphQLMutationProvider](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLMutationProvider.java): Provides mutation fields to the GraphQL schema.
+* [GraphQLTypesProvider](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLTypesProvider.java): Provides type information to the GraphQL schema.
+* [ExecutionStrategyProvider](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/ExecutionStrategyProvider.java): Provides an execution strategy for running each query.
+* [GraphQLContextBuilder](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLContextBuilder.java): Builds a context for running each query.
 
 ## Examples
 
@@ -169,3 +231,61 @@ And here is a sample src/main/feature/feature.xml file to add some dependencies 
 Here's an example of a GraphQL provider that implements three interfaces at the same time.
 
 * [ExampleGraphQLProvider](examples/osgi/providers/src/main/java/graphql/servlet/examples/osgi/ExampleGraphQLProvider.java)
+
+## Request-scoped DataLoaders
+
+It is possible to use dataloaders in a request scope by customizing [GraphQLContextBuilder](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/GraphQLContextBuilder.java).
+And instantiating a new [DataLoaderRegistry](https://github.com/graphql-java/java-dataloader/blob/master/src/main/java/org/dataloader/DataLoaderRegistry.java) for each GraphQLContext.
+For eg:
+```java
+public class CustomGraphQLContextBuilder implements GraphQLContextBuilder {
+
+    private final DataLoader userDataLoader;
+
+    public CustomGraphQLContextBuilder(DataLoader userDataLoader) {
+        this.userDataLoader = userDataLoader;
+    }
+
+    @Override
+    public GraphQLContext build(HttpServletRequest req) {
+        GraphQLContext context = new GraphQLContext(req);
+        context.setDataLoaderRegistry(buildDataLoaderRegistry());
+
+        return context;
+    }
+
+    @Override
+    public GraphQLContext build() {
+        GraphQLContext context = new GraphQLContext();
+        context.setDataLoaderRegistry(buildDataLoaderRegistry());
+
+        return context;
+    }
+
+    @Override
+    public GraphQLContext build(HandshakeRequest request) {
+        GraphQLContext context = new GraphQLContext(request);
+        context.setDataLoaderRegistry(buildDataLoaderRegistry());
+
+        return context;
+    }
+
+    private DataLoaderRegistry buildDataLoaderRegistry() {
+        DataLoaderRegistry dataLoaderRegistry = new DataLoaderRegistry();
+        dataLoaderRegistry.register("userDataLoader", userDataLoader);
+        return dataLoaderRegistry;
+    }
+}
+
+```
+ It is then possible to access the [DataLoader](https://github.com/graphql-java/java-dataloader/blob/master/src/main/java/org/dataloader/DataLoader.java) in the resolvers by accessing the [DataLoaderRegistry] from context. For eg:
+ ```java
+ public CompletableFuture<String> getEmailAddress(User user, DataFetchingEnvironment dfe) { // User is the graphQL type
+         final DataLoader<String, UserDetail> userDataloader =
+                dfe.getContext().getDataLoaderRegistry().get().getDataLoader("userDataLoader"); // UserDetail is the data that is loaded
+
+         return userDataloader.load(User.getName())
+                 .thenApply(userDetail -> userDetail != null ? userDetail.getEmailAddress() : null);
+     }
+
+ ```
