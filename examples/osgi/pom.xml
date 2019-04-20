@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
 
     <properties>
-        <karaf.version>4.1.6</karaf.version>
+        <karaf.version>4.2.4</karaf.version>
         <graphql.java.servlet.version>7.3.4-SNAPSHOT</graphql.java.servlet.version>
         <graphql.java.version>11.0</graphql.java.version>
     </properties>
