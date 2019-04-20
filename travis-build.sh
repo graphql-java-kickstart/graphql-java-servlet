@@ -24,6 +24,6 @@ if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; 
         echo "Deploying snapshot to Bintray"
         ./gradlew artifactoryPublish && ./gradlew check --info
     fi
-else if [ "${TRAVIS_PULL_REQUEST}" = "true" ]; then
+else
     ./gradlew check --info
 fi
