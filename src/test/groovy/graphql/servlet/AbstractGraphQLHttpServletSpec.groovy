@@ -114,6 +114,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getResponseContent().data.echo == "test"
     }
 
+    @Ignore
     def "async query over HTTP GET starts async request"() {
         setup:
         servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
