@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Andrew Potter
@@ -41,7 +40,9 @@ public class GraphQLRequest {
     }
 
     public void setVariables(Map<String, Object> variables) {
-        this.variables = Objects.requireNonNull(variables);
+        if (variables != null) {
+            this.variables = variables;
+        }
     }
 
     public String getOperationName() {
