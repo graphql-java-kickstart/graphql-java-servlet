@@ -31,7 +31,7 @@ repositories {
 Add the `graphql-java-servlet` dependency:
 ```gradle
 dependencies {
-    compile 'com.graphql-java-kickstart:graphql-java-servlet:7.4.0'
+    compile 'com.graphql-java-kickstart:graphql-java-servlet:7.4.1'
 }
 ```
 
@@ -42,7 +42,7 @@ Add the `graphql-java-servlet` dependency:
 <dependency>
   <groupId>com.graphql-java-kickstart</groupId>
   <artifactId>graphql-java-servlet</artifactId>
-  <version>7.4.0</version>
+  <version>7.4.1</version>
 </dependency>
 ```
 
