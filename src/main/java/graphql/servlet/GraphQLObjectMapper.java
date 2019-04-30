@@ -133,7 +133,7 @@ public class GraphQLObjectMapper {
             result.put("errors", executionResult.getErrors());
         }
 
-        if(executionResult.getExtensions() != null){
+        if(executionResult.getExtensions() != null && !executionResult.getExtensions().isEmpty()){
             result.put("extensions", executionResult.getExtensions());
         }
 
