@@ -1,28 +1,34 @@
 package graphql.servlet;
 
-import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 public class ConfiguringObjectMapperProvider implements ObjectMapperProvider {
 
+  private final ObjectMapper objectMapperTemplate;
+
   private final ObjectMapperConfigurer objectMapperConfigurer;
 
+  public ConfiguringObjectMapperProvider(ObjectMapper objectMapperTemplate, ObjectMapperConfigurer objectMapperConfigurer) {
+    this.objectMapperTemplate = objectMapperTemplate == null ? new ObjectMapper() : objectMapperTemplate;
+    this.objectMapperConfigurer = objectMapperConfigurer == null ? new DefaultObjectMapperConfigurer() : objectMapperConfigurer;
+  }
+
+  public ConfiguringObjectMapperProvider(ObjectMapper objectMapperTemplate) {
+      this(objectMapperTemplate, null);
+  }
+
   public ConfiguringObjectMapperProvider(ObjectMapperConfigurer objectMapperConfigurer) {
-    this.objectMapperConfigurer = objectMapperConfigurer;
+    this(null, objectMapperConfigurer);
   }
 
   public ConfiguringObjectMapperProvider() {
-    this.objectMapperConfigurer = new DefaultObjectMapperConfigurer();
+    this(null, null);
   }
 
   @Override
   public ObjectMapper provide() {
-    ObjectMapper mapper = new ObjectMapper().disable(
-      SerializationFeature.FAIL_ON_EMPTY_BEANS).registerModule(new Jdk8Module());
-    objectMapperConfigurer.configure(mapper);
-
+    ObjectMapper mapper = this.objectMapperTemplate.copy();
+    this.objectMapperConfigurer.configure(mapper);
     return mapper;
   }
 }
