@@ -1,5 +1,6 @@
 package graphql.servlet;
 
+import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 
 import javax.servlet.http.HttpServletRequest;
@@ -8,11 +9,8 @@ import javax.websocket.server.HandshakeRequest;
 public interface GraphQLSchemaProvider {
 
     static GraphQLSchema copyReadOnly(GraphQLSchema schema) {
-        return GraphQLSchema.newSchema()
-                .query(schema.getQueryType())
-                .codeRegistry(schema.getCodeRegistry())
-                .subscription(schema.getSubscriptionType())
-                .additionalTypes(schema.getAdditionalTypes())
+        return GraphQLSchema.newSchema(schema)
+                .mutation((GraphQLObjectType) null)
                 .build();
     }
 
