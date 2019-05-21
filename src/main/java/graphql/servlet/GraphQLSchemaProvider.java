@@ -10,6 +10,7 @@ public interface GraphQLSchemaProvider {
     static GraphQLSchema copyReadOnly(GraphQLSchema schema) {
         return GraphQLSchema.newSchema()
                 .query(schema.getQueryType())
+                .codeRegistry(schema.getCodeRegistry())
                 .subscription(schema.getSubscriptionType())
                 .additionalTypes(schema.getAdditionalTypes())
                 .build();
