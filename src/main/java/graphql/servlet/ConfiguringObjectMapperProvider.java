@@ -23,10 +23,6 @@ public class ConfiguringObjectMapperProvider implements ObjectMapperProvider {
       SerializationFeature.FAIL_ON_EMPTY_BEANS).registerModule(new Jdk8Module());
     objectMapperConfigurer.configure(mapper);
 
-    InjectableValues.Std injectableValues = new InjectableValues.Std();
-    injectableValues.addValue(ObjectMapper.class, mapper);
-    mapper.setInjectableValues(injectableValues);
-
     return mapper;
   }
 }
