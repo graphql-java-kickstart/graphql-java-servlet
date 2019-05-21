@@ -1,14 +1,6 @@
 package graphql.servlet;
 
-import javax.servlet.ServletConfig;
-
 public class DefaultGraphQLServlet extends AbstractGraphQLHttpServlet {
-
-    @Override
-    public void init(ServletConfig servletConfig) {
-
-        super.init(servletConfig);
-    }
 
     @Override
     protected GraphQLInvocationInputFactory getInvocationInputFactory() {

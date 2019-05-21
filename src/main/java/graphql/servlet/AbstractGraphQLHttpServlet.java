@@ -106,7 +106,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     }
 
     @Override
-    public void init(ServletConfig servletConfig) {
+    public void init() {
         this.configuration = getConfiguration();
 
         this.getHandler = (request, response) -> {

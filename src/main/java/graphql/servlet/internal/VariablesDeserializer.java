@@ -1,10 +1,10 @@
 package graphql.servlet.internal;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Map;
@@ -15,17 +15,17 @@ import java.util.Map;
 public class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
     @Override
     public Map<String, Object> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-        return deserializeVariablesObject(p.readValueAs(Object.class), (ObjectMapper) ctxt.findInjectableValue(ObjectMapper.class.getName(), null, null));
+        return deserializeVariablesObject(p.readValueAs(Object.class), p.getCodec());
     }
 
-    public static Map<String, Object> deserializeVariablesObject(Object variables, ObjectMapper mapper) {
+    public static Map<String, Object> deserializeVariablesObject(Object variables, ObjectCodec codec) {
         if (variables instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<String, Object> genericVariables = (Map<String, Object>) variables;
             return genericVariables;
         } else if (variables instanceof String) {
             try {
-                return mapper.readValue((String) variables, new TypeReference<Map<String, Object>>() {});
+                return codec.readValue(codec.getFactory().createParser((String) variables), new TypeReference<Map<String, Object>>() {});
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

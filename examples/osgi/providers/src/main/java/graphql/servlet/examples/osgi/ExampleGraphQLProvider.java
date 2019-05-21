@@ -25,6 +25,7 @@ public class ExampleGraphQLProvider implements GraphQLQueryProvider, GraphQLMuta
         fieldDefinitions.add(newFieldDefinition()
                 .type(GraphQLString)
                 .name("hello")
+                .description("Basic example of a GraphQL Java Servlet provider using the Apache Karaf OSGi Runtime")
                 .staticValue("world")
                 .build());
         return fieldDefinitions;
