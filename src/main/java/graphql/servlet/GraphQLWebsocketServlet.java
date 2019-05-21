@@ -184,7 +184,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
 
     public int getSubscriptionCount() {
         return sessionSubscriptionCache.values().stream()
-                .mapToInt(subscriptions -> subscriptions.getSubscriptionCount())
+                .mapToInt(WsSessionSubscriptions::getSubscriptionCount)
                 .sum();
     }
 }

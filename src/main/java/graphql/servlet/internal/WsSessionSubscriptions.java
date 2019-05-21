@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Andrew Potter
  */
 public class WsSessionSubscriptions {
+
     private final Object lock = new Object();
 
     private boolean closed = false;

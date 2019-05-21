@@ -44,11 +44,11 @@ class ApolloSubscriptionKeepAliveRunner {
                 if (session.isOpen()) {
                     sender.send(session, keepAliveMessage);
                 } else {
-                    LOG.warn("Session appears to be closed. Aborting keep alive");
+                    LOG.debug("Session {} appears to be closed. Aborting keep alive", session.getId());
                     abort(session);
                 }
             } catch (Throwable t) {
-                LOG.error("Cannot send keep alive message. Aborting keep alive", t);
+                LOG.error("Cannot send keep alive message to session {}. Aborting keep alive", session.getId(), t);
                 abort(session);
             }
         }, 0, keepAliveIntervalSeconds, TimeUnit.SECONDS);
