@@ -63,15 +63,25 @@ public class GraphQLQueryInvoker {
         if (context instanceof GraphQLContext) {
             return ((GraphQLContext) context).getDataLoaderRegistry()
                     .map(registry -> {
-                        List<Instrumentation> instrumentations = new ArrayList<>();
-                        instrumentations.add(getInstrumentation.get());
-                        instrumentations.add(new DataLoaderDispatcherInstrumentation(dataLoaderDispatcherInstrumentationOptionsSupplier.get()));
-                        return new ChainedInstrumentation(instrumentations);
+                        Instrumentation instrumentation = getInstrumentation.get();
+                        if (!containsDispatchInstrumentation(instrumentation)) {
+                            List<Instrumentation> instrumentations = new ArrayList<>();
+                            instrumentations.add(instrumentation);
+                            instrumentations.add(new DataLoaderDispatcherInstrumentation(dataLoaderDispatcherInstrumentationOptionsSupplier.get()));
+                            instrumentation = new ChainedInstrumentation(instrumentations);
+                        }
+                        return instrumentation;
                     })
-                    .map(Instrumentation.class::cast)
                     .orElse(getInstrumentation.get());
         }
         return getInstrumentation.get();
+    }
+
+    private boolean containsDispatchInstrumentation(Instrumentation instrumentation) {
+        if (instrumentation instanceof ChainedInstrumentation) {
+            return ((ChainedInstrumentation)instrumentation).getInstrumentations().stream().anyMatch(this::containsDispatchInstrumentation);
+        }
+        return instrumentation instanceof DataLoaderDispatcherInstrumentation;
     }
 
     private ExecutionResult query(GraphQLInvocationInput invocationInput, ExecutionInput executionInput) {
