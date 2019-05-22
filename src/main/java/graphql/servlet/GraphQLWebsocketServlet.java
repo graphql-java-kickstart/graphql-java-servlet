@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import javax.websocket.*;
 import javax.websocket.server.HandshakeRequest;
 import javax.websocket.server.ServerEndpointConfig;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -99,8 +100,13 @@ public class GraphQLWebsocketServlet extends Endpoint {
 
     @Override
     public void onError(Session session, Throwable thr) {
-        log.error("Error in websocket session: {}", session.getId(), thr);
-        closeUnexpectedly(session, thr);
+        if (thr instanceof EOFException) {
+            log.warn("Session {} was killed abruptly without calling onClose. Cleaning up session", session.getId());
+            onClose(session, ERROR_CLOSE_REASON);
+        } else {
+            log.error("Error in websocket session: {}", session.getId(), thr);
+            closeUnexpectedly(session, thr);
+        }
     }
 
     private void closeUnexpectedly(Session session, Throwable t) {
