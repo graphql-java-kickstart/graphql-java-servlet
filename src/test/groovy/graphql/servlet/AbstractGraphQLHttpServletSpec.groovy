@@ -5,6 +5,7 @@ import graphql.Scalars
 import graphql.execution.ExecutionStepInfo
 import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.Instrumentation
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation
 import graphql.schema.DataFetcher
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.GraphQLNonNull
@@ -1213,5 +1214,24 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         actualInstrumentation instanceof ChainedInstrumentation
         actualInstrumentation != servletInstrumentation
+    }
+
+    def "getInstrumentation does not add dataloader dispatch instrumentation if one is provided"() {
+        setup:
+        Instrumentation servletInstrumentation = Mock()
+        DataLoaderDispatcherInstrumentation mockDispatchInstrumentation = Mock()
+        ChainedInstrumentation chainedInstrumentation = new ChainedInstrumentation(Arrays.asList(servletInstrumentation,
+                mockDispatchInstrumentation))
+        GraphQLContext context = new GraphQLContext(request, response, null, null, null)
+        DataLoaderRegistry dlr = Mock()
+        context.setDataLoaderRegistry(dlr)
+        SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
+                .newBuilder(TestUtils.createGraphQlSchema())
+                .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(chainedInstrumentation).build())
+                .build();
+        when:
+        Instrumentation actualInstrumentation = simpleGraphQLServlet.getQueryInvoker().getInstrumentation(context)
+        then:
+        actualInstrumentation == chainedInstrumentation
     }
 }
