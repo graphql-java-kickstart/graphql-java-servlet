@@ -26,18 +26,20 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
 
             errors.stream()
                     .filter(error -> !isClientError(error))
-                    .forEach(error -> {
-                        if (error instanceof Throwable) {
-                            log.error("Error executing query!", (Throwable) error);
-                        } else if (error instanceof ExceptionWhileDataFetching) {
-                            log.error("Error executing query {}", error.getMessage(), ((ExceptionWhileDataFetching) error).getException());
-                        } else {
-                            log.error("Error executing query ({}): {}", error.getClass().getSimpleName(), error.getMessage());
-                        }
-                    });
+                    .forEach(this::logError);
         }
 
         return clientErrors;
+    }
+
+    protected void logError(GraphQLError error) {
+        if (error instanceof Throwable) {
+            log.error("Error executing query!", (Throwable) error);
+        } else if (error instanceof ExceptionWhileDataFetching) {
+            log.error("Error executing query {}", error.getMessage(), ((ExceptionWhileDataFetching) error).getException());
+        } else {
+            log.error("Error executing query ({}): {}", error.getClass().getSimpleName(), error.getMessage());
+        }
     }
 
     protected List<GraphQLError> filterGraphQLErrors(List<GraphQLError> errors) {
