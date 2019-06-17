@@ -1,5 +1,9 @@
-package graphql.servlet;
+package graphql.servlet.core;
 
+import graphql.servlet.GraphQLObjectMapper;
+import graphql.servlet.GraphQLQueryInvoker;
+import graphql.servlet.SubscriptionConnectionListener;
+import graphql.servlet.input.GraphQLInvocationInputFactory;
 import graphql.servlet.internal.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

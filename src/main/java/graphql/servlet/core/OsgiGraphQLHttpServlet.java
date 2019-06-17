@@ -1,4 +1,4 @@
-package graphql.servlet;
+package graphql.servlet.core;
 
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
@@ -12,6 +12,28 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import graphql.servlet.DefaultExecutionStrategyProvider;
+import graphql.servlet.DefaultGraphQLContextBuilder;
+import graphql.servlet.DefaultGraphQLErrorHandler;
+import graphql.servlet.DefaultGraphQLRootObjectBuilder;
+import graphql.servlet.DefaultGraphQLSchemaProvider;
+import graphql.servlet.ExecutionStrategyProvider;
+import graphql.servlet.GraphQLContextBuilder;
+import graphql.servlet.GraphQLErrorHandler;
+import graphql.servlet.GraphQLMutationProvider;
+import graphql.servlet.GraphQLObjectMapper;
+import graphql.servlet.GraphQLProvider;
+import graphql.servlet.GraphQLQueryInvoker;
+import graphql.servlet.GraphQLQueryProvider;
+import graphql.servlet.GraphQLRootObjectBuilder;
+import graphql.servlet.GraphQLSchemaProvider;
+import graphql.servlet.GraphQLServletListener;
+import graphql.servlet.GraphQLSubscriptionProvider;
+import graphql.servlet.GraphQLTypesProvider;
+import graphql.servlet.InstrumentationProvider;
+import graphql.servlet.NoOpInstrumentationProvider;
+import graphql.servlet.core.AbstractGraphQLHttpServlet;
+import graphql.servlet.input.GraphQLInvocationInputFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;

@@ -1,4 +1,4 @@
-package graphql.servlet;
+package graphql.servlet.core;
 
 import java.util.Objects;
 

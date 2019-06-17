@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import graphql.ExecutionResult;
 import graphql.servlet.ApolloSubscriptionConnectionListener;
-import graphql.servlet.GraphQLSingleInvocationInput;
+import graphql.servlet.input.GraphQLSingleInvocationInput;
 import graphql.servlet.SubscriptionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

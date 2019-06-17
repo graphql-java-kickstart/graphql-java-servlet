@@ -4,6 +4,7 @@ import graphql.annotations.annotationTypes.GraphQLField
 import graphql.annotations.annotationTypes.GraphQLName
 import graphql.annotations.processor.GraphQLAnnotations
 import graphql.schema.GraphQLFieldDefinition
+import graphql.servlet.core.OsgiGraphQLHttpServlet
 import spock.lang.Ignore
 import spock.lang.Specification
 
@@ -36,7 +37,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
     @Ignore
     def "query provider adds query objects"() {
         setup:
-            OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
+        OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
             TestQueryProvider queryProvider = new TestQueryProvider()
             servlet.bindQueryProvider(queryProvider)
             GraphQLFieldDefinition query

@@ -11,15 +11,26 @@ import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrume
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
+import graphql.servlet.core.AbstractGraphQLHttpServlet;
+import graphql.servlet.input.BatchInputPreProcessResult;
+import graphql.servlet.input.BatchInputPreProcessor;
+import graphql.servlet.input.ContextSetting;
+import graphql.servlet.input.GraphQLBatchedInvocationInput;
+import graphql.servlet.input.GraphQLSingleInvocationInput;
+import graphql.servlet.input.NoOpBatchInputPreProcessor;
 
 import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.Writer;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * @author Andrew Potter
@@ -29,52 +40,76 @@ public class GraphQLQueryInvoker {
     private final Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider;
     private final Supplier<Instrumentation> getInstrumentation;
     private final Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider;
-    private final Supplier<DataLoaderDispatcherInstrumentationOptions> dataLoaderDispatcherInstrumentationOptionsSupplier;
-    private final BatchExecutionHandler batchExecutionHandler;
+    private final Supplier<BatchInputPreProcessor> batchInputPreProcessor;
+    private final Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier;
 
-    protected GraphQLQueryInvoker(Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider, Supplier<Instrumentation> getInstrumentation, Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider, Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier, BatchExecutionHandler batchExecutionHandler) {
+    protected GraphQLQueryInvoker(Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider, Supplier<Instrumentation> getInstrumentation,
+                                  Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider,
+                                  Supplier<BatchInputPreProcessor> batchInputPreProcessor,
+                                  Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier) {
         this.getExecutionStrategyProvider = getExecutionStrategyProvider;
         this.getInstrumentation = getInstrumentation;
         this.getPreparsedDocumentProvider = getPreparsedDocumentProvider;
-        this.dataLoaderDispatcherInstrumentationOptionsSupplier = optionsSupplier;
-        this.batchExecutionHandler = batchExecutionHandler;
+        this.batchInputPreProcessor = batchInputPreProcessor;
+        this.optionsSupplier = optionsSupplier;
     }
 
     public ExecutionResult query(GraphQLSingleInvocationInput singleInvocationInput) {
-        return query(singleInvocationInput, singleInvocationInput.getExecutionInput());
+        return queryAsync(singleInvocationInput, getInstrumentation).join();
     }
 
-    public void query(GraphQLBatchedInvocationInput batchedInvocationInput, HttpServletResponse response, GraphQLObjectMapper graphQLObjectMapper) {
-        batchExecutionHandler.handleBatch(batchedInvocationInput, response, graphQLObjectMapper, this::query);
+    private CompletableFuture<ExecutionResult> queryAsync(GraphQLSingleInvocationInput singleInvocationInput, Supplier<Instrumentation> configuredInstrumentation) {
+        return query(singleInvocationInput, configuredInstrumentation, singleInvocationInput.getExecutionInput());
     }
 
-    private GraphQL newGraphQL(GraphQLSchema schema, Object context) {
+    public void query(GraphQLBatchedInvocationInput batchedInvocationInput, ContextSetting contextSetting, HttpServletRequest request, HttpServletResponse response,
+                      GraphQLObjectMapper graphQLObjectMapper) {
+        BatchInputPreProcessResult processedInput = batchInputPreProcessor.get().preProcessBatch(batchedInvocationInput, request, response);
+        if (processedInput.isExecutable()) {
+            response.setContentType(AbstractGraphQLHttpServlet.APPLICATION_JSON_UTF8);
+            response.setStatus(AbstractGraphQLHttpServlet.STATUS_OK);
+            List<ExecutionInput> executionIds = batchedInvocationInput.getExecutionInputs().stream()
+                .map(GraphQLSingleInvocationInput::getExecutionInput)
+                .collect(Collectors.toList());
+            Supplier<Instrumentation> configuredInstrumentation = contextSetting.configureInstrumentationForContext(getInstrumentation, executionIds,
+                optionsSupplier.get());
+            Iterator<CompletableFuture<ExecutionResult>> resultIter = processedInput.getBatchedInvocationInput().getExecutionInputs().stream()
+                .map(input -> this.queryAsync(input, configuredInstrumentation))
+                //We want eager eval
+                .collect(Collectors.toList())
+                .iterator();
+
+            try {
+                Writer writer = response.getWriter();
+                writer.write("[");
+                while (resultIter.hasNext()) {
+                    ExecutionResult current = resultIter.next().join();
+                    writer.write(graphQLObjectMapper.serializeResultAsJson(current));
+                    if (resultIter.hasNext()) {
+                        writer.write(",");
+                    }
+                }
+                writer.write("]");
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        //TODO should we check if the batch pre processor set the status in an else? if not what would we set?
+    }
+
+    private GraphQL newGraphQL(GraphQLSchema schema, Supplier<Instrumentation> configuredInstrumentation) {
         ExecutionStrategyProvider executionStrategyProvider = getExecutionStrategyProvider.get();
-        return GraphQL.newGraphQL(schema)
+        GraphQL.Builder builder = GraphQL.newGraphQL(schema)
             .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
             .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
             .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
-            .instrumentation(getInstrumentation(context))
-            .preparsedDocumentProvider(getPreparsedDocumentProvider.get())
-            .build();
-    }
-
-    protected Instrumentation getInstrumentation(Object context) {
-        if (context instanceof GraphQLContext) {
-            return ((GraphQLContext) context).getDataLoaderRegistry()
-                    .map(registry -> {
-                        Instrumentation instrumentation = getInstrumentation.get();
-                        if (!containsDispatchInstrumentation(instrumentation)) {
-                            List<Instrumentation> instrumentations = new ArrayList<>();
-                            instrumentations.add(instrumentation);
-                            instrumentations.add(new DataLoaderDispatcherInstrumentation(dataLoaderDispatcherInstrumentationOptionsSupplier.get()));
-                            instrumentation = new ChainedInstrumentation(instrumentations);
-                        }
-                        return instrumentation;
-                    })
-                    .orElse(getInstrumentation.get());
+            .preparsedDocumentProvider(getPreparsedDocumentProvider.get());
+        Instrumentation instrumentation = configuredInstrumentation.get();
+        builder.instrumentation(instrumentation);
+        if (containsDispatchInstrumentation(instrumentation)) {
+            builder.doNotAddDefaultInstrumentations();
         }
-        return getInstrumentation.get();
+        return builder.build();
     }
 
     private boolean containsDispatchInstrumentation(Instrumentation instrumentation) {
@@ -84,22 +119,22 @@ public class GraphQLQueryInvoker {
         return instrumentation instanceof DataLoaderDispatcherInstrumentation;
     }
 
-    private ExecutionResult query(GraphQLInvocationInput invocationInput, ExecutionInput executionInput) {
+    private CompletableFuture<ExecutionResult> query(GraphQLSingleInvocationInput invocationInput, Supplier<Instrumentation> configuredInstrumentation, ExecutionInput executionInput) {
         if (Subject.getSubject(AccessController.getContext()) == null && invocationInput.getSubject().isPresent()) {
-            return Subject.doAs(invocationInput.getSubject().get(), (PrivilegedAction<ExecutionResult>) () -> {
+            return Subject.doAs(invocationInput.getSubject().get(), (PrivilegedAction<CompletableFuture<ExecutionResult>>) () -> {
                 try {
-                    return query(invocationInput.getSchema(), executionInput);
+                    return query(invocationInput.getSchema(), executionInput, configuredInstrumentation);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             });
         }
 
-        return query(invocationInput.getSchema(), executionInput);
+        return query(invocationInput.getSchema(), executionInput, configuredInstrumentation);
     }
 
-    private ExecutionResult query(GraphQLSchema schema, ExecutionInput executionInput) {
-        return newGraphQL(schema, executionInput.getContext()).execute(executionInput);
+    private CompletableFuture<ExecutionResult> query(GraphQLSchema schema, ExecutionInput executionInput, Supplier<Instrumentation> configuredInstrumentation) {
+        return newGraphQL(schema, configuredInstrumentation).executeAsync(executionInput);
     }
 
     public static Builder newBuilder() {
@@ -110,8 +145,9 @@ public class GraphQLQueryInvoker {
         private Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider = DefaultExecutionStrategyProvider::new;
         private Supplier<Instrumentation> getInstrumentation = () -> SimpleInstrumentation.INSTANCE;
         private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider = () -> NoOpPreparsedDocumentProvider.INSTANCE;
+        private Supplier<BatchInputPreProcessor> batchInputPreProcessor = () -> new NoOpBatchInputPreProcessor();
         private Supplier<DataLoaderDispatcherInstrumentationOptions> dataLoaderDispatcherInstrumentationOptionsSupplier = DataLoaderDispatcherInstrumentationOptions::newOptions;
-        private BatchExecutionHandler batchExecutionHandler = new DefaultBatchExecutionHandler();
+
 
         public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
             return withExecutionStrategyProvider(() -> provider);
@@ -143,9 +179,16 @@ public class GraphQLQueryInvoker {
             return this;
         }
 
-        public Builder withBatchExeuctionHandler(BatchExecutionHandler batchExeuctionHandler) {
-            if (batchExeuctionHandler != null) {
-                this.batchExecutionHandler = batchExeuctionHandler;
+        public Builder withBatchInputPreProcessor(BatchInputPreProcessor batchInputPreProcessor) {
+            if (batchInputPreProcessor != null) {
+                this.batchInputPreProcessor = () -> batchInputPreProcessor;
+            }
+            return this;
+        }
+
+        public Builder withBatchInputPreProcessor(Supplier<BatchInputPreProcessor> batchInputPreProcessor) {
+            if (batchInputPreProcessor != null) {
+                this.batchInputPreProcessor = batchInputPreProcessor;
             }
             return this;
         }
@@ -169,7 +212,8 @@ public class GraphQLQueryInvoker {
         }
 
         public GraphQLQueryInvoker build() {
-            return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation, getPreparsedDocumentProvider, dataLoaderDispatcherInstrumentationOptionsSupplier, batchExecutionHandler);
+            return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation, getPreparsedDocumentProvider, batchInputPreProcessor,
+                dataLoaderDispatcherInstrumentationOptionsSupplier);
         }
     }
 }

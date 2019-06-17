@@ -1,6 +1,15 @@
-package graphql.servlet;
+package graphql.servlet.core;
 
 import graphql.schema.GraphQLSchema;
+import graphql.servlet.DefaultGraphQLSchemaProvider;
+import graphql.servlet.GraphQLContextBuilder;
+import graphql.servlet.GraphQLObjectMapper;
+import graphql.servlet.GraphQLQueryInvoker;
+import graphql.servlet.GraphQLRootObjectBuilder;
+import graphql.servlet.GraphQLSchemaProvider;
+import graphql.servlet.GraphQLServletListener;
+import graphql.servlet.input.ContextSetting;
+import graphql.servlet.input.GraphQLInvocationInputFactory;
 import graphql.servlet.internal.GraphQLThreadFactory;
 
 import java.util.ArrayList;
@@ -17,6 +26,7 @@ public class GraphQLConfiguration {
     private boolean asyncServletModeEnabled;
     private Executor asyncExecutor;
     private long subscriptionTimeout;
+    private ContextSetting contextSetting;
 
     public static GraphQLConfiguration.Builder with(GraphQLSchema schema) {
         return with(new DefaultGraphQLSchemaProvider(schema));
@@ -30,7 +40,9 @@ public class GraphQLConfiguration {
         return new Builder(invocationInputFactory);
     }
 
-    private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled, Executor asyncExecutor, long subscriptionTimeout) {
+    private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker,
+                                 GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled,
+                                 Executor asyncExecutor, long subscriptionTimeout, ContextSetting contextSetting) {
         this.invocationInputFactory = invocationInputFactory;
         this.queryInvoker = queryInvoker;
         this.objectMapper = objectMapper;
@@ -38,6 +50,7 @@ public class GraphQLConfiguration {
         this.asyncServletModeEnabled = asyncServletModeEnabled;
         this.asyncExecutor = asyncExecutor;
         this.subscriptionTimeout = subscriptionTimeout;
+        this.contextSetting = contextSetting;
     }
 
     public GraphQLInvocationInputFactory getInvocationInputFactory() {
@@ -76,6 +89,10 @@ public class GraphQLConfiguration {
         return subscriptionTimeout;
     }
 
+    public ContextSetting getContextSetting() {
+        return contextSetting;
+    }
+
     public static class Builder {
 
         private GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder;
@@ -86,6 +103,7 @@ public class GraphQLConfiguration {
         private boolean asyncServletModeEnabled = false;
         private Executor asyncExecutor = Executors.newCachedThreadPool(new GraphQLThreadFactory());
         private long subscriptionTimeout = 0;
+        private ContextSetting contextSetting = ContextSetting.PER_QUERY;
 
         private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
             this.invocationInputFactoryBuilder = invocationInputFactoryBuilder;
@@ -143,6 +161,13 @@ public class GraphQLConfiguration {
             return this;
         }
 
+        public Builder with(ContextSetting contextSetting) {
+            if (contextSetting != null) {
+                this.contextSetting = contextSetting;
+            }
+            return this;
+        }
+
         public GraphQLConfiguration build() {
             return new GraphQLConfiguration(
                     this.invocationInputFactory != null ? this.invocationInputFactory : invocationInputFactoryBuilder.build(),
@@ -151,7 +176,8 @@ public class GraphQLConfiguration {
                     listeners,
                     asyncServletModeEnabled,
                     asyncExecutor,
-                    subscriptionTimeout
+                    subscriptionTimeout,
+                    contextSetting
             );
         }
 

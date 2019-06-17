@@ -1,6 +1,11 @@
-package graphql.servlet;
+package graphql.servlet.core;
 
 import graphql.schema.GraphQLSchema;
+import graphql.servlet.GraphQLObjectMapper;
+import graphql.servlet.GraphQLQueryInvoker;
+import graphql.servlet.GraphQLSchemaProvider;
+import graphql.servlet.GraphQLServletListener;
+import graphql.servlet.input.GraphQLInvocationInputFactory;
 
 import java.util.ArrayList;
 import java.util.List;

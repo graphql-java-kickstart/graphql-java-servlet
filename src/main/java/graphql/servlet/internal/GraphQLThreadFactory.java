@@ -3,7 +3,7 @@ package graphql.servlet.internal;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import graphql.servlet.AbstractGraphQLHttpServlet;
+import graphql.servlet.core.AbstractGraphQLHttpServlet;
 
 /**
  * {@link ThreadFactory} implementation for {@link AbstractGraphQLHttpServlet} async operations

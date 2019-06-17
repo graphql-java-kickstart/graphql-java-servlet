@@ -1,6 +1,9 @@
-package graphql.servlet;
+package graphql.servlet.core;
 
 import graphql.schema.GraphQLSchema;
+import graphql.servlet.GraphQLObjectMapper;
+import graphql.servlet.GraphQLQueryInvoker;
+import graphql.servlet.input.GraphQLInvocationInputFactory;
 
 /**
  * @author Michiel Oliemans

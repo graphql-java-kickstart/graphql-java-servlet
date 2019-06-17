@@ -1,5 +1,8 @@
 package graphql.servlet;
 
+import graphql.servlet.core.AbstractGraphQLHttpServlet;
+import graphql.servlet.input.GraphQLInvocationInputFactory;
+
 public class DefaultGraphQLServlet extends AbstractGraphQLHttpServlet {
 
     @Override

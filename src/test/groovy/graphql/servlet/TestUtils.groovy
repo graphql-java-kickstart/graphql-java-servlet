@@ -5,6 +5,9 @@ import graphql.Scalars
 import graphql.execution.instrumentation.Instrumentation
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.*
+import graphql.servlet.core.GraphQLConfiguration
+import graphql.servlet.core.GraphQLHttpServlet
+import graphql.servlet.input.BatchInputPreProcessor
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -46,7 +49,7 @@ class TestUtils {
                                  }))
                                  return publisherRef.get()
                              }, boolean asyncServletModeEnabled = false,
-                                     BatchExecutionHandler batchHandler) {
+                                     BatchInputPreProcessor batchHandler) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
                 .with(createInstrumentedQueryInvoker(batchHandler))
@@ -56,9 +59,13 @@ class TestUtils {
         return servlet
     }
 
-    static def createInstrumentedQueryInvoker(BatchExecutionHandler batchExecutionHandler) {
+    static def createInstrumentedQueryInvoker(BatchInputPreProcessor batchExecutionHandler) {
         Instrumentation instrumentation = new TestInstrumentation()
-        GraphQLQueryInvoker.newBuilder().with([instrumentation]).withBatchExeuctionHandler(batchExecutionHandler).build()
+        GraphQLQueryInvoker.Builder builder = GraphQLQueryInvoker.newBuilder().with([instrumentation])
+                if (batchExecutionHandler != null) {
+                    builder.withBatchInputPreProcessor(batchExecutionHandler)
+                }
+        builder.build()
     }
 
     static def createBatchExecutionHandler() {
