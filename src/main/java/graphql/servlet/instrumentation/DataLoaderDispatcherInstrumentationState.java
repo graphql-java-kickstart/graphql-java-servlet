@@ -2,7 +2,6 @@ package graphql.servlet.instrumentation;
 
 import graphql.execution.ExecutionId;
 import graphql.execution.instrumentation.InstrumentationState;
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
 import org.dataloader.DataLoaderRegistry;
 
 /**

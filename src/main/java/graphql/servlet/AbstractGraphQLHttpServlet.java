@@ -54,13 +54,13 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements Servlet, GraphQLMBean {
 
-    public static final Logger log = LoggerFactory.getLogger(AbstractGraphQLHttpServlet.class);
+    private static final Logger log = LoggerFactory.getLogger(AbstractGraphQLHttpServlet.class);
 
-    public static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
-    public static final String APPLICATION_EVENT_STREAM_UTF8 = "text/event-stream;charset=UTF-8";
-    public static final String APPLICATION_GRAPHQL = "application/graphql";
-    public static final int STATUS_OK = 200;
-    public static final int STATUS_BAD_REQUEST = 400;
+    private static final String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
+    private static final String APPLICATION_EVENT_STREAM_UTF8 = "text/event-stream;charset=UTF-8";
+    private static final String APPLICATION_GRAPHQL = "application/graphql";
+    private static final int STATUS_OK = 200;
+    private static final int STATUS_BAD_REQUEST = 400;
 
     private static final GraphQLRequest INTROSPECTION_REQUEST = new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), null);
     private static final String[] MULTIPART_KEYS = new String[]{"operations", "graphql", "query"};

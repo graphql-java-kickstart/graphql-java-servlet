@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  */
 public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
 
-    public static final Logger log = LoggerFactory.getLogger(DefaultGraphQLErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultGraphQLErrorHandler.class);
 
     @Override
     public List<GraphQLError> processErrors(List<GraphQLError> errors) {
