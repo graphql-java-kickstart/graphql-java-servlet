@@ -3,15 +3,9 @@ package graphql.servlet
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
 import graphql.execution.ExecutionStepInfo
-import graphql.execution.instrumentation.ChainedInstrumentation
-import graphql.execution.instrumentation.Instrumentation
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.GraphQLNonNull
-import graphql.servlet.core.AbstractGraphQLHttpServlet
-import graphql.servlet.core.SimpleGraphQLHttpServlet
 import graphql.servlet.input.GraphQLInvocationInputFactory
-import org.dataloader.DataLoaderRegistry
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Ignore
@@ -428,21 +422,6 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
         getResponseContent().data.echo == "test"
-    }
-
-    def "query over HTTP POST body with graphql contentType maintains request object"() {
-        setup:
-        request.addHeader("Content-Type", "application/graphql")
-        request.addHeader("requestHeaderTest", "test")
-        request.setContent('query { echo(arg:"test") }'.getBytes("UTF-8"))
-
-        when:
-        servlet.doPost(request, response)
-
-        then:
-        response.getStatus() == STATUS_OK
-        response.getContentType() == CONTENT_TYPE_JSON_UTF8
-        getResponseContent().extensions.requestHeaderTest == "true"
     }
 
     def "query over HTTP POST body with variables returns data"() {

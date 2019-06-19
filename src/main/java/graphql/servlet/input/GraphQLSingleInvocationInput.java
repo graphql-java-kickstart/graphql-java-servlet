@@ -3,8 +3,8 @@ package graphql.servlet.input;
 import graphql.ExecutionInput;
 import graphql.execution.ExecutionId;
 import graphql.schema.GraphQLSchema;
-import graphql.servlet.GraphQLContext;
-import graphql.servlet.internal.GraphQLRequest;
+import graphql.servlet.context.GraphQLContext;
+import graphql.servlet.core.internal.GraphQLRequest;
 import org.dataloader.DataLoaderRegistry;
 
 import javax.security.auth.Subject;

@@ -6,7 +6,6 @@ import graphql.servlet.input.GraphQLBatchedInvocationInput;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 public class TestBatchExecutionHandler implements BatchInputPreProcessor {
 
@@ -17,19 +16,10 @@ public class TestBatchExecutionHandler implements BatchInputPreProcessor {
                                                       HttpServletResponse response) {
         BatchInputPreProcessResult preProcessResult;
         if (batchedInvocationInput.getExecutionInputs().size() > 2) {
-            handleBadInput(response);
-            preProcessResult = new BatchInputPreProcessResult(null, false);
+            preProcessResult = new BatchInputPreProcessResult(400, BATCH_ERROR_MESSAGE);
         } else {
-            preProcessResult = new BatchInputPreProcessResult(batchedInvocationInput, true);
+            preProcessResult = new BatchInputPreProcessResult(batchedInvocationInput);
         }
         return preProcessResult;
-    }
-
-    private void handleBadInput(HttpServletResponse response) {
-        try {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, BATCH_ERROR_MESSAGE);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

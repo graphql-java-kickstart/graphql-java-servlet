@@ -1,8 +1,8 @@
 package graphql.servlet.input;
 
 import graphql.schema.GraphQLSchema;
-import graphql.servlet.GraphQLContext;
-import graphql.servlet.internal.GraphQLRequest;
+import graphql.servlet.context.GraphQLContext;
+import graphql.servlet.core.internal.GraphQLRequest;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -1,13 +1,14 @@
 package graphql.servlet.input;
 
 import graphql.schema.GraphQLSchema;
-import graphql.servlet.DefaultGraphQLContextBuilder;
-import graphql.servlet.DefaultGraphQLRootObjectBuilder;
-import graphql.servlet.DefaultGraphQLSchemaProvider;
-import graphql.servlet.GraphQLContextBuilder;
-import graphql.servlet.GraphQLRootObjectBuilder;
-import graphql.servlet.GraphQLSchemaProvider;
-import graphql.servlet.internal.GraphQLRequest;
+import graphql.servlet.context.DefaultGraphQLContextBuilder;
+import graphql.servlet.core.DefaultGraphQLRootObjectBuilder;
+import graphql.servlet.config.DefaultGraphQLSchemaProvider;
+import graphql.servlet.context.ContextSetting;
+import graphql.servlet.context.GraphQLContextBuilder;
+import graphql.servlet.core.GraphQLRootObjectBuilder;
+import graphql.servlet.config.GraphQLSchemaProvider;
+import graphql.servlet.core.internal.GraphQLRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

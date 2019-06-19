@@ -2,12 +2,13 @@ package graphql.servlet
 
 import com.google.common.io.ByteStreams
 import graphql.Scalars
-import graphql.execution.instrumentation.Instrumentation
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.*
-import graphql.servlet.core.GraphQLConfiguration
-import graphql.servlet.core.GraphQLHttpServlet
+import graphql.servlet.context.GraphQLContextBuilder
+import graphql.servlet.config.GraphQLConfiguration
+import graphql.servlet.core.ApolloScalars
 import graphql.servlet.input.BatchInputPreProcessor
+import graphql.servlet.context.ContextSetting
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -39,6 +40,28 @@ class TestUtils {
         createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, createBatchExecutionHandler())
     }
 
+    static def createDataLoadingServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
+                                        DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
+                                        DataFetcher subscriptionDataFetcher = { env ->
+                                            AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                            publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                                                publisherRef.get().offer(env.arguments.arg)
+                                                publisherRef.get().noMoreData()
+                                            }))
+                                            return publisherRef.get()
+                                        }, boolean asyncServletModeEnabled = false, ContextSetting contextSetting,
+                                        GraphQLContextBuilder contextBuilder) {
+        GraphQLSchema schema = createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher)
+        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
+                .with(schema)
+                .with(contextSetting)
+                .with(contextBuilder)
+                .with(asyncServletModeEnabled)
+                .build())
+        servlet.init(null)
+        return servlet
+    }
+
     private static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                                      DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
                                      DataFetcher subscriptionDataFetcher = { env ->
@@ -50,22 +73,20 @@ class TestUtils {
                                  return publisherRef.get()
                              }, boolean asyncServletModeEnabled = false,
                                      BatchInputPreProcessor batchHandler) {
-        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
-                .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
-                .with(createInstrumentedQueryInvoker(batchHandler))
-                .with(asyncServletModeEnabled)
-                .build())
+        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(
+                graphQLConfiguration(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher),
+                batchHandler, asyncServletModeEnabled))
         servlet.init(null)
         return servlet
     }
 
-    static def createInstrumentedQueryInvoker(BatchInputPreProcessor batchExecutionHandler) {
-        Instrumentation instrumentation = new TestInstrumentation()
-        GraphQLQueryInvoker.Builder builder = GraphQLQueryInvoker.newBuilder().with([instrumentation])
-                if (batchExecutionHandler != null) {
-                    builder.withBatchInputPreProcessor(batchExecutionHandler)
-                }
-        builder.build()
+    static def graphQLConfiguration(GraphQLSchema schema, BatchInputPreProcessor batchInputPreProcessor,
+                                    boolean asyncServletModeEnabled) {
+        def configBuilder = GraphQLConfiguration.with(schema).with(asyncServletModeEnabled)
+        if (batchInputPreProcessor != null) {
+            configBuilder.with(batchInputPreProcessor)
+        }
+        configBuilder.build()
     }
 
     static def createBatchExecutionHandler() {

@@ -4,7 +4,9 @@ import graphql.annotations.annotationTypes.GraphQLField
 import graphql.annotations.annotationTypes.GraphQLName
 import graphql.annotations.processor.GraphQLAnnotations
 import graphql.schema.GraphQLFieldDefinition
-import graphql.servlet.core.OsgiGraphQLHttpServlet
+import graphql.servlet.config.GraphQLMutationProvider
+import graphql.servlet.config.GraphQLQueryProvider
+import graphql.servlet.config.GraphQLSubscriptionProvider
 import spock.lang.Ignore
 import spock.lang.Specification
 
