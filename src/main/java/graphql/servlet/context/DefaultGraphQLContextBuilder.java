@@ -5,6 +5,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 
+/**
+ * Returns an empty context.
+ */
 public class DefaultGraphQLContextBuilder implements GraphQLContextBuilder {
 
     @Override

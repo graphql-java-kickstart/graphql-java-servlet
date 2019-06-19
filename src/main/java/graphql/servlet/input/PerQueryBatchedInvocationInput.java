@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * @author Andrew Potter
+ * A Collection of GraphQLSingleInvocationInput that each have a unique context object.
  */
 public class PerQueryBatchedInvocationInput implements GraphQLBatchedInvocationInput {
     private final List<GraphQLSingleInvocationInput> inputs;
@@ -19,6 +19,7 @@ public class PerQueryBatchedInvocationInput implements GraphQLBatchedInvocationI
             .map(request -> new GraphQLSingleInvocationInput(request, schema, contextSupplier.get(), root)).collect(Collectors.toList());
     }
 
+    @Override
     public List<GraphQLSingleInvocationInput> getExecutionInputs() {
         return inputs;
     }

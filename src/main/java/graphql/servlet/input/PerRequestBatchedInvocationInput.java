@@ -7,6 +7,9 @@ import graphql.servlet.core.internal.GraphQLRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * A collection of GraphQLSingleInvocationInputs that share a context object.
+ */
 public class PerRequestBatchedInvocationInput implements GraphQLBatchedInvocationInput {
 
     private final List<GraphQLSingleInvocationInput> inputs;

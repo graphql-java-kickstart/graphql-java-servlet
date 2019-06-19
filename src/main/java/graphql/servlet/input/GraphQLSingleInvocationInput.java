@@ -11,7 +11,7 @@ import javax.security.auth.Subject;
 import java.util.Optional;
 
 /**
- * @author Andrew Potter
+ *  Represents a single GraphQL execution.
  */
 public class GraphQLSingleInvocationInput {
 
@@ -27,15 +27,21 @@ public class GraphQLSingleInvocationInput {
         subject = context.getSubject();
     }
 
+    /**
+     * @return the schema to use to execute this query.
+     */
     public GraphQLSchema getSchema() {
         return schema;
     }
 
+    /**
+     * @return a subject to execute the query as.
+     */
     public Optional<Subject> getSubject() {
         return subject;
     }
 
-    protected ExecutionInput createExecutionInput(GraphQLRequest graphQLRequest, GraphQLContext context, Object root) {
+    private ExecutionInput createExecutionInput(GraphQLRequest graphQLRequest, GraphQLContext context, Object root) {
         return ExecutionInput.newExecutionInput()
             .query(graphQLRequest.getQuery())
             .operationName(graphQLRequest.getOperationName())
