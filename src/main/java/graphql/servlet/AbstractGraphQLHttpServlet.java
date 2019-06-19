@@ -54,7 +54,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     private static final String[] MULTIPART_KEYS = new String[]{"operations", "graphql", "query"};
 
     private GraphQLConfiguration configuration;
-    
+
     /**
      * @deprecated override {@link #getConfiguration()} instead
      */
@@ -322,11 +322,13 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.configuration = getConfiguration();
         doRequestAsync(req, resp, getHandler);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.configuration = getConfiguration();
         doRequestAsync(req, resp, postHandler);
     }
 
