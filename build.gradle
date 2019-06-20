@@ -14,8 +14,8 @@ plugins {
 }
 
 apply plugin: 'java'
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 // Tests
 apply plugin: 'groovy'
