@@ -101,6 +101,7 @@ The servlet supports the following request formats:
     * operationName (optional)
     * variables (optional)
 * POST multipart parts named "query", "operationName" (optional), and "variables" (optional)
+* POST with Content Type "application/graphql" will treat the HTTP POST body contents as the GraphQL query string
 
 ## Servlet Listeners
 
