@@ -53,7 +53,7 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
         if (error instanceof ExceptionWhileDataFetching) {
             return ((ExceptionWhileDataFetching) error).getException() instanceof GraphQLError;
         }
-        return !(error instanceof Throwable);
+        return true;
     }
 
     private GraphQLError replaceNonNullableFieldWasNullError(GraphQLError error) {

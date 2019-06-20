@@ -24,7 +24,11 @@ import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.*;
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -66,7 +70,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     private static final String[] MULTIPART_KEYS = new String[]{"operations", "graphql", "query"};
 
     private GraphQLConfiguration configuration;
-    
+
     /**
      * @deprecated override {@link #getConfiguration()} instead
      */
@@ -285,11 +289,19 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     }
 
     public void addListener(GraphQLServletListener servletListener) {
-        configuration.add(servletListener);
+        if (configuration != null) {
+            configuration.add(servletListener);
+        } else {
+            listeners.add(servletListener);
+        }
     }
 
     public void removeListener(GraphQLServletListener servletListener) {
-        configuration.remove(servletListener);
+        if (configuration != null) {
+            configuration.remove(servletListener);
+        } else {
+            listeners.remove(servletListener);
+        }
     }
 
     @Override
@@ -343,11 +355,13 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        init();
         doRequestAsync(req, resp, getHandler);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        init();
         doRequestAsync(req, resp, postHandler);
     }
 
@@ -498,23 +512,28 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
     private static class SubscriptionAsyncListener implements AsyncListener {
         private final AtomicReference<Subscription> subscriptionRef;
+
         public SubscriptionAsyncListener(AtomicReference<Subscription> subscriptionRef) {
             this.subscriptionRef = subscriptionRef;
         }
 
-        @Override public void onComplete(AsyncEvent event) {
+        @Override
+        public void onComplete(AsyncEvent event) {
             subscriptionRef.get().cancel();
         }
 
-        @Override public void onTimeout(AsyncEvent event) {
+        @Override
+        public void onTimeout(AsyncEvent event) {
             subscriptionRef.get().cancel();
         }
 
-        @Override public void onError(AsyncEvent event) {
+        @Override
+        public void onError(AsyncEvent event) {
             subscriptionRef.get().cancel();
         }
 
-        @Override public void onStartAsync(AsyncEvent event) {
+        @Override
+        public void onStartAsync(AsyncEvent event) {
         }
     }
 
