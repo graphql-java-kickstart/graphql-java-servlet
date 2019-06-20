@@ -18,6 +18,7 @@ import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.Part
 import javax.websocket.Session
 import javax.websocket.server.HandshakeRequest
 import java.util.concurrent.CompletableFuture
@@ -74,7 +75,7 @@ class DataLoaderDispatchingSpec extends Specification {
     def contextBuilder () {
         return new GraphQLContextBuilder() {
             @Override
-            GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+            GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, List<Part>> fileParts) {
                 new DefaultGraphQLServletContext(registry(), null)
             }
 
