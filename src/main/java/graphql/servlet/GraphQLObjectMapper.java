@@ -20,13 +20,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * @author Andrew Potter
  */
 public class GraphQLObjectMapper {
     private static final TypeReference<Map<String, List<String>>>
-        MULTIPART_MAP_TYPE_REFERENCE = new TypeReference<Map<String, List<String>>>() {
-        };
+            MULTIPART_MAP_TYPE_REFERENCE = new TypeReference<Map<String, List<String>>>() {
+    };
     private final ObjectMapperProvider objectMapperProvider;
     private final Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier;
 
@@ -41,7 +43,7 @@ public class GraphQLObjectMapper {
     public ObjectMapper getJacksonMapper() {
         ObjectMapper result = mapper;
         if (result == null) { // First check (no locking)
-            synchronized(this) {
+            synchronized (this) {
                 result = mapper;
                 if (result == null) { // Second check (with locking)
                     mapper = result = objectMapperProvider.provide();
@@ -107,7 +109,7 @@ public class GraphQLObjectMapper {
         List<GraphQLError> errors = executionResult.getErrors();
 
         GraphQLErrorHandler errorHandler = graphQLErrorHandlerSupplier.get();
-        if(errorHandler.errorsPresent(errors)) {
+        if (errorHandler.errorsPresent(errors)) {
             errors = errorHandler.processErrors(errors);
         } else {
             errors = null;
@@ -128,14 +130,14 @@ public class GraphQLObjectMapper {
         final Map<String, Object> result = new LinkedHashMap<>();
 
         if (areErrorsPresent(executionResult)) {
-            result.put("errors", executionResult.getErrors());
+            result.put("errors", executionResult.getErrors().stream().map(err->err.toSpecification()).collect(toList()));
         }
 
-        if(executionResult.getExtensions() != null && !executionResult.getExtensions().isEmpty()){
+        if (executionResult.getExtensions() != null && !executionResult.getExtensions().isEmpty()) {
             result.put("extensions", executionResult.getExtensions());
         }
 
-        if(includeData) {
+        if (includeData) {
             result.put("data", executionResult.getData());
         }
 
@@ -150,7 +152,7 @@ public class GraphQLObjectMapper {
         }
     }
 
-    public Map<String,List<String>> deserializeMultipartMap(Part part) {
+    public Map<String, List<String>> deserializeMultipartMap(Part part) {
         try {
             return getJacksonMapper().readValue(part.getInputStream(), MULTIPART_MAP_TYPE_REFERENCE);
         } catch (IOException e) {
