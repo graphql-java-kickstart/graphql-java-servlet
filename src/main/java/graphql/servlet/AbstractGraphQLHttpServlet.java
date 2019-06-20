@@ -322,13 +322,13 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        this.configuration = getConfiguration();
+        init();
         doRequestAsync(req, resp, getHandler);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        this.configuration = getConfiguration();
+        init();
         doRequestAsync(req, resp, postHandler);
     }
 
