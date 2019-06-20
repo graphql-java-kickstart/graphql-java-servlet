@@ -14,8 +14,8 @@ plugins {
 }
 
 apply plugin: 'java'
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+sourceCompatibility = 11
+targetCompatibility = 11
 
 // Tests
 apply plugin: 'groovy'
@@ -202,7 +202,11 @@ artifactory {
 
 idea {
     project {
-        languageLevel = '1.8'
+        languageLevel = '11'
         vcs = 'Git'
     }
+}
+
+wrapper {
+    gradleVersion = '4.10.3'
 }
