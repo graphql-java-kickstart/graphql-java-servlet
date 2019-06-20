@@ -130,7 +130,7 @@ public class GraphQLObjectMapper {
         final Map<String, Object> result = new LinkedHashMap<>();
 
         if (areErrorsPresent(executionResult)) {
-            result.put("errors", executionResult.getErrors().stream().map(err->err.toSpecification()).collect(toList()));
+            result.put("errors", executionResult.getErrors().stream().map(GraphQLError::toSpecification).collect(toList()));
         }
 
         if (executionResult.getExtensions() != null && !executionResult.getExtensions().isEmpty()) {
