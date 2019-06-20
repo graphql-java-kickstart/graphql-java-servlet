@@ -1,9 +1,10 @@
 package graphql.servlet.core.internal;
 
-import graphql.servlet.GraphQLSingleInvocationInput;
+import graphql.servlet.input.GraphQLSingleInvocationInput;
 
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
+import java.io.IOException;
 import java.util.UUID;
 
 /**
