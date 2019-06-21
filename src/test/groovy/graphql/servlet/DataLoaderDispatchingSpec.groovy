@@ -37,20 +37,28 @@ class DataLoaderDispatchingSpec extends Specification {
     AbstractGraphQLHttpServlet servlet
     MockHttpServletRequest request
     MockHttpServletResponse response
-    AtomicInteger fetchCounter = new AtomicInteger()
-    AtomicInteger loadCounter = new AtomicInteger()
+    AtomicInteger fetchCounterA = new AtomicInteger()
+    AtomicInteger loadCounterA = new AtomicInteger()
+    AtomicInteger fetchCounterB = new AtomicInteger()
+    AtomicInteger loadCounterB = new AtomicInteger()
+    AtomicInteger fetchCounterC = new AtomicInteger()
+    AtomicInteger loadCounterC = new AtomicInteger()
 
-    BatchLoader<String, String> batchLoaderA = new BatchLoader<String, String>() {
-        @Override
-        CompletionStage<List<String>> load(List<String> keys) {
-            fetchCounter.incrementAndGet()
-            CompletableFuture.completedFuture(keys)
+    BatchLoader<String, String> batchLoaderWithCounter(AtomicInteger fetchCounter) {
+        return new BatchLoader<String, String>() {
+            @Override
+            CompletionStage<List<String>> load(List<String> keys) {
+                fetchCounter.incrementAndGet()
+                CompletableFuture.completedFuture(keys)
+            }
         }
     }
 
     def registry() {
         DataLoaderRegistry registry = new DataLoaderRegistry()
-        registry.register("A", DataLoader.newDataLoader(batchLoaderA))
+        registry.register("A", DataLoader.newDataLoader(batchLoaderWithCounter(fetchCounterA)))
+        registry.register("B", DataLoader.newDataLoader(batchLoaderWithCounter(fetchCounterB)))
+        registry.register("C", DataLoader.newDataLoader(batchLoaderWithCounter(fetchCounterC)))
         registry
     }
 
@@ -61,13 +69,13 @@ class DataLoaderDispatchingSpec extends Specification {
         response = new MockHttpServletResponse()
     }
 
-    def queryDataFetcher() {
+    def queryDataFetcher(String dataLoaderName, AtomicInteger loadCounter) {
         return new DataFetcher() {
             @Override
             Object get(DataFetchingEnvironment environment) {
                 String id = environment.arguments.arg
                 loadCounter.incrementAndGet()
-                environment.getDataLoader("A").load(id)
+                environment.getDataLoader(dataLoaderName).load(id)
             }
         }
     }
@@ -92,25 +100,25 @@ class DataLoaderDispatchingSpec extends Specification {
     }
 
     def configureServlet(ContextSetting contextSetting) {
-        servlet = TestUtils.createDataLoadingServlet( queryDataFetcher(),
-                { env -> env.arguments.arg },
-                { env ->
-                    AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
-                    publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
-                        publisherRef.get().offer(env.arguments.arg)
-                        publisherRef.get().noMoreData()
-                    }))
-                    return publisherRef.get()
-                },  false,  contextSetting,
+        servlet = TestUtils.createDataLoadingServlet(queryDataFetcher("A", loadCounterA),
+                queryDataFetcher("B", loadCounterB), queryDataFetcher("C", loadCounterC),
+                false, contextSetting,
                 contextBuilder())
+    }
+
+    def resetCounters() {
+        fetchCounterA.set(0)
+        fetchCounterB.set(0)
+        loadCounterA.set(0)
+        loadCounterB.set(0)
     }
 
     def "batched query with per query context does not batch loads together"() {
         setup:
         configureServlet(ContextSetting.PER_QUERY)
-        request.addParameter('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
-        fetchCounter.set(0)
-        loadCounter.set(0)
+        request.addParameter('query', '[{ "query": "query { query(arg:\\"test\\") { echo(arg:\\"test\\") { echo(arg:\\"test\\") } }}" }, { "query": "query{query(arg:\\"test\\") { echo (arg:\\"test\\") { echo(arg:\\"test\\")} }}" },' +
+                ' { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }, { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }]')
+        resetCounters()
 
         when:
         servlet.doGet(request, response)
@@ -118,18 +126,24 @@ class DataLoaderDispatchingSpec extends Specification {
         then:
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
-        getBatchedResponseContent()[0].data.echo == "test"
-        getBatchedResponseContent()[1].data.echo == "test"
-        fetchCounter.get() == 2
-        loadCounter.get() == 2
+        getBatchedResponseContent()[0].data.query.echo.echo == "test"
+        getBatchedResponseContent()[1].data.query.echo.echo == "test"
+        getBatchedResponseContent()[2].data.queryTwo.echo == "test"
+        getBatchedResponseContent()[3].data.queryTwo.echo == "test"
+        fetchCounterA.get() == 2
+        loadCounterA.get() == 2
+        fetchCounterB.get() == 2
+        loadCounterB.get() == 2
+        fetchCounterC.get() == 2
+        loadCounterC.get() == 2
     }
 
     def "batched query with per request context batches all queries within the request"() {
         setup:
         servlet = configureServlet(ContextSetting.PER_REQUEST)
-        request.addParameter('query', '[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
-        fetchCounter.set(0)
-        loadCounter.set(0)
+        request.addParameter('query', '[{ "query": "query { query(arg:\\"test\\") { echo(arg:\\"test\\") { echo(arg:\\"test\\") } }}" }, { "query": "query{query(arg:\\"test\\") { echo (arg:\\"test\\") { echo(arg:\\"test\\")} }}" },' +
+                ' { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }, { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }]')
+        resetCounters()
 
         when:
         servlet.doGet(request, response)
@@ -137,10 +151,16 @@ class DataLoaderDispatchingSpec extends Specification {
         then:
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
-        getBatchedResponseContent()[0].data.echo == "test"
-        getBatchedResponseContent()[1].data.echo == "test"
-        fetchCounter.get() == 1
-        loadCounter.get() == 2
+        getBatchedResponseContent()[0].data.query.echo.echo == "test"
+        getBatchedResponseContent()[1].data.query.echo.echo == "test"
+        getBatchedResponseContent()[2].data.queryTwo.echo == "test"
+        getBatchedResponseContent()[3].data.queryTwo.echo == "test"
+        fetchCounterA.get() == 1
+        loadCounterA.get() == 2
+        fetchCounterB.get() == 1
+        loadCounterB.get() == 2
+        fetchCounterC.get() == 1
+        loadCounterC.get() == 2
     }
 
     List<Map<String, Object>> getBatchedResponseContent() {

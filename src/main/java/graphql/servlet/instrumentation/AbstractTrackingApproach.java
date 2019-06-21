@@ -11,12 +11,17 @@ import graphql.execution.instrumentation.InstrumentationContext;
 import graphql.execution.instrumentation.parameters.InstrumentationDeferredFieldParameters;
 import graphql.execution.instrumentation.parameters.InstrumentationExecutionStrategyParameters;
 import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters;
+import graphql.language.Field;
+import graphql.language.Selection;
+import graphql.language.SelectionSet;
+import graphql.schema.GraphQLOutputType;
 import org.dataloader.DataLoaderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -45,6 +50,8 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     public ExecutionStrategyInstrumentationContext beginExecutionStrategy(InstrumentationExecutionStrategyParameters parameters) {
         ExecutionId executionId = parameters.getExecutionContext().getExecutionId();
         ExecutionPath path = parameters.getExecutionStrategyParameters().getPath();
+        List<Selection> selectionSet = Optional.ofNullable(parameters.getExecutionStrategyParameters().getField())
+            .map(MergedField::getSingleField).map(Field::getSelectionSet).map(SelectionSet::getSelections).orElse(Collections.emptyList());
         int parentLevel = path.getLevel();
         int curLevel = parentLevel + 1;
         int fieldCount = parameters.getExecutionStrategyParameters().getFields().size();
@@ -67,7 +74,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
             @Override
             public void onFieldValuesInfo(List<FieldValueInfo> fieldValueInfoList) {
                 synchronized (stack) {
-                    stack.setStatus(executionId, handleOnFieldValuesInfo(fieldValueInfoList, stack, executionId, curLevel));
+                    stack.setStatus(executionId, handleOnFieldValuesInfo(fieldValueInfoList, stack, executionId, curLevel, selectionSet));
                     if (stack.allReady()) {
                         dispatchWithoutLocking();
                     }
@@ -79,7 +86,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
                 // fake fetch count for this field
                 synchronized (stack) {
                     stack.increaseFetchCount(executionId, curLevel);
-                    stack.setStatus(executionId, dispatchIfNeeded(stack, executionId, curLevel));
+                    stack.setStatus(executionId, dispatchIfNeeded(stack, executionId, curLevel, selectionSet));
                     if (stack.allReady()) {
                         dispatchWithoutLocking();
                     }
@@ -91,7 +98,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     //
     // thread safety : called with synchronised(stack)
     //
-    private boolean handleOnFieldValuesInfo(List<FieldValueInfo> fieldValueInfoList, RequestStack stack, ExecutionId executionId, int curLevel) {
+    private boolean handleOnFieldValuesInfo(List<FieldValueInfo> fieldValueInfoList, RequestStack stack, ExecutionId executionId, int curLevel, List<Selection> selectionSet) {
         stack.increaseHappenedOnFieldValueCalls(executionId, curLevel);
         int expectedStrategyCalls = 0;
         for (FieldValueInfo fieldValueInfo : fieldValueInfoList) {
@@ -102,7 +109,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
             }
         }
         stack.increaseExpectedStrategyCalls(executionId, curLevel + 1, expectedStrategyCalls);
-        return dispatchIfNeeded(stack, executionId, curLevel + 1);
+        return dispatchIfNeeded(stack, executionId, curLevel + 1, selectionSet);
     }
 
     private int getCountForList(FieldValueInfo fieldValueInfo) {
@@ -121,6 +128,8 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     public DeferredFieldInstrumentationContext beginDeferredField(InstrumentationDeferredFieldParameters parameters) {
         ExecutionId executionId = parameters.getExecutionContext().getExecutionId();
         int level = parameters.getExecutionStrategyParameters().getPath().getLevel();
+        List<Selection> selectionSet = Optional.ofNullable(parameters.getExecutionStrategyParameters().getField())
+            .map(MergedField::getSingleField).map(Field::getSelectionSet).map(SelectionSet::getSelections).orElse(Collections.emptyList());
         synchronized (stack) {
             stack.clearAndMarkCurrentLevelAsReady(executionId, level);
         }
@@ -138,7 +147,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
             @Override
             public void onFieldValueInfo(FieldValueInfo fieldValueInfo) {
                 synchronized (stack) {
-                    stack.setStatus(executionId, handleOnFieldValuesInfo(Collections.singletonList(fieldValueInfo), stack, executionId, level));
+                    stack.setStatus(executionId, handleOnFieldValuesInfo(Collections.singletonList(fieldValueInfo), stack, executionId, level, selectionSet));
                     if (stack.allReady()) {
                         dispatchWithoutLocking();
                     }
@@ -151,6 +160,8 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     public InstrumentationContext<Object> beginFieldFetch(InstrumentationFieldFetchParameters parameters) {
         ExecutionId executionId = parameters.getExecutionContext().getExecutionId();
         ExecutionPath path = parameters.getEnvironment().getExecutionStepInfo().getPath();
+        List<Selection> selectionSet = Optional.ofNullable(parameters.getEnvironment().getField())
+            .map(Field::getSelectionSet).map(SelectionSet::getSelections).orElse(Collections.emptyList());
         int level = path.getLevel();
         return new InstrumentationContext<Object>() {
 
@@ -158,7 +169,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
             public void onDispatched(CompletableFuture result) {
                 synchronized (stack) {
                     stack.increaseFetchCount(executionId, level);
-                    stack.setStatus(executionId, dispatchIfNeeded(stack, executionId, level));
+                    stack.setStatus(executionId, dispatchIfNeeded(stack, executionId, level, selectionSet));
 
                     if (stack.allReady()) {
                         dispatchWithoutLocking();
@@ -176,6 +187,9 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     public void removeTracking(ExecutionId executionId) {
         synchronized (stack) {
             stack.removeExecution(executionId);
+            if (stack.allReady()) {
+                dispatchWithoutLocking();
+            }
         }
     }
 
@@ -183,9 +197,9 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     //
     // thread safety : called with synchronised(stack)
     //
-    private boolean dispatchIfNeeded(RequestStack stack, ExecutionId executionId, int level) {
+    private boolean dispatchIfNeeded(RequestStack stack, ExecutionId executionId, int level, List<Selection> selectionSet) {
         if (levelReady(stack, executionId, level)) {
-            return stack.dispatchIfNotDispatchedBefore(executionId, level);
+            return stack.dispatchIfNotDispatchedBefore(executionId, level, selectionSet);
         }
         return false;
     }

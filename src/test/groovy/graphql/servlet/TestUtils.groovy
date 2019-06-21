@@ -4,6 +4,11 @@ import com.google.common.io.ByteStreams
 import graphql.Scalars
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.*
+import graphql.schema.idl.RuntimeWiring
+import graphql.schema.idl.SchemaGenerator
+import graphql.schema.idl.SchemaParser
+import graphql.schema.idl.TypeRuntimeWiring
+import graphql.schema.idl.errors.SchemaProblem
 import graphql.servlet.context.GraphQLContextBuilder
 import graphql.servlet.config.GraphQLConfiguration
 import graphql.servlet.core.ApolloScalars
@@ -41,17 +46,11 @@ class TestUtils {
     }
 
     static def createDataLoadingServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
-                                        DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
-                                        DataFetcher subscriptionDataFetcher = { env ->
-                                            AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
-                                            publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
-                                                publisherRef.get().offer(env.arguments.arg)
-                                                publisherRef.get().noMoreData()
-                                            }))
-                                            return publisherRef.get()
-                                        }, boolean asyncServletModeEnabled = false, ContextSetting contextSetting,
+                                        DataFetcher fieldDataFetcher = { env -> env.arguments.arg },
+                                        DataFetcher otherDataFetcher,
+                                        boolean asyncServletModeEnabled = false, ContextSetting contextSetting,
                                         GraphQLContextBuilder contextBuilder) {
-        GraphQLSchema schema = createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher)
+        GraphQLSchema schema = createGraphQlSchemaWithTwoLevels(queryDataFetcher, fieldDataFetcher, otherDataFetcher)
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(schema)
                 .with(contextSetting)
@@ -178,4 +177,45 @@ class TestUtils {
                 .build()
     }
 
+    static def createGraphQlSchemaWithTwoLevels(DataFetcher queryDataFetcher , DataFetcher fieldDataFetcher, DataFetcher otherQueryFetcher) {
+        String sdl = """schema {
+                        query: Query
+                    }
+
+                    type Query{
+                            query(arg : String): QueryEcho
+                            queryTwo(arg: String): OtherQueryEcho
+                    }
+                        
+                    type QueryEcho {
+                        echo(arg: String): FieldEcho
+                    }
+                    
+                    type OtherQueryEcho {
+                        echo(arg: String): String
+                    }
+                    
+                    type FieldEcho {
+                        echo(arg:String): String
+                    }
+                    """
+
+        def wiring = RuntimeWiring.newRuntimeWiring()
+                .type(TypeRuntimeWiring.newTypeWiring("Query").dataFetcher("query", {env -> env.arguments.arg})
+                    .dataFetcher("queryTwo", {env -> env.arguments.arg}))
+                .type(TypeRuntimeWiring.newTypeWiring("QueryEcho").dataFetcher("echo", queryDataFetcher))
+                .type(TypeRuntimeWiring.newTypeWiring("FieldEcho").dataFetcher("echo", fieldDataFetcher))
+                .type(TypeRuntimeWiring.newTypeWiring("OtherQueryEcho").dataFetcher("echo", otherQueryFetcher))
+                .build()
+
+
+        try {
+            def registry = new SchemaParser().parse(new StringReader(sdl))
+            def options = SchemaGenerator.Options.defaultOptions().enforceSchemaDirectives(false)
+            return new SchemaGenerator().makeExecutableSchema(options, registry, wiring)
+        } catch (SchemaProblem e) {
+            assert false: "The schema could not be compiled : ${e}"
+            return null
+        }
+    }
 }
