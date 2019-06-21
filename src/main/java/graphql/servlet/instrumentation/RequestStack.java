@@ -7,6 +7,7 @@ import graphql.language.Selection;
 import graphql.language.SelectionSet;
 import graphql.schema.GraphQLOutputType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -35,7 +36,7 @@ public class RequestStack {
         private final Map<Integer, Integer> happenedOnFieldValueCallsPerLevel = new LinkedHashMap<>();
 
 
-        private final Map<Integer, List<Selection>> dispatchedLevels = new LinkedHashMap<>();
+        private final List<Integer> dispatchedLevels = new ArrayList<>();
 
         private CallStack() {
             expectedStrategyCallsPerLevel.put(1, 1);
@@ -74,7 +75,7 @@ public class RequestStack {
             return Objects.equals(fetchCountPerLevel.get(level), expectedFetchCountPerLevel.get(level));
         }
 
-        private Map<Integer, List<Selection>> getDispatchedLevels() {
+        private List<Integer> getDispatchedLevels() {
             return dispatchedLevels;
         }
 
@@ -90,12 +91,12 @@ public class RequestStack {
                 '}';
         }
 
-        private boolean dispatchIfNotDispatchedBefore(int level, List<Selection> selectionSet) {
-            if (dispatchedLevels.containsKey(level)) {
+        private boolean dispatchIfNotDispatchedBefore(int level) {
+            if (dispatchedLevels.contains(level)) {
                 Assert.assertShouldNeverHappen("level " + level + " already dispatched");
                 return false;
             }
-            dispatchedLevels.put(level, selectionSet);
+            dispatchedLevels.add(level);
             return true;
         }
 
@@ -131,45 +132,9 @@ public class RequestStack {
      * @return if all managed executions are ready to be dispatched.
      */
     public boolean allReady() {
+        List<Integer> dispatchStack = activeRequests.values().stream().findFirst().map(CallStack::getDispatchedLevels).orElse(Collections.emptyList());
         return status.values().stream().noneMatch(Boolean.FALSE::equals) &&
-            activeRequests.values().stream().map(CallStack::getDispatchedLevels).allMatch(dispatchMap ->
-                verifyAgainstOthers(dispatchMap, activeRequests.values().stream().map(CallStack::getDispatchedLevels).collect(Collectors.toList())));
-    }
-
-    boolean verifyAgainstOthers(Map<Integer, List<Selection>> current, List<Map<Integer, List<Selection>>> others) {
-        for (Map<Integer, List<Selection>> other : others) {
-            Iterator<Map.Entry<Integer, List<Selection>>> currentIter = current.entrySet().iterator();
-            Iterator<Map.Entry<Integer, List<Selection>>> otherIter = other.entrySet().iterator();
-            if (currentIter.hasNext() && otherIter.hasNext()) {
-                Map.Entry<Integer, List<Selection>> currentFirstEntry = currentIter.next();
-                Map.Entry<Integer, List<Selection>> otherFirstEntry = otherIter.next();
-                boolean matching = selectionsEqual(currentFirstEntry.getValue(), otherFirstEntry.getValue());
-                while (matching && currentIter.hasNext() && otherIter.hasNext()) {
-                    currentFirstEntry = currentIter.next();
-                    otherFirstEntry = otherIter.next();
-                    matching = selectionsEqual(currentFirstEntry.getValue(), otherFirstEntry.getValue());
-                }
-                if (matching && (currentIter.hasNext() || otherIter.hasNext())) {
-                    return false;
-                }
-            } else if (otherIter.hasNext() || currentIter.hasNext()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean selectionsEqual(List<Selection> first, List<Selection> second) {
-        if (first.size() != second.size()) {
-            return false;
-        } else {
-            for (int i = 0; i < first.size(); i++) {
-                if (!first.get(i).isEqualTo(second.get(i))) {
-                    return false;
-                }
-            }
-            return true;
-        }
+            activeRequests.values().stream().map(CallStack::getDispatchedLevels).allMatch(dispatchStack::equals);
     }
 
     /**
@@ -312,12 +277,12 @@ public class RequestStack {
      * @param level the level to get the value of
      * @return dispatchIfNotDispattchedBefore
      */
-    public boolean dispatchIfNotDispatchedBefore(ExecutionId executionId, int level, List<Selection> selectionSet) {
+    public boolean dispatchIfNotDispatchedBefore(ExecutionId executionId, int level) {
         if (!activeRequests.containsKey(executionId)) {
             throw new IllegalStateException(
                 String.format("Execution %s not managed by this RequestStack, can not get dispatch if not dispatched before value", executionId));
         }
-        return activeRequests.get(executionId).dispatchIfNotDispatchedBefore(level, selectionSet);
+        return activeRequests.get(executionId).dispatchIfNotDispatchedBefore(level);
     }
 
     /**
