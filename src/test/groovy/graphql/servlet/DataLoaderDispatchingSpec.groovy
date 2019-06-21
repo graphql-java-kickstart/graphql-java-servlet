@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
-import graphql.servlet.context.DefaultGraphQLServletContext
+import graphql.servlet.context.DefaultGraphQLContext
 import graphql.servlet.context.GraphQLContext
 import graphql.servlet.context.GraphQLContextBuilder
 import graphql.servlet.context.ContextSetting
@@ -76,17 +76,17 @@ class DataLoaderDispatchingSpec extends Specification {
         return new GraphQLContextBuilder() {
             @Override
             GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, List<Part>> fileParts) {
-                new DefaultGraphQLServletContext(registry(), null)
+                new DefaultGraphQLContext(registry(), null)
             }
 
             @Override
             GraphQLContext build(Session session, HandshakeRequest handshakeRequest) {
-                new DefaultGraphQLServletContext(registry(), null)
+                new DefaultGraphQLContext(registry(), null)
             }
 
             @Override
             GraphQLContext build() {
-                new DefaultGraphQLServletContext(registry(), null)
+                new DefaultGraphQLContext(registry(), null)
             }
         }
     }

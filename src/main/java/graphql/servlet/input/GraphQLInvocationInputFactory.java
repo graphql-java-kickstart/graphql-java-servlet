@@ -1,13 +1,13 @@
 package graphql.servlet.input;
 
 import graphql.schema.GraphQLSchema;
-import graphql.servlet.context.DefaultGraphQLContextBuilder;
-import graphql.servlet.core.DefaultGraphQLRootObjectBuilder;
 import graphql.servlet.config.DefaultGraphQLSchemaProvider;
-import graphql.servlet.context.ContextSetting;
-import graphql.servlet.context.GraphQLContextBuilder;
-import graphql.servlet.core.GraphQLRootObjectBuilder;
 import graphql.servlet.config.GraphQLSchemaProvider;
+import graphql.servlet.context.ContextSetting;
+import graphql.servlet.context.DefaultGraphQLContextBuilder;
+import graphql.servlet.context.GraphQLContextBuilder;
+import graphql.servlet.core.DefaultGraphQLRootObjectBuilder;
+import graphql.servlet.core.GraphQLRootObjectBuilder;
 import graphql.servlet.core.internal.GraphQLRequest;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +43,7 @@ public class GraphQLInvocationInputFactory {
     }
 
     public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response, Map<String,
-        List<Part>> fileParts) {
+            List<Part>> fileParts) {
         return create(graphQLRequest, request, response, false, fileParts);
     }
 
@@ -67,48 +67,48 @@ public class GraphQLInvocationInputFactory {
 
     public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest) {
         return new GraphQLSingleInvocationInput(
-            graphQLRequest,
-            schemaProviderSupplier.get().getSchema(),
-            contextBuilderSupplier.get().build(),
-            rootObjectBuilderSupplier.get().build()
+                graphQLRequest,
+                schemaProviderSupplier.get().getSchema(),
+                contextBuilderSupplier.get().build(),
+                rootObjectBuilderSupplier.get().build()
         );
     }
 
     private GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response,
                                                 boolean readOnly, Map<String, List<Part>> fileParts) {
         return new GraphQLSingleInvocationInput(
-            graphQLRequest,
-            readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request) : schemaProviderSupplier.get().getSchema(request),
-            contextBuilderSupplier.get().build(request, response,fileParts),
-            rootObjectBuilderSupplier.get().build(request)
+                graphQLRequest,
+                readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request) : schemaProviderSupplier.get().getSchema(request),
+                contextBuilderSupplier.get().build(request, response, fileParts),
+                rootObjectBuilderSupplier.get().build(request)
         );
     }
 
     private GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequests, HttpServletRequest request,
                                                  HttpServletResponse response, boolean readOnly, Map<String, List<Part>> fileParts) {
         return contextSetting.getBatch(
-            graphQLRequests,
-            readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request) : schemaProviderSupplier.get().getSchema(request),
-            () -> contextBuilderSupplier.get().build(request, response, fileParts),
-            rootObjectBuilderSupplier.get().build(request)
+                graphQLRequests,
+                readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request) : schemaProviderSupplier.get().getSchema(request),
+                () -> contextBuilderSupplier.get().build(request, response, fileParts),
+                rootObjectBuilderSupplier.get().build(request)
         );
     }
 
     public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, Session session, HandshakeRequest request) {
         return new GraphQLSingleInvocationInput(
-            graphQLRequest,
-            schemaProviderSupplier.get().getSchema(request),
-            contextBuilderSupplier.get().build(session, request),
-            rootObjectBuilderSupplier.get().build(request)
+                graphQLRequest,
+                schemaProviderSupplier.get().getSchema(request),
+                contextBuilderSupplier.get().build(session, request),
+                rootObjectBuilderSupplier.get().build(request)
         );
     }
 
     public GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequest, Session session, HandshakeRequest request) {
         return contextSetting.getBatch(
-            graphQLRequest,
-            schemaProviderSupplier.get().getSchema(request),
-            () -> contextBuilderSupplier.get().build(session, request),
-            rootObjectBuilderSupplier.get().build(request)
+                graphQLRequest,
+                schemaProviderSupplier.get().getSchema(request),
+                () -> contextBuilderSupplier.get().build(session, request),
+                rootObjectBuilderSupplier.get().build(request)
         );
     }
 

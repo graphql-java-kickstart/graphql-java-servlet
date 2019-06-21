@@ -15,7 +15,7 @@ public class DefaultGraphQLContextBuilder implements GraphQLContextBuilder {
 
     @Override
     public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, List<Part>> fileParts) {
-        return DefaultGraphQLWebSocketContext.createWebContext().with(httpServletRequest).with(httpServletResponse).with(fileParts).build();
+        return DefaultGraphQLServletContext.createWebContext().with(httpServletRequest).with(httpServletResponse).with(fileParts).build();
     }
 
     @Override
@@ -25,6 +25,6 @@ public class DefaultGraphQLContextBuilder implements GraphQLContextBuilder {
 
     @Override
     public GraphQLContext build() {
-        return new DefaultGraphQLServletContext();
+        return new DefaultGraphQLContext();
     }
 }
