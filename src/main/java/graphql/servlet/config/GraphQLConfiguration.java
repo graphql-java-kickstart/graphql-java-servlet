@@ -111,7 +111,7 @@ public class GraphQLConfiguration {
         private boolean asyncServletModeEnabled = false;
         private Executor asyncExecutor = Executors.newCachedThreadPool(new GraphQLThreadFactory());
         private long subscriptionTimeout = 0;
-        private ContextSetting contextSetting = ContextSetting.PER_QUERY;
+        private ContextSetting contextSetting = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION;
         private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier = () -> new NoOpBatchInputPreProcessor();
 
         private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {

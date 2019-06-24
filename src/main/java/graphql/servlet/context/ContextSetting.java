@@ -29,11 +29,13 @@ public enum ContextSetting {
     /**
      * A context object, and therefor dataloader registry and subject, should be shared between all GraphQL executions in a http request.
      */
-    PER_REQUEST,
+    PER_REQUEST_WITH_INSTRUMENTATION,
+    PER_REQUEST_WITHOUT_INSTRUMENTATION,
     /**
      * Each GraphQL execution should always have its own context.
      */
-    PER_QUERY;
+    PER_QUERY_WITH_INSTRUMENTATION,
+    PER_QUERY_WITHOUT_INSTRUMENTATION;
 
     /**
      * Creates a set of inputs with the correct context based on the setting.
@@ -45,9 +47,13 @@ public enum ContextSetting {
      */
     public GraphQLBatchedInvocationInput getBatch(List<GraphQLRequest> requests, GraphQLSchema schema, Supplier<GraphQLContext> contextSupplier, Object root) {
         switch (this) {
-            case PER_QUERY:
+            case PER_QUERY_WITH_INSTRUMENTATION:
+                //Intentional fallthrough
+            case PER_QUERY_WITHOUT_INSTRUMENTATION:
                 return new PerQueryBatchedInvocationInput(requests, schema, contextSupplier, root);
-            case PER_REQUEST:
+            case PER_REQUEST_WITHOUT_INSTRUMENTATION:
+                //Intentional fallthrough
+            case PER_REQUEST_WITH_INSTRUMENTATION:
                 return new PerRequestBatchedInvocationInput(requests, schema, contextSupplier.get(), root);
                 default:
                     throw new RuntimeException("Unconfigured context setting type");
@@ -65,7 +71,7 @@ public enum ContextSetting {
                                                                         DataLoaderDispatcherInstrumentationOptions options) {
         ConfigurableDispatchInstrumentation dispatchInstrumentation;
         switch (this) {
-            case PER_REQUEST:
+            case PER_REQUEST_WITH_INSTRUMENTATION:
                 DataLoaderRegistry registry = executionInputs.stream().findFirst().map(ExecutionInput::getDataLoaderRegistry)
                     .orElseThrow(IllegalArgumentException::new);
                 List<ExecutionId> executionIds = executionInputs.stream().map(ExecutionInput::getExecutionId).collect(Collectors.toList());
@@ -73,10 +79,14 @@ public enum ContextSetting {
                 dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options,
                     (dataLoaderRegistry -> requestTrackingApproach));
                 break;
-            case PER_QUERY:
+            case PER_QUERY_WITH_INSTRUMENTATION:
                 dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options,
                     (dataLoaderRegistry) -> new FieldLevelTrackingApproach(dataLoaderRegistry));
                 break;
+            case PER_REQUEST_WITHOUT_INSTRUMENTATION:
+                //Intentional fallthrough
+            case PER_QUERY_WITHOUT_INSTRUMENTATION:
+                return () -> instrumentation.get();
                 default:
                     throw new RuntimeException("Unconfigured context setting type");
         }

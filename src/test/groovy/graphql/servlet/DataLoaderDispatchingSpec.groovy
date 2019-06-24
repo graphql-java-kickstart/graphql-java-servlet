@@ -1,7 +1,6 @@
 package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import graphql.servlet.context.DefaultGraphQLContext
@@ -24,7 +23,6 @@ import javax.websocket.server.HandshakeRequest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
 
 class DataLoaderDispatchingSpec extends Specification {
 
@@ -115,7 +113,7 @@ class DataLoaderDispatchingSpec extends Specification {
 
     def "batched query with per query context does not batch loads together"() {
         setup:
-        configureServlet(ContextSetting.PER_QUERY)
+        configureServlet(ContextSetting.PER_QUERY_WITH_INSTRUMENTATION)
         request.addParameter('query', '[{ "query": "query { query(arg:\\"test\\") { echo(arg:\\"test\\") { echo(arg:\\"test\\") } }}" }, { "query": "query{query(arg:\\"test\\") { echo (arg:\\"test\\") { echo(arg:\\"test\\")} }}" },' +
                 ' { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }, { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }]')
         resetCounters()
@@ -140,7 +138,7 @@ class DataLoaderDispatchingSpec extends Specification {
 
     def "batched query with per request context batches all queries within the request"() {
         setup:
-        servlet = configureServlet(ContextSetting.PER_REQUEST)
+        servlet = configureServlet(ContextSetting.PER_REQUEST_WITH_INSTRUMENTATION)
         request.addParameter('query', '[{ "query": "query { query(arg:\\"test\\") { echo(arg:\\"test\\") { echo(arg:\\"test\\") } }}" }, { "query": "query{query(arg:\\"test\\") { echo (arg:\\"test\\") { echo(arg:\\"test\\")} }}" },' +
                 ' { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }, { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }]')
         resetCounters()

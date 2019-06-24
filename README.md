@@ -233,9 +233,9 @@ Here's an example of a GraphQL provider that implements three interfaces at the 
 
 * [ExampleGraphQLProvider](examples/osgi/providers/src/main/java/graphql/servlet/examples/osgi/ExampleGraphQLProvider.java)
 
-## Request-scoped DataLoaders
+## Context and DataLoader settings
 
-It is possible to use dataloaders in both a request scope and a per query scope by customizing [GraphQLContextBuilder](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/context/GraphQLContextBuilder.java) and selecting the appropriate [ContextSetting](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/context/ContextSetting.java) with the provided [GraphQLConfiguration](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/config/GraphQLConfiguration.java).
+It is possible to create context, and consequently dataloaders, in both a request scope and a per query scope by customizing [GraphQLContextBuilder](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/context/GraphQLContextBuilder.java) and selecting the appropriate [ContextSetting](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/context/ContextSetting.java) with the provided [GraphQLConfiguration](https://github.com/graphql-java-kickstart/graphql-java-servlet/blob/master/src/main/java/graphql/servlet/config/GraphQLConfiguration.java).
 A new [DataLoaderRegistry](https://github.com/graphql-java/java-dataloader/blob/master/src/main/java/org/dataloader/DataLoaderRegistry.java) should be created in each call to the GraphQLContextBuilder, and the servlet will call the builder at the appropriate times.
 For eg:
 ```java
@@ -281,4 +281,6 @@ public class CustomGraphQLContextBuilder implements GraphQLContextBuilder {
      }
 
  ```
- If per request is selected, this will cause all queries within the http request, if using a batch, to share dataloader caches and batch together load calls as efficently as possible. The dataloaders are dispatched using instrumentation and the correct instrumentation will be selected according to the ContextSetting. The default context setting in GraphQLConfiguration is per query.
+ If per request is selected this will cause all queries within the http request, if using a batch, to share dataloader caches and batch together load calls as efficently as possible. The dataloaders are dispatched using instrumentation and the correct instrumentation will be selected according to the ContextSetting. The default context setting in GraphQLConfiguration is per query.
+ 
+ Two additional context settings are provided, one for each of the previous settings but without the addition of the Dataloader dispatching instrumentation. This is useful for those not using Dataloaders or wanting to supply their own dispatching instrumentation though the instrumentation supplier within the GraphQLQueryInvoker.
