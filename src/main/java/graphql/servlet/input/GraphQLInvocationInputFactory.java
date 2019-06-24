@@ -39,30 +39,21 @@ public class GraphQLInvocationInputFactory {
     }
 
     public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response) {
-        return create(graphQLRequest, request, response, null);
-    }
-
-    public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response, Map<String,
-            List<Part>> fileParts) {
-        return create(graphQLRequest, request, response, false, fileParts);
+        return create(graphQLRequest, request, response, false);
     }
 
     public GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequests, HttpServletRequest request,
                                                 HttpServletResponse response) {
-        return create(contextSetting, graphQLRequests, request, response, null);
+        return create(contextSetting, graphQLRequests, request, response, false);
     }
 
-    public GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequests, HttpServletRequest request,
-                                                HttpServletResponse response, Map<String, List<Part>> fileParts) {
-        return create(contextSetting, graphQLRequests, request, response, false, fileParts);
-    }
 
     public GraphQLSingleInvocationInput createReadOnly(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response) {
-        return create(graphQLRequest, request, response, true, null);
+        return create(graphQLRequest, request, response, true);
     }
 
     public GraphQLBatchedInvocationInput createReadOnly(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequests, HttpServletRequest request, HttpServletResponse response) {
-        return create(contextSetting, graphQLRequests, request, response, true, null);
+        return create(contextSetting, graphQLRequests, request, response, true);
     }
 
     public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest) {
@@ -75,21 +66,21 @@ public class GraphQLInvocationInputFactory {
     }
 
     private GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response,
-                                                boolean readOnly, Map<String, List<Part>> fileParts) {
+                                                boolean readOnly) {
         return new GraphQLSingleInvocationInput(
                 graphQLRequest,
                 readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request) : schemaProviderSupplier.get().getSchema(request),
-                contextBuilderSupplier.get().build(request, response, fileParts),
+                contextBuilderSupplier.get().build(request, response),
                 rootObjectBuilderSupplier.get().build(request)
         );
     }
 
     private GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequests, HttpServletRequest request,
-                                                 HttpServletResponse response, boolean readOnly, Map<String, List<Part>> fileParts) {
+                                                 HttpServletResponse response, boolean readOnly) {
         return contextSetting.getBatch(
                 graphQLRequests,
                 readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request) : schemaProviderSupplier.get().getSchema(request),
-                () -> contextBuilderSupplier.get().build(request, response, fileParts),
+                () -> contextBuilderSupplier.get().build(request, response),
                 rootObjectBuilderSupplier.get().build(request)
         );
     }

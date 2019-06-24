@@ -6,8 +6,6 @@ import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,15 +14,12 @@ class DefaultGraphQLServletContext extends DefaultGraphQLContext implements Grap
 
     private final HttpServletRequest httpServletRequest;
     private final HttpServletResponse httpServletResponse;
-    private final Map<String, List<Part>> parts;
 
     private DefaultGraphQLServletContext(DataLoaderRegistry dataLoaderRegistry, Subject subject, HttpServletRequest httpServletRequest,
-                                         HttpServletResponse httpServletResponse,
-                                         Map<String, List<Part>> parts) {
+                                         HttpServletResponse httpServletResponse) {
         super(dataLoaderRegistry, subject);
         this.httpServletRequest = httpServletRequest;
         this.httpServletResponse = httpServletResponse;
-        this.parts = parts;
     }
 
     @Override
@@ -39,30 +34,37 @@ class DefaultGraphQLServletContext extends DefaultGraphQLContext implements Grap
 
     @Override
     public List<Part> getFileParts() {
-        return parts.values()
-                .stream()
-                .flatMap(Collection::stream)
-                .filter(part -> part.getContentType() != null)
-                .collect(Collectors.toList());
+        try {
+            return httpServletRequest.getParts().stream()
+                    .filter(part -> part.getContentType() != null)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Map<String, List<Part>> getParts() {
-        return parts;
+        try {
+            return httpServletRequest.getParts()
+                .stream()
+                .collect(Collectors.groupingBy(Part::getName));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static Builder createWebContext(DataLoaderRegistry registry, Subject subject) {
+    public static Builder createServletContext(DataLoaderRegistry registry, Subject subject) {
         return new Builder(registry, subject);
     }
 
-    public static Builder createWebContext() {
+    public static Builder createServletContext() {
         return new Builder(null, null);
     }
 
     public static class Builder {
         private HttpServletRequest httpServletRequest;
         private HttpServletResponse httpServletResponse;
-        private Map<String, List<Part>> parts = new HashMap<>();
         private DataLoaderRegistry dataLoaderRegistry;
         private Subject subject;
 
@@ -72,7 +74,7 @@ class DefaultGraphQLServletContext extends DefaultGraphQLContext implements Grap
         }
 
         public DefaultGraphQLServletContext build() {
-            return new DefaultGraphQLServletContext(dataLoaderRegistry, subject, httpServletRequest, httpServletResponse, parts);
+            return new DefaultGraphQLServletContext(dataLoaderRegistry, subject, httpServletRequest, httpServletResponse);
         }
 
         public Builder with(HttpServletRequest httpServletRequest) {
@@ -80,15 +82,18 @@ class DefaultGraphQLServletContext extends DefaultGraphQLContext implements Grap
             return this;
         }
 
-        public Builder with(HttpServletResponse httpServletResponse) {
-            this.httpServletResponse = httpServletResponse;
+        public Builder with(DataLoaderRegistry dataLoaderRegistry) {
+            this.dataLoaderRegistry = dataLoaderRegistry;
             return this;
         }
 
-        public Builder with(Map<String, List<Part>> parts) {
-            if (parts != null) {
-                this.parts.putAll(parts);
-            }
+        public Builder with(Subject subject) {
+            this.subject = subject;
+            return this;
+        }
+
+        public Builder with(HttpServletResponse httpServletResponse) {
+            this.httpServletResponse = httpServletResponse;
             return this;
         }
     }

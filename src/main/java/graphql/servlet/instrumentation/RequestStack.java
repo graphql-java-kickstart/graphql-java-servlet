@@ -1,22 +1,14 @@
 package graphql.servlet.instrumentation;
 
-import com.sun.org.apache.bcel.internal.generic.Select;
 import graphql.Assert;
 import graphql.execution.ExecutionId;
-import graphql.language.Selection;
-import graphql.language.SelectionSet;
-import graphql.schema.GraphQLOutputType;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  *  Manages sets of call stack state for ongoing executions.

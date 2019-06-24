@@ -81,7 +81,7 @@ class DataLoaderDispatchingSpec extends Specification {
     def contextBuilder () {
         return new GraphQLContextBuilder() {
             @Override
-            GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, List<Part>> fileParts) {
+            GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
                 new DefaultGraphQLContext(registry(), null)
             }
 

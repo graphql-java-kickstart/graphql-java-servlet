@@ -35,11 +35,11 @@ class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implements Gr
         return handshakeRequest;
     }
 
-    public static Builder createWebContext(DataLoaderRegistry registry, Subject subject) {
+    public static Builder createWebSocketContext(DataLoaderRegistry registry, Subject subject) {
         return new Builder(registry, subject);
     }
 
-    public static Builder createWebContext() {
+    public static Builder createWebSocketContext() {
         return new Builder(null, null);
     }
 
@@ -65,6 +65,16 @@ class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implements Gr
 
         public Builder with(HandshakeRequest handshakeRequest) {
             this.handshakeRequest = handshakeRequest;
+            return this;
+        }
+
+        public Builder with(DataLoaderRegistry dataLoaderRegistry) {
+            this.dataLoaderRegistry = dataLoaderRegistry;
+            return this;
+        }
+
+        public Builder with(Subject subject) {
+            this.subject = subject;
             return this;
         }
 

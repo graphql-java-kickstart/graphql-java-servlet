@@ -14,13 +14,13 @@ import java.util.Map;
 public class DefaultGraphQLContextBuilder implements GraphQLContextBuilder {
 
     @Override
-    public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Map<String, List<Part>> fileParts) {
-        return DefaultGraphQLServletContext.createWebContext().with(httpServletRequest).with(httpServletResponse).with(fileParts).build();
+    public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        return DefaultGraphQLServletContext.createServletContext().with(httpServletRequest).with(httpServletResponse).build();
     }
 
     @Override
     public GraphQLContext build(Session session, HandshakeRequest handshakeRequest) {
-        return DefaultGraphQLWebSocketContext.createWebContext().with(session).with(handshakeRequest).build();
+        return DefaultGraphQLWebSocketContext.createWebSocketContext().with(session).with(handshakeRequest).build();
     }
 
     @Override
