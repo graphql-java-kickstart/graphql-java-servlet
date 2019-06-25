@@ -54,7 +54,7 @@ public enum ContextSetting {
             case PER_REQUEST_WITHOUT_INSTRUMENTATION:
                 //Intentional fallthrough
             case PER_REQUEST_WITH_INSTRUMENTATION:
-                return new PerRequestBatchedInvocationInput(requests, schema, contextSupplier.get(), root);
+                return new PerRequestBatchedInvocationInput(requests, schema, contextSupplier, root);
                 default:
                     throw new RuntimeException("Unconfigured context setting type");
         }
@@ -80,13 +80,12 @@ public enum ContextSetting {
                     (dataLoaderRegistry -> requestTrackingApproach));
                 break;
             case PER_QUERY_WITH_INSTRUMENTATION:
-                dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options,
-                    (dataLoaderRegistry) -> new FieldLevelTrackingApproach(dataLoaderRegistry));
+                dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options, FieldLevelTrackingApproach::new);
                 break;
             case PER_REQUEST_WITHOUT_INSTRUMENTATION:
                 //Intentional fallthrough
             case PER_QUERY_WITHOUT_INSTRUMENTATION:
-                return () -> instrumentation.get();
+                return instrumentation::get;
                 default:
                     throw new RuntimeException("Unconfigured context setting type");
         }

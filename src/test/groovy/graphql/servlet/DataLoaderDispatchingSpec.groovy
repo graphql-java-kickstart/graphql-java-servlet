@@ -1,12 +1,18 @@
 package graphql.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import graphql.ExecutionInput
+import graphql.execution.instrumentation.ChainedInstrumentation
+import graphql.execution.instrumentation.Instrumentation
+import graphql.execution.instrumentation.SimpleInstrumentation
+import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import graphql.servlet.context.DefaultGraphQLContext
 import graphql.servlet.context.GraphQLContext
 import graphql.servlet.context.GraphQLContextBuilder
 import graphql.servlet.context.ContextSetting
+import graphql.servlet.instrumentation.ConfigurableDispatchInstrumentation
 import org.dataloader.BatchLoader
 import org.dataloader.DataLoader
 import org.dataloader.DataLoaderRegistry
@@ -111,6 +117,15 @@ class DataLoaderDispatchingSpec extends Specification {
         loadCounterB.set(0)
     }
 
+    List<Map<String, Object>> getBatchedResponseContent() {
+        mapper.readValue(response.getContentAsByteArray(), List)
+    }
+
+    Instrumentation simpleInstrumentation = new SimpleInstrumentation()
+    ChainedInstrumentation chainedInstrumentation = new ChainedInstrumentation(Collections.singletonList(simpleInstrumentation))
+    def simpleSupplier = {simpleInstrumentation}
+    def chainedSupplier = {chainedInstrumentation}
+
     def "batched query with per query context does not batch loads together"() {
         setup:
         configureServlet(ContextSetting.PER_QUERY_WITH_INSTRUMENTATION)
@@ -161,7 +176,77 @@ class DataLoaderDispatchingSpec extends Specification {
         loadCounterC.get() == 2
     }
 
-    List<Map<String, Object>> getBatchedResponseContent() {
-        mapper.readValue(response.getContentAsByteArray(), List)
+    def unwrapChainedInstrumentations(Instrumentation instrumentation) {
+        if (!instrumentation instanceof ChainedInstrumentation) {
+            return Collections.singletonList(instrumentation)
+        } else {
+            List<Instrumentation> instrumentations = new ArrayList<>()
+            for (Instrumentation current : ((ChainedInstrumentation)instrumentation).getInstrumentations()) {
+                if (current instanceof ChainedInstrumentation) {
+                    instrumentations.addAll(unwrapChainedInstrumentations(current))
+                } else {
+                    instrumentations.add(current)
+                }
+            }
+            return instrumentations
+        }
+    }
+
+    def "PER_QUERY_WITHOUT_INSTRUMENTATION does not add instrumentation"() {
+        when:
+        def chainedFromContext = ContextSetting.PER_QUERY_WITHOUT_INSTRUMENTATION
+                .configureInstrumentationForContext(chainedSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
+        def simpleFromContext = ContextSetting.PER_QUERY_WITHOUT_INSTRUMENTATION
+                .configureInstrumentationForContext(simpleSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
+        then:
+        simpleInstrumentation == simpleFromContext.get()
+        chainedInstrumentation == chainedFromContext.get()
+    }
+
+    def "PER_REQUEST_WITHOUT_INSTRUMENTATION does not add instrumentation"() {
+        when:
+        def chainedFromContext = ContextSetting.PER_REQUEST_WITHOUT_INSTRUMENTATION
+                .configureInstrumentationForContext(chainedSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
+        def simpleFromContext = ContextSetting.PER_REQUEST_WITHOUT_INSTRUMENTATION
+                .configureInstrumentationForContext(simpleSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
+        then:
+        simpleInstrumentation == simpleFromContext.get()
+        chainedInstrumentation == chainedFromContext.get()
+    }
+
+    def "PER_QUERY_WITH_INSTRUMENTATION adds instrumentation"() {
+        when:
+        def chainedFromContext = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION
+                .configureInstrumentationForContext(chainedSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
+        def simpleFromContext = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION
+                .configureInstrumentationForContext(simpleSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
+        def fromSimple = unwrapChainedInstrumentations(simpleFromContext.get())
+        def fromChained = unwrapChainedInstrumentations(chainedFromContext.get())
+        then:
+        fromSimple.size() == 2
+        fromSimple.contains(simpleInstrumentation)
+        fromSimple.stream().anyMatch({inst -> inst instanceof ConfigurableDispatchInstrumentation})
+        fromChained.size() == 2
+        fromChained.contains(simpleInstrumentation)
+        fromChained.stream().anyMatch({inst -> inst instanceof ConfigurableDispatchInstrumentation})
+    }
+
+    def "PER_REQUEST_WITH_INSTRUMENTATION adds instrumentation"() {
+        setup:
+        ExecutionInput mockInput = ExecutionInput.newExecutionInput().dataLoaderRegistry(new DataLoaderRegistry()).build()
+        when:
+        def chainedFromContext = ContextSetting.PER_REQUEST_WITH_INSTRUMENTATION
+                .configureInstrumentationForContext(chainedSupplier, Collections.singletonList(mockInput), DataLoaderDispatcherInstrumentationOptions.newOptions())
+        def simpleFromContext = ContextSetting.PER_REQUEST_WITH_INSTRUMENTATION
+                .configureInstrumentationForContext(simpleSupplier, Collections.singletonList(mockInput), DataLoaderDispatcherInstrumentationOptions.newOptions())
+        def fromSimple = unwrapChainedInstrumentations(simpleFromContext.get())
+        def fromChained = unwrapChainedInstrumentations(chainedFromContext.get())
+        then:
+        fromSimple.size() == 2
+        fromSimple.contains(simpleInstrumentation)
+        fromSimple.stream().anyMatch({inst -> inst instanceof ConfigurableDispatchInstrumentation})
+        fromChained.size() == 2
+        fromChained.contains(simpleInstrumentation)
+        fromChained.stream().anyMatch({inst -> inst instanceof ConfigurableDispatchInstrumentation})
     }
 }
