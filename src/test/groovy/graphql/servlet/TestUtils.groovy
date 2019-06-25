@@ -89,7 +89,7 @@ class TestUtils {
     }
 
     static def createBatchExecutionHandler() {
-        new TestBatchExecutionHandler()
+        new TestBatchInputPreProcessor()
     }
 
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },

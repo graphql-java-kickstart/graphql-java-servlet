@@ -7,7 +7,7 @@ import graphql.servlet.input.GraphQLBatchedInvocationInput;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class TestBatchExecutionHandler implements BatchInputPreProcessor {
+public class TestBatchInputPreProcessor implements BatchInputPreProcessor {
 
     public static String BATCH_ERROR_MESSAGE = "Batch limit exceeded";
 

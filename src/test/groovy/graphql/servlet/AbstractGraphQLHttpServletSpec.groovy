@@ -303,7 +303,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
         then:
         response.getStatus() == STATUS_BAD_REQUEST
-        response.getErrorMessage() == TestBatchExecutionHandler.BATCH_ERROR_MESSAGE
+        response.getErrorMessage() == TestBatchInputPreProcessor.BATCH_ERROR_MESSAGE
     }
 
     def "Default Execution Result Handler does not limit number of queries"() {
