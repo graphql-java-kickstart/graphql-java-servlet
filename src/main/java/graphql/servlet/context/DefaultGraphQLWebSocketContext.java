@@ -8,7 +8,7 @@ import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import java.util.Optional;
 
-class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implements GraphQLWebSocketContext {
+public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implements GraphQLWebSocketContext {
 
     private final Session session;
     private final HandshakeRequest handshakeRequest;

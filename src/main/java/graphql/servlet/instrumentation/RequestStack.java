@@ -124,9 +124,8 @@ public class RequestStack {
      * @return if all managed executions are ready to be dispatched.
      */
     public boolean allReady() {
-        List<Integer> dispatchStack = activeRequests.values().stream().findFirst().map(CallStack::getDispatchedLevels).orElse(Collections.emptyList());
         return status.values().stream().noneMatch(Boolean.FALSE::equals) &&
-            activeRequests.values().stream().map(CallStack::getDispatchedLevels).allMatch(dispatchStack::equals);
+            activeRequests.values().stream().map(CallStack::getDispatchedLevels).distinct().count() <= 1;
     }
 
     /**

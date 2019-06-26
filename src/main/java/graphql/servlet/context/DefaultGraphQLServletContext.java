@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-class DefaultGraphQLServletContext extends DefaultGraphQLContext implements GraphQLServletContext {
+public class DefaultGraphQLServletContext extends DefaultGraphQLContext implements GraphQLServletContext {
 
     private final HttpServletRequest httpServletRequest;
     private final HttpServletResponse httpServletResponse;
