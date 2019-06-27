@@ -49,7 +49,7 @@ public class BatchInputPreProcessResult {
    }
 
     /**
-     * @returnstatus code the servlet will use if if isExecutable is false.
+     * @return status code the servlet will use if if isExecutable is false.
      */
    public int getStatusCode() {
         return statusCode;
