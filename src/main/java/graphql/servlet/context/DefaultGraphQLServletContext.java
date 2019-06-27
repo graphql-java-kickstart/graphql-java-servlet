@@ -59,7 +59,7 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext implemen
     }
 
     public static Builder createServletContext() {
-        return new Builder(null, null);
+        return new Builder(new DataLoaderRegistry(), null);
     }
 
     public static class Builder {

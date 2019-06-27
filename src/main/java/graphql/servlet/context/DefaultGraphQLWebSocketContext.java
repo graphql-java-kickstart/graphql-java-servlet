@@ -40,7 +40,7 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implem
     }
 
     public static Builder createWebSocketContext() {
-        return new Builder(null, null);
+        return new Builder(new DataLoaderRegistry(), null);
     }
 
     public static class Builder {
