@@ -3,13 +3,9 @@ package graphql.servlet
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
 import graphql.execution.ExecutionStepInfo
-import graphql.execution.instrumentation.ChainedInstrumentation
-import graphql.execution.instrumentation.Instrumentation
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation
-import graphql.schema.DataFetcher
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.GraphQLNonNull
-import org.dataloader.DataLoaderRegistry
+import graphql.servlet.input.GraphQLInvocationInputFactory
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Ignore
@@ -307,7 +303,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
         then:
         response.getStatus() == STATUS_BAD_REQUEST
-        response.getErrorMessage() == TestBatchExecutionHandler.BATCH_ERROR_MESSAGE
+        response.getErrorMessage() == TestBatchInputPreProcessor.BATCH_ERROR_MESSAGE
     }
 
     def "Default Execution Result Handler does not limit number of queries"() {
@@ -426,21 +422,6 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
         getResponseContent().data.echo == "test"
-    }
-
-    def "query over HTTP POST body with graphql contentType maintains request object"() {
-        setup:
-        request.addHeader("Content-Type", "application/graphql")
-        request.addHeader("requestHeaderTest", "test")
-        request.setContent('query { echo(arg:"test") }'.getBytes("UTF-8"))
-
-        when:
-        servlet.doPost(request, response)
-
-        then:
-        response.getStatus() == STATUS_OK
-        response.getContentType() == CONTENT_TYPE_JSON_UTF8
-        getResponseContent().extensions.requestHeaderTest == "true"
     }
 
     def "query over HTTP POST body with variables returns data"() {
@@ -1180,58 +1161,5 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
         then:
         1 * mockInputStream.reset()
-    }
-
-    def "getInstrumentation returns the set Instrumentation if none is provided in the context"() {
-
-        setup:
-        Instrumentation expectedInstrumentation = Mock()
-        GraphQLContext context = new GraphQLContext(request, response, null, null, null)
-        SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
-                .newBuilder(TestUtils.createGraphQlSchema())
-                .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(expectedInstrumentation).build())
-                .build()
-        when:
-        Instrumentation actualInstrumentation = simpleGraphQLServlet.getQueryInvoker().getInstrumentation(context)
-        then:
-        actualInstrumentation == expectedInstrumentation;
-        !(actualInstrumentation instanceof ChainedInstrumentation)
-
-    }
-
-    def "getInstrumentation returns the ChainedInstrumentation if DataLoader provided in context"() {
-        setup:
-        Instrumentation servletInstrumentation = Mock()
-        GraphQLContext context = new GraphQLContext(request, response, null, null, null)
-        DataLoaderRegistry dlr = Mock()
-        context.setDataLoaderRegistry(dlr)
-        SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
-                .newBuilder(TestUtils.createGraphQlSchema())
-                .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(servletInstrumentation).build())
-                .build();
-        when:
-        Instrumentation actualInstrumentation = simpleGraphQLServlet.getQueryInvoker().getInstrumentation(context)
-        then:
-        actualInstrumentation instanceof ChainedInstrumentation
-        actualInstrumentation != servletInstrumentation
-    }
-
-    def "getInstrumentation does not add dataloader dispatch instrumentation if one is provided"() {
-        setup:
-        Instrumentation servletInstrumentation = Mock()
-        DataLoaderDispatcherInstrumentation mockDispatchInstrumentation = Mock()
-        ChainedInstrumentation chainedInstrumentation = new ChainedInstrumentation(Arrays.asList(servletInstrumentation,
-                mockDispatchInstrumentation))
-        GraphQLContext context = new GraphQLContext(request, response, null, null, null)
-        DataLoaderRegistry dlr = Mock()
-        context.setDataLoaderRegistry(dlr)
-        SimpleGraphQLHttpServlet simpleGraphQLServlet = SimpleGraphQLHttpServlet
-                .newBuilder(TestUtils.createGraphQlSchema())
-                .withQueryInvoker(GraphQLQueryInvoker.newBuilder().withInstrumentation(chainedInstrumentation).build())
-                .build();
-        when:
-        Instrumentation actualInstrumentation = simpleGraphQLServlet.getQueryInvoker().getInstrumentation(context)
-        then:
-        actualInstrumentation == chainedInstrumentation
     }
 }

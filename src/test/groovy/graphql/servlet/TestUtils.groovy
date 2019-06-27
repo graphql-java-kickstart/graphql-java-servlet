@@ -2,9 +2,18 @@ package graphql.servlet
 
 import com.google.common.io.ByteStreams
 import graphql.Scalars
-import graphql.execution.instrumentation.Instrumentation
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.*
+import graphql.schema.idl.RuntimeWiring
+import graphql.schema.idl.SchemaGenerator
+import graphql.schema.idl.SchemaParser
+import graphql.schema.idl.TypeRuntimeWiring
+import graphql.schema.idl.errors.SchemaProblem
+import graphql.servlet.context.GraphQLContextBuilder
+import graphql.servlet.config.GraphQLConfiguration
+import graphql.servlet.core.ApolloScalars
+import graphql.servlet.input.BatchInputPreProcessor
+import graphql.servlet.context.ContextSetting
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -36,6 +45,22 @@ class TestUtils {
         createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, createBatchExecutionHandler())
     }
 
+    static def createDataLoadingServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
+                                        DataFetcher fieldDataFetcher = { env -> env.arguments.arg },
+                                        DataFetcher otherDataFetcher,
+                                        boolean asyncServletModeEnabled = false, ContextSetting contextSetting,
+                                        GraphQLContextBuilder contextBuilder) {
+        GraphQLSchema schema = createGraphQlSchemaWithTwoLevels(queryDataFetcher, fieldDataFetcher, otherDataFetcher)
+        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
+                .with(schema)
+                .with(contextSetting)
+                .with(contextBuilder)
+                .with(asyncServletModeEnabled)
+                .build())
+        servlet.init(null)
+        return servlet
+    }
+
     private static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                                      DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
                                      DataFetcher subscriptionDataFetcher = { env ->
@@ -46,23 +71,25 @@ class TestUtils {
                                  }))
                                  return publisherRef.get()
                              }, boolean asyncServletModeEnabled = false,
-                                     BatchExecutionHandler batchHandler) {
-        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
-                .with(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher))
-                .with(createInstrumentedQueryInvoker(batchHandler))
-                .with(asyncServletModeEnabled)
-                .build())
+                                     BatchInputPreProcessor batchHandler) {
+        GraphQLHttpServlet servlet = GraphQLHttpServlet.with(
+                graphQLConfiguration(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher),
+                batchHandler, asyncServletModeEnabled))
         servlet.init(null)
         return servlet
     }
 
-    static def createInstrumentedQueryInvoker(BatchExecutionHandler batchExecutionHandler) {
-        Instrumentation instrumentation = new TestInstrumentation()
-        GraphQLQueryInvoker.newBuilder().with([instrumentation]).withBatchExeuctionHandler(batchExecutionHandler).build()
+    static def graphQLConfiguration(GraphQLSchema schema, BatchInputPreProcessor batchInputPreProcessor,
+                                    boolean asyncServletModeEnabled) {
+        def configBuilder = GraphQLConfiguration.with(schema).with(asyncServletModeEnabled)
+        if (batchInputPreProcessor != null) {
+            configBuilder.with(batchInputPreProcessor)
+        }
+        configBuilder.build()
     }
 
     static def createBatchExecutionHandler() {
-        new TestBatchExecutionHandler()
+        new TestBatchInputPreProcessor()
     }
 
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
@@ -150,4 +177,45 @@ class TestUtils {
                 .build()
     }
 
+    static def createGraphQlSchemaWithTwoLevels(DataFetcher queryDataFetcher , DataFetcher fieldDataFetcher, DataFetcher otherQueryFetcher) {
+        String sdl = """schema {
+                        query: Query
+                    }
+
+                    type Query{
+                            query(arg : String): QueryEcho
+                            queryTwo(arg: String): OtherQueryEcho
+                    }
+                        
+                    type QueryEcho {
+                        echo(arg: String): FieldEcho
+                    }
+                    
+                    type OtherQueryEcho {
+                        echo(arg: String): String
+                    }
+                    
+                    type FieldEcho {
+                        echo(arg:String): String
+                    }
+                    """
+
+        def wiring = RuntimeWiring.newRuntimeWiring()
+                .type(TypeRuntimeWiring.newTypeWiring("Query").dataFetcher("query", {env -> env.arguments.arg})
+                    .dataFetcher("queryTwo", {env -> env.arguments.arg}))
+                .type(TypeRuntimeWiring.newTypeWiring("QueryEcho").dataFetcher("echo", queryDataFetcher))
+                .type(TypeRuntimeWiring.newTypeWiring("FieldEcho").dataFetcher("echo", fieldDataFetcher))
+                .type(TypeRuntimeWiring.newTypeWiring("OtherQueryEcho").dataFetcher("echo", otherQueryFetcher))
+                .build()
+
+
+        try {
+            def registry = new SchemaParser().parse(new StringReader(sdl))
+            def options = SchemaGenerator.Options.defaultOptions().enforceSchemaDirectives(false)
+            return new SchemaGenerator().makeExecutableSchema(options, registry, wiring)
+        } catch (SchemaProblem e) {
+            assert false: "The schema could not be compiled : ${e}"
+            return null
+        }
+    }
 }

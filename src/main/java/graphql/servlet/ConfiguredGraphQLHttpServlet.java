@@ -1,5 +1,7 @@
 package graphql.servlet;
 
+import graphql.servlet.config.GraphQLConfiguration;
+
 import java.util.Objects;
 
 class ConfiguredGraphQLHttpServlet extends GraphQLHttpServlet {

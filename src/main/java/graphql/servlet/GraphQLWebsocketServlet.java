@@ -1,6 +1,10 @@
 package graphql.servlet;
 
-import graphql.servlet.internal.*;
+import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.servlet.core.GraphQLQueryInvoker;
+import graphql.servlet.core.SubscriptionConnectionListener;
+import graphql.servlet.input.GraphQLInvocationInputFactory;
+import graphql.servlet.core.internal.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
