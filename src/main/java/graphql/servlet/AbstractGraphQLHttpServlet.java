@@ -16,40 +16,23 @@ import graphql.servlet.core.GraphQLQueryInvoker;
 import graphql.servlet.core.GraphQLServletListener;
 import graphql.servlet.core.internal.GraphQLRequest;
 import graphql.servlet.core.internal.VariableMapper;
-import graphql.servlet.input.BatchInputPreProcessResult;
-import graphql.servlet.input.BatchInputPreProcessor;
-import graphql.servlet.input.GraphQLBatchedInvocationInput;
-import graphql.servlet.input.GraphQLInvocationInputFactory;
-import graphql.servlet.input.GraphQLSingleInvocationInput;
+import graphql.servlet.input.*;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Flux;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -358,13 +341,13 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         init();
         doRequestAsync(req, resp, getHandler);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         init();
         doRequestAsync(req, resp, postHandler);
     }
@@ -402,7 +385,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             } else {
                 publisher = new SingleSubscriberPublisher<>();
                 ((SingleSubscriberPublisher<ExecutionResult>) publisher).offer(result);
-                publisher = Flux.merge(publisher, (Publisher<DeferredExecutionResult>) result.getExtensions().get(GraphQL.DEFERRED_RESULTS));
+                publisher = new MultiPublisher(publisher, (Publisher<DeferredExecutionResult>) result.getExtensions().get(GraphQL.DEFERRED_RESULTS));
             }
             publisher.subscribe(subscriber);
             if (isInAsyncThread) {
@@ -551,7 +534,6 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         }
     }
 
-
     private static class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
 
         private final AtomicReference<Subscription> subscriptionRef;
@@ -598,4 +580,21 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             completedLatch.await();
         }
     }
+
+    private static class MultiPublisher<T> implements Publisher<T> {
+
+        private List<Publisher<T>> publishers;
+
+        @SafeVarargs
+        MultiPublisher(Publisher<T>... publishers) {
+            this.publishers = Arrays.asList(publishers);
+        }
+
+        @Override
+        public void subscribe(Subscriber<? super T> s) {
+            publishers.forEach(publisher -> publisher.subscribe(s));
+        }
+
+    }
+
 }
