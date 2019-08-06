@@ -385,7 +385,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             } else {
                 publisher = new SingleSubscriberPublisher<>();
                 ((SingleSubscriberPublisher<ExecutionResult>) publisher).offer(result);
-                publisher = new MultiPublisher(publisher, (Publisher<DeferredExecutionResult>) result.getExtensions().get(GraphQL.DEFERRED_RESULTS));
+                publisher = new MultiPublisher<>(publisher, (Publisher<ExecutionResult>) result.getExtensions().get(GraphQL.DEFERRED_RESULTS));
             }
             publisher.subscribe(subscriber);
             if (isInAsyncThread) {
