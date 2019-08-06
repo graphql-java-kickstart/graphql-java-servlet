@@ -2,7 +2,10 @@ package graphql.servlet;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
+import graphql.DeferredExecutionResult;
 import graphql.ExecutionResult;
+import graphql.GraphQL;
+import graphql.execution.reactive.SingleSubscriberPublisher;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.servlet.config.GraphQLConfiguration;
@@ -23,6 +26,7 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
@@ -373,7 +377,9 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                        HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ExecutionResult result = queryInvoker.query(invocationInput);
 
-        if (!(result.getData() instanceof Publisher)) {
+        boolean isDeferred = Objects.nonNull(result.getExtensions()) && result.getExtensions().containsKey(GraphQL.DEFERRED_RESULTS);
+
+        if (!(result.getData() instanceof Publisher || isDeferred)) {
             resp.setContentType(APPLICATION_JSON_UTF8);
             resp.setStatus(STATUS_OK);
             resp.getWriter().write(graphQLObjectMapper.serializeResultAsJson(result));
@@ -390,7 +396,15 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             AtomicReference<Subscription> subscriptionRef = new AtomicReference<>();
             asyncContext.addListener(new SubscriptionAsyncListener(subscriptionRef));
             ExecutionResultSubscriber subscriber = new ExecutionResultSubscriber(subscriptionRef, asyncContext, graphQLObjectMapper);
-            ((Publisher<ExecutionResult>) result.getData()).subscribe(subscriber);
+            Publisher<ExecutionResult> publisher;
+            if (result.getData() instanceof Publisher) {
+                publisher = result.getData();
+            } else {
+                publisher = new SingleSubscriberPublisher<>();
+                ((SingleSubscriberPublisher<ExecutionResult>) publisher).offer(result);
+                publisher = Flux.merge(publisher, (Publisher<DeferredExecutionResult>) result.getExtensions().get(GraphQL.DEFERRED_RESULTS));
+            }
+            publisher.subscribe(subscriber);
             if (isInAsyncThread) {
                 // We need to delay the completion of async context until after the subscription has terminated, otherwise the AsyncContext is prematurely closed.
                 try {

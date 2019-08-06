@@ -283,6 +283,28 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
+
+    def "deferred query over HTTP GET"() {
+        setup:
+        request.addParameter('query', 'query { deferred(arg:"test") @defer }')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
+        getSubscriptionResponseContent()[0].data.deferred == null
+
+        when:
+        subscriptionLatch.await(1, TimeUnit.SECONDS)
+
+        then:
+        def content = getSubscriptionResponseContent()
+        content[1].data == "test"
+        content[1].path == ["deferred"]
+    }
+
     def "Batch Execution Handler allows limiting batches and sending error messages."() {
         setup:
         servlet = TestUtils.createBatchCustomizedServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
@@ -1028,6 +1050,31 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         getSubscriptionResponseContent()[0].data.echo == "First\n\ntest"
         getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
+    }
+
+    def "defer query over HTTP POST"() {
+        setup:
+        servlet = TestUtils.createDefaultServlet()
+        request.setContent(mapper.writeValueAsBytes([
+                query: 'query { deferred(arg:"test") @defer }'
+        ]))
+        request.setAsyncSupported(true)
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
+        getSubscriptionResponseContent()[0].data.deferred == null
+
+        when:
+        subscriptionLatch.await(1, TimeUnit.SECONDS)
+
+        then:
+        def content = getSubscriptionResponseContent()
+        content[1].data == "test"
+        content[1].path == ["deferred"]
     }
 
     def "errors before graphql schema execution return internal server error"() {

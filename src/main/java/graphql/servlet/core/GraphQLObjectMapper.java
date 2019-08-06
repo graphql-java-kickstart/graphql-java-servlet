@@ -5,9 +5,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import graphql.ExecutionResult;
-import graphql.ExecutionResultImpl;
-import graphql.GraphQLError;
+import graphql.*;
+import graphql.execution.ExecutionPath;
 import graphql.servlet.config.ConfiguringObjectMapperProvider;
 import graphql.servlet.config.ObjectMapperConfigurer;
 import graphql.servlet.config.ObjectMapperProvider;
@@ -117,12 +116,19 @@ public class GraphQLObjectMapper {
         } else {
             errors = null;
         }
-
         return new ExecutionResultImpl(data, errors, extensions);
     }
 
     public Map<String, Object> createResultFromExecutionResult(ExecutionResult executionResult) {
-        return convertSanitizedExecutionResult(sanitizeErrors(executionResult));
+        ExecutionResult sanitizedExecutionResult = sanitizeErrors(executionResult);
+        if (executionResult instanceof DeferredExecutionResult) {
+            sanitizedExecutionResult = DeferredExecutionResultImpl
+                    .newDeferredExecutionResult()
+                    .from(executionResult)
+                    .path(ExecutionPath.fromList(((DeferredExecutionResult) executionResult).getPath()))
+                    .build();
+        }
+        return convertSanitizedExecutionResult(sanitizedExecutionResult);
     }
 
     public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult) {
@@ -142,6 +148,10 @@ public class GraphQLObjectMapper {
 
         if (includeData) {
             result.put("data", executionResult.getData());
+        }
+
+        if (executionResult instanceof DeferredExecutionResult) {
+            result.put("path", ((DeferredExecutionResult) executionResult).getPath());
         }
 
         return result;

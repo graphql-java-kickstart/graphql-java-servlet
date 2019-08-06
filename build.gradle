@@ -53,6 +53,7 @@ dependencies {
     // Servlet
     compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile 'javax.websocket:javax.websocket-api:1.1'
+    compile 'io.projectreactor:reactor-core:3.0.5.RELEASE'
 
     // GraphQL
     compile "com.graphql-java:graphql-java:$LIB_GRAPHQL_JAVA_VER"
