@@ -2,7 +2,6 @@ package graphql.servlet;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
-import graphql.DeferredExecutionResult;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.execution.reactive.SingleSubscriberPublisher;
@@ -379,15 +378,16 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             AtomicReference<Subscription> subscriptionRef = new AtomicReference<>();
             asyncContext.addListener(new SubscriptionAsyncListener(subscriptionRef));
             ExecutionResultSubscriber subscriber = new ExecutionResultSubscriber(subscriptionRef, asyncContext, graphQLObjectMapper);
-            Publisher<ExecutionResult> publisher;
+            List<Publisher<ExecutionResult>> publishers = new ArrayList<>();
             if (result.getData() instanceof Publisher) {
-                publisher = result.getData();
+                publishers.add(result.getData());
             } else {
-                publisher = new SingleSubscriberPublisher<>();
-                ((SingleSubscriberPublisher<ExecutionResult>) publisher).offer(result);
-                publisher = new MultiPublisher<>(publisher, (Publisher<ExecutionResult>) result.getExtensions().get(GraphQL.DEFERRED_RESULTS));
+                publishers.add(new StaticDataPublisher<>(result));
+                final Publisher<ExecutionResult> deferredResultsPublisher = (Publisher<ExecutionResult>) result.getExtensions().get(GraphQL.DEFERRED_RESULTS);
+                publishers.add(deferredResultsPublisher);
             }
-            publisher.subscribe(subscriber);
+            publishers.forEach(it -> it.subscribe(subscriber));
+
             if (isInAsyncThread) {
                 // We need to delay the completion of async context until after the subscription has terminated, otherwise the AsyncContext is prematurely closed.
                 try {
@@ -581,20 +581,11 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         }
     }
 
-    private static class MultiPublisher<T> implements Publisher<T> {
-
-        private List<Publisher<T>> publishers;
-
-        @SafeVarargs
-        MultiPublisher(Publisher<T>... publishers) {
-            this.publishers = Arrays.asList(publishers);
+    private static class StaticDataPublisher<T> extends SingleSubscriberPublisher<T> implements Publisher<T> {
+        StaticDataPublisher(T data) {
+            super();
+            super.offer(data);
         }
-
-        @Override
-        public void subscribe(Subscriber<? super T> s) {
-            publishers.forEach(publisher -> publisher.subscribe(s));
-        }
-
     }
 
 }

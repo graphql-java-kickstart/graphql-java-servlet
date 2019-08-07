@@ -120,20 +120,6 @@ class TestUtils {
             field.type(new GraphQLNonNull(Scalars.GraphQLString))
             field.dataFetcher({ env -> null })
         }
-        .field { GraphQLFieldDefinition.Builder field ->
-            field.name("deferred")
-            field.type(Scalars.GraphQLString)
-            field.argument { argument ->
-                argument.name("arg")
-                argument.type(Scalars.GraphQLString)
-            }
-            field.dataFetcher({ env ->
-                return CompletableFuture.supplyAsync( {
-                    Thread.sleep(100)
-                    env.arguments.arg
-                })
-            })
-        }
         .build()
 
         GraphQLObjectType mutation = GraphQLObjectType.newObject()
