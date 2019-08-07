@@ -1054,9 +1054,39 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "defer query over HTTP POST"() {
         setup:
-        servlet = TestUtils.createDefaultServlet()
+        request.setContent('{"query": "subscription Subscription($arg: String!) { echo(arg: $arg) }", "operationName": "Subscription", "variables": {"arg": "test"}}'.bytes)
+        request.setAsyncSupported(true)
+
+        when:
+        servlet.doPost(request, response)
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
+
+        when:
+        subscriptionLatch.await(1, TimeUnit.SECONDS)
+        then:
+        getSubscriptionResponseContent()[0].data.echo == "First\n\ntest"
+        getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
+    }
+
+    def "deferred query that takes longer than initial results, should still be sent second"() {
+        setup:
+        servlet = TestUtils.createDefaultServlet({ env ->
+            if (env.getField().name == "a") {
+                Thread.sleep(1000)
+            }
+            env.arguments.arg
+        })
         request.setContent(mapper.writeValueAsBytes([
-                query: 'query { echo(arg:"test") @defer }'
+                query: '''
+                    { 
+                        object { 
+                            a(arg: "Hello") 
+                            b(arg: "World") @defer
+                        }     
+                    }
+                '''
         ]))
         request.setAsyncSupported(true)
 
@@ -1066,15 +1096,15 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
-        getSubscriptionResponseContent()[0].data.echo == null
+        getSubscriptionResponseContent()[0].data.object.a == "Hello" // a has a Thread.sleep
 
         when:
         subscriptionLatch.await(1, TimeUnit.SECONDS)
 
         then:
         def content = getSubscriptionResponseContent()
-        content[1].data == "test"
-        content[1].path == ["echo"]
+        content[1].data == "World"
+        content[1].path == ["object", "b"]
     }
 
     def "errors before graphql schema execution return internal server error"() {

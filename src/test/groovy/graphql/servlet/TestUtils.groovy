@@ -116,6 +116,32 @@ class TestUtils {
             field.dataFetcher(queryDataFetcher)
         }
         .field { GraphQLFieldDefinition.Builder field ->
+            field.name("object")
+            field.type(
+                GraphQLObjectType.newObject()
+                    .name("NestedObject")
+                    .field { nested ->
+                        nested.name("a")
+                        nested.type(Scalars.GraphQLString)
+                        nested.argument { argument ->
+                            argument.name("arg")
+                            argument.type(Scalars.GraphQLString)
+                        }
+                        nested.dataFetcher(queryDataFetcher)
+                    }
+                    .field { nested ->
+                        nested.name("b")
+                        nested.type(Scalars.GraphQLString)
+                        nested.argument { argument ->
+                            argument.name("arg")
+                            argument.type(Scalars.GraphQLString)
+                        }
+                        nested.dataFetcher(queryDataFetcher)
+                    }
+            )
+            field.dataFetcher(new StaticDataFetcher([:]))
+        }
+        .field { GraphQLFieldDefinition.Builder field ->
             field.name("returnsNullIncorrectly")
             field.type(new GraphQLNonNull(Scalars.GraphQLString))
             field.dataFetcher({ env -> null })

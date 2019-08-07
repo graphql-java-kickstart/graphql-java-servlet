@@ -585,6 +585,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         StaticDataPublisher(T data) {
             super();
             super.offer(data);
+            super.noMoreData();
         }
     }
 
