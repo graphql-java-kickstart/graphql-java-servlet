@@ -247,28 +247,35 @@ public class CustomGraphQLContextBuilder implements GraphQLContextBuilder {
         this.userDataLoader = userDataLoader;
     }
 
-    @Override
-    public GraphQLContext build(HttpServletRequest req) {
-        return new GraphQLContext(buildDataLoaderRegistry());
-    }
 
-    @Override
     public GraphQLContext build() {
-        return new GraphQLContext(buildDataLoaderRegistry());
+        return new DefaultGraphQLContext();
     }
 
-    @Override
-    public GraphQLContext build(HandshakeRequest request) {
-        return new GraphQLContext(buildDataLoaderRegistry());
+    public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        return DefaultGraphQLServletContext.createServletContext()
+                .with(httpServletRequest)
+                .with(httpServletResponse)
+                .with(buildDataLoaderRegistry())
+                .build();
+    }
+
+    public GraphQLContext build(Session session, HandshakeRequest handshakeRequest) {
+        return DefaultGraphQLWebSocketContext.createWebSocketContext()
+                .with(session)
+                .with(handshakeRequest)
+                .with(buildDataLoaderRegistry())
+                .build();
     }
 
     private DataLoaderRegistry buildDataLoaderRegistry() {
-        DataLoaderRegistry dataLoaderRegistry = new DataLoaderRegistry();
-        dataLoaderRegistry.register("userDataLoader", userDataLoader);
-        return dataLoaderRegistry;
+        DataLoaderRegistry registry = new DataLoaderRegistry();
+        for (BatchLoader batchLoader: this.batchLoaders) {
+            registry.register(batchLoader.getClass().getSimpleName(), DataLoader.newDataLoader(batchLoader));
+        }
+        return registry;
     }
 }
-
 ```
  It is then possible to access the [DataLoader](https://github.com/graphql-java/java-dataloader/blob/master/src/main/java/org/dataloader/DataLoader.java) in the resolvers by accessing the [DataLoaderRegistry] from context. For eg:
  ```java
