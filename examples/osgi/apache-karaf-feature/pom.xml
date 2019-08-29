@@ -13,7 +13,7 @@
     <packaging>feature</packaging>
 
     <properties>
-        <jackson.version>2.9.9</jackson.version>
+        <jackson.version>2.10.0.pr1</jackson.version>
     </properties>
 
 
