@@ -457,11 +457,12 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             return false;
         }
 
+        final int BUFFER_SIZE = 128;
         ByteArrayOutputStream result = new ByteArrayOutputStream();
-        byte[] buffer = new byte[128];
+        byte[] buffer = new byte[BUFFER_SIZE];
         int length;
 
-        inputStream.mark(0);
+        inputStream.mark(BUFFER_SIZE);
         while ((length = inputStream.read(buffer)) != -1) {
             result.write(buffer, 0, length);
             String chunk = result.toString();
