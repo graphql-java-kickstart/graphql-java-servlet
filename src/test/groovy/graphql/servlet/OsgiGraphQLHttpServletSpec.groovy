@@ -1,9 +1,13 @@
 package graphql.servlet
 
+import graphql.AssertException
 import graphql.annotations.annotationTypes.GraphQLField
 import graphql.annotations.annotationTypes.GraphQLName
 import graphql.annotations.processor.GraphQLAnnotations
+import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLFieldDefinition
+import graphql.schema.GraphQLInterfaceType
+import graphql.servlet.config.GraphQLCodeRegistryProvider
 import graphql.servlet.config.GraphQLMutationProvider
 import graphql.servlet.config.GraphQLQueryProvider
 import graphql.servlet.config.GraphQLSubscriptionProvider
@@ -121,5 +125,31 @@ class OsgiGraphQLHttpServletSpec extends Specification {
             servlet.unbindSubscriptionProvider(subscriptionProvider)
         then:
             servlet.getSchemaProvider().getSchema().getSubscriptionType() == null
+    }
+
+    static class TestCodeRegistryProvider implements GraphQLCodeRegistryProvider {
+        @Override
+        GraphQLCodeRegistry getCodeRegistry() {
+            return GraphQLCodeRegistry.newCodeRegistry().typeResolver("Type", { env -> null }).build();
+        }
+    }
+
+    def "code registry provider adds type resolver"() {
+        setup:
+            OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
+            TestCodeRegistryProvider codeRegistryProvider = new TestCodeRegistryProvider()
+
+        when:
+            servlet.bindCodeRegistryProvider(codeRegistryProvider)
+            servlet.getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
+        then:
+            notThrown AssertException
+
+        when:
+            servlet.unbindCodeRegistryProvider(codeRegistryProvider)
+            servlet.getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
+        then:
+            thrown AssertException
+
     }
 }

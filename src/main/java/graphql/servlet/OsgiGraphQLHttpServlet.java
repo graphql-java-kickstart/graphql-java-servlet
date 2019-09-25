@@ -18,6 +18,7 @@ import graphql.servlet.core.DefaultGraphQLErrorHandler;
 import graphql.servlet.core.DefaultGraphQLRootObjectBuilder;
 import graphql.servlet.config.DefaultGraphQLSchemaProvider;
 import graphql.servlet.config.ExecutionStrategyProvider;
+import graphql.servlet.config.GraphQLCodeRegistryProvider;
 import graphql.servlet.context.GraphQLContextBuilder;
 import graphql.servlet.core.GraphQLErrorHandler;
 import graphql.servlet.config.GraphQLMutationProvider;
@@ -45,6 +46,7 @@ import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
+import graphql.schema.GraphQLCodeRegistry;
 
 @Component(
         service={javax.servlet.http.HttpServlet.class,javax.servlet.Servlet.class},
@@ -67,6 +69,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
     private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
     private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
+    private GraphQLCodeRegistryProvider codeRegistryProvider = () -> GraphQLCodeRegistry.newCodeRegistry().build();
 
     private GraphQLSchemaProvider schemaProvider;
 
@@ -191,6 +194,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
                 .mutation(mutationType)
                 .subscription(subscriptionType)
                 .additionalTypes(types)
+                .codeRegistry(codeRegistryProvider.getCodeRegistry())
                 .build());
     }
 
@@ -208,6 +212,9 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         if (provider instanceof GraphQLTypesProvider) {
             typesProviders.add((GraphQLTypesProvider) provider);
         }
+        if (provider instanceof GraphQLCodeRegistryProvider) {
+            codeRegistryProvider = (GraphQLCodeRegistryProvider) provider;
+        }
         updateSchema();
     }
     public void unbindProvider(GraphQLProvider provider) {
@@ -222,6 +229,9 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         }
         if (provider instanceof GraphQLTypesProvider) {
             typesProviders.remove(provider);
+        }
+        if (provider instanceof GraphQLCodeRegistryProvider) {
+            codeRegistryProvider = () -> GraphQLCodeRegistry.newCodeRegistry().build();
         }
         updateSchema();
     }
@@ -320,6 +330,16 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     }
     public void unsetPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
         this.preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
+    }
+
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy= ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+    public void bindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
+        this.codeRegistryProvider = graphQLCodeRegistryProvider;
+        updateSchema();
+    }
+    public void unbindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
+        this.codeRegistryProvider = () -> GraphQLCodeRegistry.newCodeRegistry().build();
+        updateSchema();
     }
 
     public GraphQLContextBuilder getContextBuilder() {
