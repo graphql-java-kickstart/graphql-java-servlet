@@ -162,19 +162,20 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
     @Override
     public CompletableFuture<ExecutionResult> instrumentExecutionResult(ExecutionResult executionResult, InstrumentationExecutionParameters parameters) {
+        DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
+        state.getApproach().removeTracking(parameters.getExecutionInput().getExecutionId());
         if (!options.isIncludeStatistics()) {
             return CompletableFuture.completedFuture(executionResult);
+        } else {
+            Map<Object, Object> currentExt = executionResult.getExtensions();
+            Map<Object, Object> statsMap = new LinkedHashMap<>(currentExt == null ? Collections.emptyMap() : currentExt);
+            Map<Object, Object> dataLoaderStats = buildStatsMap(state);
+            statsMap.put("dataloader", dataLoaderStats);
+
+            log.debug("Data loader stats : {}", dataLoaderStats);
+
+            return CompletableFuture.completedFuture(new ExecutionResultImpl(executionResult.getData(), executionResult.getErrors(), statsMap));
         }
-        DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
-        Map<Object, Object> currentExt = executionResult.getExtensions();
-        Map<Object, Object> statsMap = new LinkedHashMap<>(currentExt == null ? Collections.emptyMap() : currentExt);
-        Map<Object, Object> dataLoaderStats = buildStatsMap(state);
-        statsMap.put("dataloader", dataLoaderStats);
-        state.getApproach().removeTracking(parameters.getExecutionInput().getExecutionId());
-
-        log.debug("Data loader stats : {}", dataLoaderStats);
-
-        return CompletableFuture.completedFuture(new ExecutionResultImpl(executionResult.getData(), executionResult.getErrors(), statsMap));
     }
 
     private Map<Object, Object> buildStatsMap(DataLoaderDispatcherInstrumentationState state) {

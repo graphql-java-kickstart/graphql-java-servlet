@@ -117,7 +117,9 @@ public class RequestStack {
             throw new IllegalStateException(
                 String.format("Can not set status for execution %s, it is not managed by this request stack", executionId));
         }
-        status.put(executionId, toState);
+        if (toState) {
+            status.put(executionId, true);
+        }
     }
 
     /**
