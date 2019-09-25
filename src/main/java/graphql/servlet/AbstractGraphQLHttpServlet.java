@@ -3,6 +3,8 @@ package graphql.servlet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import graphql.ExecutionResult;
+import graphql.GraphQL;
+import graphql.execution.reactive.SingleSubscriberPublisher;
 import graphql.introspection.IntrospectionQuery;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.servlet.config.GraphQLConfiguration;
@@ -13,11 +15,7 @@ import graphql.servlet.core.GraphQLQueryInvoker;
 import graphql.servlet.core.GraphQLServletListener;
 import graphql.servlet.core.internal.GraphQLRequest;
 import graphql.servlet.core.internal.VariableMapper;
-import graphql.servlet.input.BatchInputPreProcessResult;
-import graphql.servlet.input.BatchInputPreProcessor;
-import graphql.servlet.input.GraphQLBatchedInvocationInput;
-import graphql.servlet.input.GraphQLInvocationInputFactory;
-import graphql.servlet.input.GraphQLSingleInvocationInput;
+import graphql.servlet.input.*;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -28,24 +26,12 @@ import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -354,13 +340,13 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         init();
         doRequestAsync(req, resp, getHandler);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
         init();
         doRequestAsync(req, resp, postHandler);
     }
@@ -373,7 +359,9 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                        HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ExecutionResult result = queryInvoker.query(invocationInput);
 
-        if (!(result.getData() instanceof Publisher)) {
+        boolean isDeferred = Objects.nonNull(result.getExtensions()) && result.getExtensions().containsKey(GraphQL.DEFERRED_RESULTS);
+
+        if (!(result.getData() instanceof Publisher || isDeferred)) {
             resp.setContentType(APPLICATION_JSON_UTF8);
             resp.setStatus(STATUS_OK);
             resp.getWriter().write(graphQLObjectMapper.serializeResultAsJson(result));
@@ -390,7 +378,16 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             AtomicReference<Subscription> subscriptionRef = new AtomicReference<>();
             asyncContext.addListener(new SubscriptionAsyncListener(subscriptionRef));
             ExecutionResultSubscriber subscriber = new ExecutionResultSubscriber(subscriptionRef, asyncContext, graphQLObjectMapper);
-            ((Publisher<ExecutionResult>) result.getData()).subscribe(subscriber);
+            List<Publisher<ExecutionResult>> publishers = new ArrayList<>();
+            if (result.getData() instanceof Publisher) {
+                publishers.add(result.getData());
+            } else {
+                publishers.add(new StaticDataPublisher<>(result));
+                final Publisher<ExecutionResult> deferredResultsPublisher = (Publisher<ExecutionResult>) result.getExtensions().get(GraphQL.DEFERRED_RESULTS);
+                publishers.add(deferredResultsPublisher);
+            }
+            publishers.forEach(it -> it.subscribe(subscriber));
+
             if (isInAsyncThread) {
                 // We need to delay the completion of async context until after the subscription has terminated, otherwise the AsyncContext is prematurely closed.
                 try {
@@ -537,7 +534,6 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         }
     }
 
-
     private static class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
 
         private final AtomicReference<Subscription> subscriptionRef;
@@ -584,4 +580,13 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             completedLatch.await();
         }
     }
+
+    private static class StaticDataPublisher<T> extends SingleSubscriberPublisher<T> implements Publisher<T> {
+        StaticDataPublisher(T data) {
+            super();
+            super.offer(data);
+            super.noMoreData();
+        }
+    }
+
 }

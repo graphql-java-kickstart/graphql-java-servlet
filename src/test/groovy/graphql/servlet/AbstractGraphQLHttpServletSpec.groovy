@@ -283,6 +283,28 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
+
+    def "deferred query over HTTP GET"() {
+        setup:
+        request.addParameter('query', 'query { echo(arg:"test") @defer }')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
+        getSubscriptionResponseContent()[0].data.echo == null
+
+        when:
+        subscriptionLatch.await(1, TimeUnit.SECONDS)
+
+        then:
+        def content = getSubscriptionResponseContent()
+        content[1].data == "test"
+        content[1].path == ["echo"]
+    }
+
     def "Batch Execution Handler allows limiting batches and sending error messages."() {
         setup:
         servlet = TestUtils.createBatchCustomizedServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
@@ -1028,6 +1050,61 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         getSubscriptionResponseContent()[0].data.echo == "First\n\ntest"
         getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
+    }
+
+    def "defer query over HTTP POST"() {
+        setup:
+        request.setContent('{"query": "subscription Subscription($arg: String!) { echo(arg: $arg) }", "operationName": "Subscription", "variables": {"arg": "test"}}'.bytes)
+        request.setAsyncSupported(true)
+
+        when:
+        servlet.doPost(request, response)
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
+
+        when:
+        subscriptionLatch.await(1, TimeUnit.SECONDS)
+        then:
+        getSubscriptionResponseContent()[0].data.echo == "First\n\ntest"
+        getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
+    }
+
+    def "deferred query that takes longer than initial results, should still be sent second"() {
+        setup:
+        servlet = TestUtils.createDefaultServlet({ env ->
+            if (env.getField().name == "a") {
+                Thread.sleep(1000)
+            }
+            env.arguments.arg
+        })
+        request.setContent(mapper.writeValueAsBytes([
+                query: '''
+                    { 
+                        object { 
+                            a(arg: "Hello") 
+                            b(arg: "World") @defer
+                        }     
+                    }
+                '''
+        ]))
+        request.setAsyncSupported(true)
+
+        when:
+        servlet.doPost(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
+        getSubscriptionResponseContent()[0].data.object.a == "Hello" // a has a Thread.sleep
+
+        when:
+        subscriptionLatch.await(1, TimeUnit.SECONDS)
+
+        then:
+        def content = getSubscriptionResponseContent()
+        content[1].data == "World"
+        content[1].path == ["object", "b"]
     }
 
     def "errors before graphql schema execution return internal server error"() {

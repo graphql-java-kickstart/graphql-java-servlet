@@ -1,6 +1,7 @@
 package graphql.servlet
 
 import com.google.common.io.ByteStreams
+import graphql.Directives
 import graphql.Scalars
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.schema.*
@@ -15,6 +16,7 @@ import graphql.servlet.core.ApolloScalars
 import graphql.servlet.input.BatchInputPreProcessor
 import graphql.servlet.context.ContextSetting
 
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 
 class TestUtils {
@@ -95,7 +97,7 @@ class TestUtils {
     static def createGraphQlSchema(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                                    DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
                                    DataFetcher subscriptionDataFetcher = { env ->
-                                       AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                       AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>()
                                        publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                                            publisherRef.get().offer(env.arguments.arg)
                                            publisherRef.get().noMoreData()
@@ -112,6 +114,32 @@ class TestUtils {
                 argument.type(Scalars.GraphQLString)
             }
             field.dataFetcher(queryDataFetcher)
+        }
+        .field { GraphQLFieldDefinition.Builder field ->
+            field.name("object")
+            field.type(
+                GraphQLObjectType.newObject()
+                    .name("NestedObject")
+                    .field { nested ->
+                        nested.name("a")
+                        nested.type(Scalars.GraphQLString)
+                        nested.argument { argument ->
+                            argument.name("arg")
+                            argument.type(Scalars.GraphQLString)
+                        }
+                        nested.dataFetcher(queryDataFetcher)
+                    }
+                    .field { nested ->
+                        nested.name("b")
+                        nested.type(Scalars.GraphQLString)
+                        nested.argument { argument ->
+                            argument.name("arg")
+                            argument.type(Scalars.GraphQLString)
+                        }
+                        nested.dataFetcher(queryDataFetcher)
+                    }
+            )
+            field.dataFetcher(new StaticDataFetcher([:]))
         }
         .field { GraphQLFieldDefinition.Builder field ->
             field.name("returnsNullIncorrectly")
@@ -174,6 +202,7 @@ class TestUtils {
                 .mutation(mutation)
                 .subscription(subscription)
                 .additionalType(ApolloScalars.Upload)
+                .additionalDirective(Directives.DeferDirective)
                 .build()
     }
 
