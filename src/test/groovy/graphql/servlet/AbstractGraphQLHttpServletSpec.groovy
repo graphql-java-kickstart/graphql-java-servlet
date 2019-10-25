@@ -108,6 +108,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        response.getContentLength() == mapper.writeValueAsString(["data":["echo":"test"]]).length()
         getResponseContent().data.echo == "test"
     }
 
@@ -729,6 +730,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        response.getContentLength() == mapper.writeValueAsString([["data": ["echo": "test"]], ["data": ["echo": "test"]]]).length()
         getBatchedResponseContent()[0].data.echo == "test"
         getBatchedResponseContent()[1].data.echo == "test"
     }

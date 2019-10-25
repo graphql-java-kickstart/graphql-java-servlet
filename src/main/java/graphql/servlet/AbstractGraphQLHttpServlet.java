@@ -364,7 +364,9 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         if (!(result.getData() instanceof Publisher || isDeferred)) {
             resp.setContentType(APPLICATION_JSON_UTF8);
             resp.setStatus(STATUS_OK);
-            resp.getWriter().write(graphQLObjectMapper.serializeResultAsJson(result));
+            String responseContent = graphQLObjectMapper.serializeResultAsJson(result);
+            resp.setContentLength(responseContent.length());
+            resp.getWriter().write(responseContent);
         } else {
             if (req == null) {
                 throw new IllegalStateException("Http servlet request can not be null");
@@ -409,17 +411,20 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
                     contextSetting);
             response.setContentType(AbstractGraphQLHttpServlet.APPLICATION_JSON_UTF8);
             response.setStatus(AbstractGraphQLHttpServlet.STATUS_OK);
-            Writer writer = response.getWriter();
             Iterator<ExecutionResult> executionInputIterator = results.iterator();
-            writer.write("[");
+            StringBuilder responseBuilder = new StringBuilder();
+            responseBuilder.append('[');
             GraphQLObjectMapper graphQLObjectMapper = configuration.getObjectMapper();
             while (executionInputIterator.hasNext()) {
-                writer.write(graphQLObjectMapper.serializeResultAsJson(executionInputIterator.next()));
+                responseBuilder.append(graphQLObjectMapper.serializeResultAsJson(executionInputIterator.next()));
                 if (executionInputIterator.hasNext()) {
-                    writer.write(",");
+                    responseBuilder.append(',');
                 }
             }
-            writer.write("]");
+            responseBuilder.append(']');
+            String responseContent = responseBuilder.toString();
+            response.setContentLength(responseContent.length());
+            response.getWriter().write(responseContent);
         } else {
             response.sendError(batchInputPreProcessResult.getStatusCode(), batchInputPreProcessResult.getStatusMessage());
         }
