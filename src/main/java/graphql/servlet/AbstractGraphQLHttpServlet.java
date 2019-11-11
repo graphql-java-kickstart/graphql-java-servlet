@@ -364,7 +364,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         if (!(result.getData() instanceof Publisher || isDeferred)) {
             resp.setContentType(APPLICATION_JSON_UTF8);
             resp.setStatus(STATUS_OK);
-            resp.getWriter().write(graphQLObjectMapper.serializeResultAsJson(result));
+            graphQLObjectMapper.serializeResultAsJson(resp.getWriter(), result);
         } else {
             if (req == null) {
                 throw new IllegalStateException("Http servlet request can not be null");
@@ -414,7 +414,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             writer.write("[");
             GraphQLObjectMapper graphQLObjectMapper = configuration.getObjectMapper();
             while (executionInputIterator.hasNext()) {
-                writer.write(graphQLObjectMapper.serializeResultAsJson(executionInputIterator.next()));
+                graphQLObjectMapper.serializeResultAsJson(writer, executionInputIterator.next());
                 if (executionInputIterator.hasNext()) {
                     writer.write(",");
                 }
@@ -558,7 +558,9 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         public void onNext(ExecutionResult executionResult) {
             try {
                 Writer writer = asyncContext.getResponse().getWriter();
-                writer.write("data: " + graphQLObjectMapper.serializeResultAsJson(executionResult) + "\n\n");
+                writer.write("data: ");
+                graphQLObjectMapper.serializeResultAsJson(writer, executionResult);
+                writer.write("\n\n");
                 writer.flush();
                 subscriptionRef.get().request(1);
             } catch (IOException ignored) {
