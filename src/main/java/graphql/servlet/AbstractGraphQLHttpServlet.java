@@ -414,7 +414,8 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
             writer.write("[");
             GraphQLObjectMapper graphQLObjectMapper = configuration.getObjectMapper();
             while (executionInputIterator.hasNext()) {
-                graphQLObjectMapper.serializeResultAsJson(writer, executionInputIterator.next());
+                String result = graphQLObjectMapper.serializeResultAsJson(executionInputIterator.next());
+                writer.write(result);
                 if (executionInputIterator.hasNext()) {
                     writer.write(",");
                 }

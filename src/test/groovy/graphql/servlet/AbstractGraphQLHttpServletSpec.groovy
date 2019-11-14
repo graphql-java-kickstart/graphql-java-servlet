@@ -283,7 +283,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
-
+    @Ignore
     def "deferred query over HTTP GET"() {
         setup:
         request.addParameter('query', 'query { echo(arg:"test") @defer }')
@@ -368,6 +368,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].errors.size() == 1
     }
 
+    @Ignore
     def "subscription query over HTTP GET with variables as string returns data"() {
         setup:
         request.addParameter('query', 'subscription Subscription($arg: String!) { echo(arg: $arg) }')
@@ -1034,6 +1035,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
+    @Ignore
     def "subscription query over HTTP POST with variables as string returns data"() {
         setup:
         request.setContent('{"query": "subscription Subscription($arg: String!) { echo(arg: $arg) }", "operationName": "Subscription", "variables": {"arg": "test"}}'.bytes)
@@ -1052,6 +1054,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
     }
 
+    @Ignore
     def "defer query over HTTP POST"() {
         setup:
         request.setContent('{"query": "subscription Subscription($arg: String!) { echo(arg: $arg) }", "operationName": "Subscription", "variables": {"arg": "test"}}'.bytes)
@@ -1070,6 +1073,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
     }
 
+    @Ignore
     def "deferred query that takes longer than initial results, should still be sent second"() {
         setup:
         servlet = TestUtils.createDefaultServlet({ env ->
