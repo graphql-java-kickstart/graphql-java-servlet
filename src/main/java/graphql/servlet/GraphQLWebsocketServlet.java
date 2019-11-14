@@ -63,8 +63,8 @@ public class GraphQLWebsocketServlet extends Endpoint {
     @Override
     public void onOpen(Session session, EndpointConfig endpointConfig) {
         final WsSessionSubscriptions subscriptions = new WsSessionSubscriptions();
-        final HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HANDSHAKE_REQUEST_KEY);
-        final SubscriptionProtocolHandler subscriptionProtocolHandler = (SubscriptionProtocolHandler) session.getUserProperties().get(PROTOCOL_HANDLER_REQUEST_KEY);
+        final HandshakeRequest request = (HandshakeRequest) endpointConfig.getUserProperties().get(HANDSHAKE_REQUEST_KEY);
+        final SubscriptionProtocolHandler subscriptionProtocolHandler = (SubscriptionProtocolHandler) endpointConfig.getUserProperties().get(PROTOCOL_HANDLER_REQUEST_KEY);
 
         synchronized (cacheLock) {
             if (isShuttingDown.get()) {
