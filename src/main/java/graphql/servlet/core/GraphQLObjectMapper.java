@@ -16,6 +16,7 @@ import graphql.servlet.core.internal.VariablesDeserializer;
 import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -99,6 +100,10 @@ public class GraphQLObjectMapper {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void serializeResultAsJson(Writer writer, ExecutionResult executionResult) throws IOException {
+        getJacksonMapper().writeValue(writer, createResultFromExecutionResult(executionResult));
     }
 
     public boolean areErrorsPresent(ExecutionResult executionResult) {
