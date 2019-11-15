@@ -6,7 +6,6 @@ import static graphql.servlet.HttpRequestHandler.STATUS_OK;
 import graphql.ExecutionResult;
 import graphql.servlet.core.GraphQLObjectMapper;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -24,17 +23,20 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
     response.setContentType(APPLICATION_JSON_UTF8);
     response.setStatus(STATUS_OK);
 
-    Writer writer = response.getWriter();
     Iterator<ExecutionResult> executionInputIterator = results.iterator();
-    writer.write("[");
+    StringBuilder responseBuilder = new StringBuilder();
+    responseBuilder.append('[');
     while (executionInputIterator.hasNext()) {
-      String result = graphQLObjectMapper.serializeResultAsJson(executionInputIterator.next());
-      writer.write(result);
+      responseBuilder.append(graphQLObjectMapper.serializeResultAsJson(executionInputIterator.next()));
       if (executionInputIterator.hasNext()) {
-        writer.write(",");
+        responseBuilder.append(',');
       }
     }
-    writer.write("]");
+    responseBuilder.append(']');
+
+    String responseContent = responseBuilder.toString();
+    response.setContentLength(responseContent.length());
+    response.getWriter().write(responseContent);
   }
 
 }

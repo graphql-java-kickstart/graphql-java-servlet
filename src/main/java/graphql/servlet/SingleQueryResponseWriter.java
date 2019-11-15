@@ -19,7 +19,9 @@ class SingleQueryResponseWriter implements QueryResponseWriter {
   public void write(HttpServletRequest request, HttpServletResponse response) throws IOException {
     response.setContentType(APPLICATION_JSON_UTF8);
     response.setStatus(STATUS_OK);
-    graphQLObjectMapper.serializeResultAsJson(response.getWriter(), result);
+    String responseContent = graphQLObjectMapper.serializeResultAsJson(result);
+    response.setContentLength(responseContent.length());
+    response.getWriter().write(responseContent);
   }
 
 }

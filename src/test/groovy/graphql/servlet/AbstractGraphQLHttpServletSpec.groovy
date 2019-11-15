@@ -10,12 +10,9 @@ import graphql.schema.GraphQLNonNull
 import graphql.servlet.input.GraphQLInvocationInputFactory
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
-import javax.servlet.ServletInputStream
-import javax.servlet.http.HttpServletRequest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -111,12 +108,13 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        response.getContentLength() == mapper.writeValueAsString(["data": ["echo": "test"]]).length()
         getResponseContent().data.echo == "test"
     }
 
     def "async query over HTTP GET starts async request"() {
         setup:
-        servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
+        servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
             publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                 publisherRef.get().offer(env.arguments.arg)
@@ -373,7 +371,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         setup:
         request.addParameter('query', 'subscription Subscription($arg: String!) { echo(arg: $arg) }')
         request.addParameter('operationName', 'Subscription')
-        request.addParameter( 'variables', '{"arg": "test"}')
+        request.addParameter('variables', '{"arg": "test"}')
         request.setAsyncSupported(true)
 
         when:
@@ -416,7 +414,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "async query over HTTP POST starts async request"() {
         setup:
-        servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
+        servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
             publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                 publisherRef.get().offer(env.arguments.arg)
@@ -424,9 +422,9 @@ class AbstractGraphQLHttpServletSpec extends Specification {
             }))
             return publisherRef.get()
         }, true)
-		request.setContent(mapper.writeValueAsBytes([
-				query: 'query { echo(arg:"test") }'
-		]))
+        request.setContent(mapper.writeValueAsBytes([
+                query: 'query { echo(arg:"test") }'
+        ]))
 
         when:
         servlet.doPost(request, response)
@@ -738,6 +736,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        response.getContentLength() == mapper.writeValueAsString([["data": ["echo": "test"]], ["data": ["echo": "test"]]]).length()
         getBatchedResponseContent()[0].data.echo == "test"
         getBatchedResponseContent()[1].data.echo == "test"
     }
