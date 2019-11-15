@@ -3,7 +3,9 @@ package graphql.servlet
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.Scalars
 import graphql.execution.ExecutionStepInfo
+import graphql.execution.MergedField
 import graphql.execution.reactive.SingleSubscriberPublisher
+import graphql.language.Field
 import graphql.schema.GraphQLNonNull
 import graphql.servlet.input.GraphQLInvocationInputFactory
 import org.springframework.mock.web.MockHttpServletRequest
@@ -112,7 +114,6 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getResponseContent().data.echo == "test"
     }
 
-    @Ignore
     def "async query over HTTP GET starts async request"() {
         setup:
         servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg },{ env -> env.arguments.arg }, { env ->
@@ -284,7 +285,6 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
-    @Ignore
     def "deferred query over HTTP GET"() {
         setup:
         request.addParameter('query', 'query { echo(arg:"test") @defer }')
@@ -369,7 +369,6 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].errors.size() == 1
     }
 
-    @Ignore
     def "subscription query over HTTP GET with variables as string returns data"() {
         setup:
         request.addParameter('query', 'subscription Subscription($arg: String!) { echo(arg: $arg) }')
@@ -1051,11 +1050,11 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
-    @Ignore
     def "subscription query over HTTP POST with variables as string returns data"() {
         setup:
         request.setContent('{"query": "subscription Subscription($arg: String!) { echo(arg: $arg) }", "operationName": "Subscription", "variables": {"arg": "test"}}'.bytes)
         request.setAsyncSupported(true)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -1070,11 +1069,11 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
     }
 
-    @Ignore
     def "defer query over HTTP POST"() {
         setup:
         request.setContent('{"query": "subscription Subscription($arg: String!) { echo(arg: $arg) }", "operationName": "Subscription", "variables": {"arg": "test"}}'.bytes)
         request.setAsyncSupported(true)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -1089,7 +1088,6 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
     }
 
-    @Ignore
     def "deferred query that takes longer than initial results, should still be sent second"() {
         setup:
         servlet = TestUtils.createDefaultServlet({ env ->
@@ -1109,6 +1107,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 '''
         ]))
         request.setAsyncSupported(true)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -1230,33 +1229,13 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         resp[1].errors != null
     }
 
-    @Ignore
     def "typeInfo is serialized correctly"() {
-        expect:
-        servlet.getConfiguration().getObjectMapper().getJacksonMapper().writeValueAsString(ExecutionStepInfo.newExecutionStepInfo().type(new GraphQLNonNull(Scalars.GraphQLString)).build()) != "{}"
-    }
-
-    @Ignore
-    def "isBatchedQuery check uses buffer length as read limit"() {
         setup:
-        HttpServletRequest mockRequest = Mock()
-        ServletInputStream mockInputStream = Mock()
+        MergedField field = MergedField.newMergedField().addField(new Field("test")).build()
+        ExecutionStepInfo stepInfo = ExecutionStepInfo.newExecutionStepInfo().field(field).type(new GraphQLNonNull(Scalars.GraphQLString)).build()
 
-        mockInputStream.markSupported() >> true
-        mockRequest.getInputStream() >> mockInputStream
-        mockRequest.getMethod() >> "POST"
-        mockRequest.getParts() >> Collections.emptyList()
-
-        when:
-        servlet.doPost(mockRequest, response)
-
-        then:
-        1 * mockInputStream.mark(128)
-
-        then:
-        1 * mockInputStream.read({ it.length == 128 }) >> -1
-
-        then:
-        1 * mockInputStream.reset()
+        expect:
+        servlet.getConfiguration().getObjectMapper().getJacksonMapper().writeValueAsString(stepInfo) != "{}"
     }
+
 }

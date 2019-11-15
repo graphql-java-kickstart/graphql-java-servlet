@@ -17,7 +17,7 @@ class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
   private final GraphQLObjectMapper graphQLObjectMapper;
   private final CountDownLatch completedLatch = new CountDownLatch(1);
 
-  public ExecutionResultSubscriber(AtomicReference<Subscription> subscriptionRef, AsyncContext asyncContext,
+  ExecutionResultSubscriber(AtomicReference<Subscription> subscriptionRef, AsyncContext asyncContext,
       GraphQLObjectMapper graphQLObjectMapper) {
     this.subscriptionRef = subscriptionRef;
     this.asyncContext = asyncContext;
@@ -35,7 +35,7 @@ class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
     try {
       Writer writer = asyncContext.getResponse().getWriter();
       writer.write("data: ");
-      graphQLObjectMapper.serializeResultAsJson(writer, executionResult);
+      writer.write(graphQLObjectMapper.serializeResultAsJson(executionResult));
       writer.write("\n\n");
       writer.flush();
       subscriptionRef.get().request(1);
@@ -55,7 +55,7 @@ class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
     completedLatch.countDown();
   }
 
-  public void await() throws InterruptedException {
+  void await() throws InterruptedException {
     completedLatch.await();
   }
 

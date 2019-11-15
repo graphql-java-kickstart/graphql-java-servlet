@@ -29,7 +29,7 @@ class SingleAsynchronousQueryResponseWriter implements QueryResponseWriter {
   private final long subscriptionTimeout;
 
   @Override
-  public void write(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  public void write(HttpServletRequest request, HttpServletResponse response) {
     Objects.requireNonNull(request, "Http servlet request cannot be null");
     response.setContentType(APPLICATION_EVENT_STREAM_UTF8);
     response.setStatus(STATUS_OK);
