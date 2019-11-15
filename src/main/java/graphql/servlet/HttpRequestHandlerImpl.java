@@ -14,25 +14,25 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class HttpGetRequestHandler implements HttpRequestHandler {
+class HttpRequestHandlerImpl implements HttpRequestHandler {
 
   private final GraphQLConfiguration configuration;
-  private final GraphQLInvocationInputParser invocationInputParser;
   private final GraphQLQueryInvoker queryInvoker;
 
-  HttpGetRequestHandler(GraphQLConfiguration configuration) {
+  HttpRequestHandlerImpl(GraphQLConfiguration configuration) {
     this.configuration = configuration;
-    invocationInputParser = new GraphQLInvocationInputParser(
-        configuration.getInvocationInputFactory(),
-        configuration.getObjectMapper(),
-        configuration.getContextSetting()
-    );
     queryInvoker = configuration.getQueryInvoker();
   }
 
   @Override
   public void handle(HttpServletRequest request, HttpServletResponse response) {
     try {
+      GraphQLInvocationInputParser invocationInputParser = GraphQLInvocationInputParser.create(
+          request,
+          configuration.getInvocationInputFactory(),
+          configuration.getObjectMapper(),
+          configuration.getContextSetting()
+      );
       GraphQLInvocationInput invocationInput = invocationInputParser.getGraphQLInvocationInput(request, response);
 
       GraphQLQueryResult queryResult = invoke(invocationInput, request, response);

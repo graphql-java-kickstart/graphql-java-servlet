@@ -32,6 +32,10 @@ public class GraphQLRequest {
         return new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), null);
     }
 
+    public static GraphQLRequest createQueryOnlyRequest(String query) {
+        return new GraphQLRequest(query, new HashMap<>(), null);
+    }
+
     public String getQuery() {
         return query;
     }

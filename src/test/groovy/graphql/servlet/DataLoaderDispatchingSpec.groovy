@@ -8,10 +8,10 @@ import graphql.execution.instrumentation.SimpleInstrumentation
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import graphql.servlet.context.ContextSetting
 import graphql.servlet.context.DefaultGraphQLContext
 import graphql.servlet.context.GraphQLContext
 import graphql.servlet.context.GraphQLContextBuilder
-import graphql.servlet.context.ContextSetting
 import graphql.servlet.instrumentation.ConfigurableDispatchInstrumentation
 import org.dataloader.BatchLoader
 import org.dataloader.DataLoader
@@ -23,7 +23,6 @@ import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import javax.servlet.http.Part
 import javax.websocket.Session
 import javax.websocket.server.HandshakeRequest
 import java.util.concurrent.CompletableFuture
@@ -84,7 +83,7 @@ class DataLoaderDispatchingSpec extends Specification {
         }
     }
 
-    def contextBuilder () {
+    def contextBuilder() {
         return new GraphQLContextBuilder() {
             @Override
             GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
@@ -123,8 +122,8 @@ class DataLoaderDispatchingSpec extends Specification {
 
     Instrumentation simpleInstrumentation = new SimpleInstrumentation()
     ChainedInstrumentation chainedInstrumentation = new ChainedInstrumentation(Collections.singletonList(simpleInstrumentation))
-    def simpleSupplier = {simpleInstrumentation}
-    def chainedSupplier = {chainedInstrumentation}
+    def simpleSupplier = { simpleInstrumentation }
+    def chainedSupplier = { chainedInstrumentation }
 
     def "batched query with per query context does not batch loads together"() {
         setup:
@@ -181,7 +180,7 @@ class DataLoaderDispatchingSpec extends Specification {
             return Collections.singletonList(instrumentation)
         } else {
             List<Instrumentation> instrumentations = new ArrayList<>()
-            for (Instrumentation current : ((ChainedInstrumentation)instrumentation).getInstrumentations()) {
+            for (Instrumentation current : ((ChainedInstrumentation) instrumentation).getInstrumentations()) {
                 if (current instanceof ChainedInstrumentation) {
                     instrumentations.addAll(unwrapChainedInstrumentations(current))
                 } else {
@@ -225,10 +224,10 @@ class DataLoaderDispatchingSpec extends Specification {
         then:
         fromSimple.size() == 2
         fromSimple.contains(simpleInstrumentation)
-        fromSimple.stream().anyMatch({inst -> inst instanceof ConfigurableDispatchInstrumentation})
+        fromSimple.stream().anyMatch({ inst -> inst instanceof ConfigurableDispatchInstrumentation })
         fromChained.size() == 2
         fromChained.contains(simpleInstrumentation)
-        fromChained.stream().anyMatch({inst -> inst instanceof ConfigurableDispatchInstrumentation})
+        fromChained.stream().anyMatch({ inst -> inst instanceof ConfigurableDispatchInstrumentation })
     }
 
     def "PER_REQUEST_WITH_INSTRUMENTATION adds instrumentation"() {
@@ -244,9 +243,9 @@ class DataLoaderDispatchingSpec extends Specification {
         then:
         fromSimple.size() == 2
         fromSimple.contains(simpleInstrumentation)
-        fromSimple.stream().anyMatch({inst -> inst instanceof ConfigurableDispatchInstrumentation})
+        fromSimple.stream().anyMatch({ inst -> inst instanceof ConfigurableDispatchInstrumentation })
         fromChained.size() == 2
         fromChained.contains(simpleInstrumentation)
-        fromChained.stream().anyMatch({inst -> inst instanceof ConfigurableDispatchInstrumentation})
+        fromChained.stream().anyMatch({ inst -> inst instanceof ConfigurableDispatchInstrumentation })
     }
 }

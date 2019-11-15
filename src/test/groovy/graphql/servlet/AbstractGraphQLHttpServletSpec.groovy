@@ -54,6 +54,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         request = new MockHttpServletRequest()
         request.setAsyncSupported(true)
         request.asyncSupported = true
+        request.setMethod("GET")
         response = new MockHttpServletResponse()
     }
 
@@ -402,6 +403,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         request.setContent(mapper.writeValueAsBytes([
                 query: 'query { echo(arg:"test") }'
         ]))
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -437,6 +439,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         setup:
         request.addHeader("Content-Type", "application/graphql")
         request.setContent('query { echo(arg:"test") }'.getBytes("UTF-8"))
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -453,6 +456,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 query    : 'query Echo($arg: String) { echo(arg:$arg) }',
                 variables: '{"arg": "test"}'
         ]))
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -469,6 +473,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 query        : 'query one{ echoOne: echo(arg:"test-one") } query two{ echoTwo: echo(arg:"test-two") }',
                 operationName: 'two'
         ]))
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -486,6 +491,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 query        : 'query echo{ echo: echo(arg:"test") }',
                 operationName: ''
         ]))
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -502,6 +508,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 query: 'query { echo(arg:"test") }',
                 test : 'test'
         ]))
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -723,6 +730,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def "batched query over HTTP POST body returns data"() {
         setup:
         request.setContent('[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]'.bytes)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -737,6 +745,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def "batched query over HTTP POST body with variables returns data"() {
         setup:
         request.setContent('[{ "query": "query { echo(arg:\\"test\\") }", "variables": { "arg": "test" } }, { "query": "query { echo(arg:\\"test\\") }", "variables": { "arg": "test" } }]'.bytes)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -751,6 +760,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def "batched query over HTTP POST body with operationName returns data"() {
         setup:
         request.setContent('[{ "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "one" }, { "query": "query one{ echoOne: echo(arg:\\"test-one\\") } query two{ echoTwo: echo(arg:\\"test-two\\") }", "operationName": "two" }]'.bytes)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -767,6 +777,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def "batched query over HTTP POST body with empty non-null operationName returns data"() {
         setup:
         request.setContent('[{ "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }, { "query": "query echo{ echo: echo(arg:\\"test\\") }", "operationName": "" }]'.bytes)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -781,6 +792,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def "batched query over HTTP POST body with unknown property 'test' returns data"() {
         setup:
         request.setContent('[{ "query": "query { echo(arg:\\"test\\") }", "test": "test" }, { "query": "query { echo(arg:\\"test\\") }", "test": "test" }]'.bytes)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -997,6 +1009,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         request.setContent(mapper.writeValueAsBytes([
                 query: 'mutation { echo(arg:"test") }'
         ]))
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -1010,6 +1023,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def "batched mutation over HTTP POST body returns data"() {
         setup:
         request.setContent('[{ "query": "mutation { echo(arg:\\"test\\") }" }, { "query": "mutation { echo(arg:\\"test\\") }" }]'.bytes)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
@@ -1024,6 +1038,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     def "batched mutation over HTTP POST body with unknown property 'test' returns data"() {
         setup:
         request.setContent('[{ "query": "mutation { echo(arg:\\"test\\") }", "test": "test" }, { "query": "mutation { echo(arg:\\"test\\") }", "test": "test" }]'.bytes)
+        request.setMethod("POST")
 
         when:
         servlet.doPost(request, response)
