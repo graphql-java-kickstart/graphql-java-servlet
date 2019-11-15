@@ -13,6 +13,7 @@ import graphql.servlet.config.ObjectMapperProvider;
 import graphql.servlet.core.internal.GraphQLRequest;
 import graphql.servlet.core.internal.VariablesDeserializer;
 
+import java.util.stream.Stream;
 import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;

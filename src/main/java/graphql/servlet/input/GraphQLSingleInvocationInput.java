@@ -13,7 +13,7 @@ import java.util.Optional;
 /**
  *  Represents a single GraphQL execution.
  */
-public class GraphQLSingleInvocationInput {
+public class GraphQLSingleInvocationInput implements GraphQLInvocationInput {
 
     private final GraphQLSchema schema;
 

@@ -36,6 +36,7 @@ public class GraphQLInvocationInputFactory {
         return schemaProviderSupplier.get();
     }
 
+
     public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response) {
         return create(graphQLRequest, request, response, false);
     }

@@ -1,0 +1,69 @@
+package graphql.servlet;
+
+import static graphql.servlet.QueryResponseWriter.createWriter;
+
+import graphql.servlet.config.GraphQLConfiguration;
+import graphql.servlet.core.GraphQLQueryInvoker;
+import graphql.servlet.input.BatchInputPreProcessResult;
+import graphql.servlet.input.BatchInputPreProcessor;
+import graphql.servlet.input.GraphQLBatchedInvocationInput;
+import graphql.servlet.input.GraphQLInvocationInput;
+import graphql.servlet.input.GraphQLSingleInvocationInput;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+class HttpGetRequestHandler implements HttpRequestHandler {
+
+  private final GraphQLConfiguration configuration;
+  private final GraphQLInvocationInputParser invocationInputParser;
+  private final GraphQLQueryInvoker queryInvoker;
+
+  HttpGetRequestHandler(GraphQLConfiguration configuration) {
+    this.configuration = configuration;
+    invocationInputParser = new GraphQLInvocationInputParser(
+        configuration.getInvocationInputFactory(),
+        configuration.getObjectMapper(),
+        configuration.getContextSetting()
+    );
+    queryInvoker = configuration.getQueryInvoker();
+  }
+
+  @Override
+  public void handle(HttpServletRequest request, HttpServletResponse response) {
+    try {
+      GraphQLInvocationInput invocationInput = invocationInputParser.getGraphQLInvocationInput(request, response);
+
+      GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
+
+      QueryResponseWriter queryResponseWriter = createWriter(queryResult, configuration.getObjectMapper(),
+          configuration.getSubscriptionTimeout());
+      queryResponseWriter.write(request, response);
+    } catch (Throwable t) {
+      response.setStatus(STATUS_BAD_REQUEST);
+      log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
+    }
+  }
+
+  private GraphQLQueryResult invoke(GraphQLInvocationInput invocationInput, HttpServletRequest request,
+      HttpServletResponse response) {
+    if (invocationInput instanceof GraphQLSingleInvocationInput) {
+      return queryInvoker.query(invocationInput);
+    }
+    return invokeBatched((GraphQLBatchedInvocationInput) invocationInput, request, response);
+  }
+
+  private GraphQLQueryResult invokeBatched(GraphQLBatchedInvocationInput batchedInvocationInput,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    BatchInputPreProcessor preprocessor = configuration.getBatchInputPreProcessor();
+    BatchInputPreProcessResult result = preprocessor.preProcessBatch(batchedInvocationInput, request, response);
+    if (result.isExecutable()) {
+      return queryInvoker.query(result.getBatchedInvocationInput());
+    }
+
+    return new GraphQLErrorQueryResult(result.getStatusCode(), result.getStatusMessage());
+  }
+
+}

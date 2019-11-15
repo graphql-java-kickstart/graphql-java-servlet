@@ -11,6 +11,7 @@ plugins {
     id "com.jfrog.bintray" version "1.8.4"
     id "com.jfrog.artifactory" version "4.8.1"
     id 'net.researchgate.release' version '2.7.0'
+    id 'io.franzbecker.gradle-lombok' version '3.1.0'
 }
 
 apply plugin: 'java'
@@ -23,10 +24,6 @@ apply plugin: 'groovy'
 repositories {
     mavenLocal()
     mavenCentral()
-}
-
-configurations.all {
-    exclude group:"org.projectlombok", module: "lombok"
 }
 
 dependencies {
@@ -209,4 +206,8 @@ idea {
 
 wrapper {
     gradleVersion = '4.10.3'
+}
+
+lombok {
+    version = '1.18.10'
 }

@@ -3,6 +3,7 @@ package graphql.servlet.core.internal;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import graphql.introspection.IntrospectionQuery;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +26,10 @@ public class GraphQLRequest {
         if (variables != null) {
             this.variables = variables;
         }
+    }
+
+    public static GraphQLRequest createIntrospectionRequest() {
+        return new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), null);
     }
 
     public String getQuery() {

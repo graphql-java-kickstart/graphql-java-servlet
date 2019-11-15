@@ -50,11 +50,11 @@ public enum ContextSetting {
             case PER_QUERY_WITH_INSTRUMENTATION:
                 //Intentional fallthrough
             case PER_QUERY_WITHOUT_INSTRUMENTATION:
-                return new PerQueryBatchedInvocationInput(requests, schema, contextSupplier, root);
+                return new PerQueryBatchedInvocationInput(requests, schema, contextSupplier, root, this);
             case PER_REQUEST_WITHOUT_INSTRUMENTATION:
                 //Intentional fallthrough
             case PER_REQUEST_WITH_INSTRUMENTATION:
-                return new PerRequestBatchedInvocationInput(requests, schema, contextSupplier, root);
+                return new PerRequestBatchedInvocationInput(requests, schema, contextSupplier, root, this);
                 default:
                     throw new RuntimeException("Unconfigured context setting type");
         }
