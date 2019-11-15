@@ -10,7 +10,6 @@ import graphql.servlet.input.BatchInputPreProcessor;
 import graphql.servlet.input.GraphQLBatchedInvocationInput;
 import graphql.servlet.input.GraphQLInvocationInput;
 import graphql.servlet.input.GraphQLSingleInvocationInput;
-import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
