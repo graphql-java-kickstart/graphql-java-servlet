@@ -3,6 +3,7 @@ package graphql.servlet;
 import static graphql.servlet.HttpRequestHandler.APPLICATION_GRAPHQL;
 import static java.util.stream.Collectors.joining;
 
+import graphql.GraphQLException;
 import graphql.servlet.context.ContextSetting;
 import graphql.servlet.core.GraphQLObjectMapper;
 import graphql.servlet.core.internal.GraphQLRequest;
@@ -34,8 +35,12 @@ class GraphQLPostInvocationInputParser extends AbstractGraphQLInvocationInputPar
       return invocationInputFactory.create(graphqlRequest, request, response);
     }
 
-    List<GraphQLRequest> requests = graphQLObjectMapper.readBatchedGraphQLRequest(body);
-    return invocationInputFactory.create(contextSetting, requests, request, response);
+    if (isBatchedQuery(body)) {
+      List<GraphQLRequest> requests = graphQLObjectMapper.readBatchedGraphQLRequest(body);
+      return invocationInputFactory.create(contextSetting, requests, request, response);
+    }
+
+    throw new GraphQLException("No valid query found in request");
   }
 
 }

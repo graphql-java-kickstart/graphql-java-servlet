@@ -13,11 +13,11 @@ abstract class AbstractGraphQLInvocationInputParser implements GraphQLInvocation
   final ContextSetting contextSetting;
 
   boolean isSingleQuery(String query) {
-    return !isArrayStart(query);
+    return query != null && !query.trim().isEmpty() && !query.trim().startsWith("[");
   }
 
-  private boolean isArrayStart(String s) {
-    return s != null && s.trim().startsWith("[");
+  boolean isBatchedQuery(String query) {
+    return query != null && !query.trim().isEmpty() && query.trim().startsWith("[");
   }
 
 }

@@ -1,7 +1,5 @@
 package graphql.servlet;
 
-import graphql.ExecutionResult;
-import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -14,7 +12,7 @@ class GraphQLErrorQueryResult implements GraphQLQueryResult {
 
   @Override
   public boolean isBatched() {
-    return true;
+    return false;
   }
 
   @Override

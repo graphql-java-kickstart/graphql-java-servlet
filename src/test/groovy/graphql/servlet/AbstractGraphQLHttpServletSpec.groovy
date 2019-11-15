@@ -392,6 +392,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "query over HTTP POST without part or body returns bad request"() {
         when:
+        request.setMethod("POST")
         servlet.doPost(request, response)
 
         then:

@@ -32,7 +32,7 @@ class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputPars
 
     String query = request.getParameter("query");
     if (query == null) {
-      throw new GraphQLException("Query not found in request");
+      throw new GraphQLException("Query parameter not found in GET request");
     }
 
     if (isSingleQuery(query)) {
@@ -42,8 +42,8 @@ class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputPars
       return invocationInputFactory.createReadOnly(graphqlRequest, request, response);
     }
 
-    List<GraphQLRequest> requests = graphQLObjectMapper.readBatchedGraphQLRequest(query);
-    return invocationInputFactory.createReadOnly(contextSetting, requests, request, response);
+    List<GraphQLRequest> graphqlRequests = graphQLObjectMapper.readBatchedGraphQLRequest(query);
+    return invocationInputFactory.createReadOnly(contextSetting, graphqlRequests, request, response);
   }
 
   private boolean isIntrospectionQuery(HttpServletRequest request) {

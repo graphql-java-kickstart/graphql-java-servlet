@@ -131,6 +131,7 @@ class DataLoaderDispatchingSpec extends Specification {
         request.addParameter('query', '[{ "query": "query { query(arg:\\"test\\") { echo(arg:\\"test\\") { echo(arg:\\"test\\") } }}" }, { "query": "query{query(arg:\\"test\\") { echo (arg:\\"test\\") { echo(arg:\\"test\\")} }}" },' +
                 ' { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }, { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }]')
         resetCounters()
+        request.setMethod("GET")
 
         when:
         servlet.doGet(request, response)
@@ -156,6 +157,7 @@ class DataLoaderDispatchingSpec extends Specification {
         request.addParameter('query', '[{ "query": "query { query(arg:\\"test\\") { echo(arg:\\"test\\") { echo(arg:\\"test\\") } }}" }, { "query": "query{query(arg:\\"test\\") { echo (arg:\\"test\\") { echo(arg:\\"test\\")} }}" },' +
                 ' { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }, { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }]')
         resetCounters()
+        request.setMethod("GET")
 
         when:
         servlet.doGet(request, response)

@@ -59,18 +59,18 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
         final Optional<Map<String, List<String>>> variablesMap =
             getPart(parts, "map").map(graphQLObjectMapper::deserializeMultipartMap);
 
-        if ("query".equals(key)) {
-          GraphQLRequest graphqlRequest = buildRequestFromQuery(inputStream, graphQLObjectMapper, parts);
+        String query = read(inputStream);
+        if ("query".equals(key) && isSingleQuery(query)) {
+          GraphQLRequest graphqlRequest = buildRequestFromQuery(query, graphQLObjectMapper, parts);
           variablesMap.ifPresent(m -> mapMultipartVariables(graphqlRequest, m, parts));
           return invocationInputFactory.create(graphqlRequest, request, response);
         } else {
-          String body = read(inputStream);
-          if (isSingleQuery(body)) {
-            GraphQLRequest graphqlRequest = graphQLObjectMapper.readGraphQLRequest(body);
+          if (isSingleQuery(query)) {
+            GraphQLRequest graphqlRequest = graphQLObjectMapper.readGraphQLRequest(query);
             variablesMap.ifPresent(m -> mapMultipartVariables(graphqlRequest, m, parts));
             return invocationInputFactory.create(graphqlRequest, request, response);
           } else {
-            List<GraphQLRequest> graphqlRequests = graphQLObjectMapper.readBatchedGraphQLRequest(body);
+            List<GraphQLRequest> graphqlRequests = graphQLObjectMapper.readBatchedGraphQLRequest(query);
             variablesMap.ifPresent(map -> graphqlRequests.forEach(r -> mapMultipartVariables(r, map, parts)));
             return invocationInputFactory.create(contextSetting, graphqlRequests, request, response);
           }
@@ -103,11 +103,9 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
     });
   }
 
-  private GraphQLRequest buildRequestFromQuery(InputStream inputStream,
+  private GraphQLRequest buildRequestFromQuery(String query,
       GraphQLObjectMapper graphQLObjectMapper,
       Map<String, List<Part>> parts) throws IOException {
-    String query = read(inputStream);
-
     Map<String, Object> variables = null;
     final Optional<Part> variablesItem = getPart(parts, "variables");
     if (variablesItem.isPresent()) {
