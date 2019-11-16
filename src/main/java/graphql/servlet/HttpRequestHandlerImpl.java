@@ -10,6 +10,7 @@ import graphql.servlet.input.BatchInputPreProcessor;
 import graphql.servlet.input.GraphQLBatchedInvocationInput;
 import graphql.servlet.input.GraphQLInvocationInput;
 import graphql.servlet.input.GraphQLSingleInvocationInput;
+import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
   }
 
   @Override
-  public void handle(HttpServletRequest request, HttpServletResponse response) {
+  public void handle(HttpServletRequest request, HttpServletResponse response) throws IOException {
     try {
       GraphQLInvocationInputParser invocationInputParser = GraphQLInvocationInputParser.create(
           request,
@@ -39,9 +40,11 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
     } catch (GraphQLException e) {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad request: cannot create invocation input parser", e);
+      throw e;
     } catch (Throwable t) {
       response.setStatus(500);
       log.info("Bad request: cannot create invocation input parser", t);
+      throw t;
     }
   }
 

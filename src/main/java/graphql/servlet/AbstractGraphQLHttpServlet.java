@@ -143,7 +143,6 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
       handler.handle(request, response);
       runCallbacks(requestCallbacks, c -> c.onSuccess(request, response));
     } catch (Throwable t) {
-      response.setStatus(500);
       log.error("Error executing GraphQL request!", t);
       runCallbacks(requestCallbacks, c -> c.onError(request, response, t));
     } finally {
