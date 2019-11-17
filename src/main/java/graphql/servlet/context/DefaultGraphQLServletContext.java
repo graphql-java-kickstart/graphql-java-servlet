@@ -1,5 +1,6 @@
 package graphql.servlet.context;
 
+import graphql.kickstart.execution.context.DefaultGraphQLContext;
 import org.dataloader.DataLoaderRegistry;
 
 import javax.security.auth.Subject;

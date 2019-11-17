@@ -4,10 +4,10 @@ import static graphql.servlet.HttpRequestHandler.APPLICATION_GRAPHQL;
 import static java.util.stream.Collectors.joining;
 
 import graphql.GraphQLException;
-import graphql.servlet.context.ContextSetting;
+import graphql.kickstart.execution.context.ContextSetting;
 import graphql.servlet.core.GraphQLObjectMapper;
 import graphql.servlet.core.internal.GraphQLRequest;
-import graphql.servlet.input.GraphQLInvocationInput;
+import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 import java.io.IOException;
 import java.util.List;

@@ -1,6 +1,6 @@
 package graphql.servlet;
 
-import graphql.servlet.config.GraphQLConfiguration;
+import graphql.kickstart.execution.config.GraphQLConfiguration;
 
 import java.util.Objects;
 

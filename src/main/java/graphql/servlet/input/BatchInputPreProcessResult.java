@@ -1,7 +1,9 @@
 package graphql.servlet.input;
 
+import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
+
 /**
- * Wraps the result of pre processing a batch. Allows customization of the response code and message if the batch  isn't to be executed.
+ * Wraps the result of pre processing a batch. Allows customization of the response code and message if the batch isn't to be executed.
  */
 public class BatchInputPreProcessResult {
 

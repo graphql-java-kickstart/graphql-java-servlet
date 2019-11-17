@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import graphql.ExecutionResult;
-import graphql.servlet.core.ApolloSubscriptionConnectionListener;
-import graphql.servlet.input.GraphQLSingleInvocationInput;
-import graphql.servlet.core.SubscriptionException;
+import graphql.servlet.apollo.ApolloSubscriptionConnectionListener;
+import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
+import graphql.kickstart.execution.subscription.SubscriptionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

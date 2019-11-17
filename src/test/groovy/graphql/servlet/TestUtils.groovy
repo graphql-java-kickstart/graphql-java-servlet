@@ -11,12 +11,11 @@ import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
 import graphql.schema.idl.errors.SchemaProblem
 import graphql.servlet.context.GraphQLContextBuilder
-import graphql.servlet.config.GraphQLConfiguration
-import graphql.servlet.core.ApolloScalars
+import graphql.kickstart.execution.config.GraphQLConfiguration
+import graphql.servlet.apollo.ApolloScalars
 import graphql.servlet.input.BatchInputPreProcessor
-import graphql.servlet.context.ContextSetting
+import graphql.kickstart.execution.context.ContextSetting
 
-import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicReference
 
 class TestUtils {

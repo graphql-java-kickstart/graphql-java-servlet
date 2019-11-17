@@ -8,11 +8,11 @@ import graphql.execution.instrumentation.SimpleInstrumentation
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
-import graphql.servlet.context.ContextSetting
-import graphql.servlet.context.DefaultGraphQLContext
-import graphql.servlet.context.GraphQLContext
+import graphql.kickstart.execution.context.ContextSetting
+import graphql.kickstart.execution.context.DefaultGraphQLContext
+import graphql.kickstart.execution.context.GraphQLContext
 import graphql.servlet.context.GraphQLContextBuilder
-import graphql.servlet.instrumentation.ConfigurableDispatchInstrumentation
+import graphql.kickstart.execution.instrumentation.ConfigurableDispatchInstrumentation
 import org.dataloader.BatchLoader
 import org.dataloader.DataLoader
 import org.dataloader.DataLoaderRegistry

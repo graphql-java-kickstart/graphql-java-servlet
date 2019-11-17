@@ -1,8 +1,8 @@
 package graphql.servlet;
 
 import graphql.servlet.core.GraphQLObjectMapper;
-import graphql.servlet.core.GraphQLQueryInvoker;
-import graphql.servlet.core.SubscriptionConnectionListener;
+import graphql.kickstart.execution.GraphQLQueryInvoker;
+import graphql.kickstart.execution.subscription.SubscriptionConnectionListener;
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 import graphql.servlet.core.internal.*;
 import org.slf4j.Logger;

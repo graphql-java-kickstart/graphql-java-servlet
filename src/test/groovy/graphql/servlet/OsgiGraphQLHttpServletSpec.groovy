@@ -7,10 +7,10 @@ import graphql.annotations.processor.GraphQLAnnotations
 import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLInterfaceType
-import graphql.servlet.config.GraphQLCodeRegistryProvider
-import graphql.servlet.config.GraphQLMutationProvider
-import graphql.servlet.config.GraphQLQueryProvider
-import graphql.servlet.config.GraphQLSubscriptionProvider
+import graphql.kickstart.execution.config.GraphQLCodeRegistryProvider
+import graphql.servlet.osgi.GraphQLMutationProvider
+import graphql.servlet.osgi.GraphQLQueryProvider
+import graphql.servlet.osgi.GraphQLSubscriptionProvider
 import spock.lang.Ignore
 import spock.lang.Specification
 

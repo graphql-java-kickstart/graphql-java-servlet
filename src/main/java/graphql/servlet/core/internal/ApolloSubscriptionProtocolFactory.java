@@ -1,6 +1,6 @@
 package graphql.servlet.core.internal;
 
-import graphql.servlet.core.ApolloSubscriptionConnectionListener;
+import graphql.servlet.apollo.ApolloSubscriptionConnectionListener;
 
 /**
  * @author Andrew Potter

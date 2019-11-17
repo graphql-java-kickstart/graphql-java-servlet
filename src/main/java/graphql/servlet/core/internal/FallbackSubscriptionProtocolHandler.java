@@ -1,6 +1,6 @@
 package graphql.servlet.core.internal;
 
-import graphql.servlet.input.GraphQLSingleInvocationInput;
+import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;

@@ -2,8 +2,8 @@ package graphql.servlet;
 
 import graphql.schema.GraphQLSchema;
 import graphql.servlet.core.GraphQLObjectMapper;
-import graphql.servlet.core.GraphQLQueryInvoker;
-import graphql.servlet.config.GraphQLConfiguration;
+import graphql.kickstart.execution.GraphQLQueryInvoker;
+import graphql.kickstart.execution.config.GraphQLConfiguration;
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 
 /**

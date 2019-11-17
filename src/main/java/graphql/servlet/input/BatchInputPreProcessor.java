@@ -1,5 +1,6 @@
 package graphql.servlet.input;
 
+import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

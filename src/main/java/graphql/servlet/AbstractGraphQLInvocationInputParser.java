@@ -1,6 +1,6 @@
 package graphql.servlet;
 
-import graphql.servlet.context.ContextSetting;
+import graphql.kickstart.execution.context.ContextSetting;
 import graphql.servlet.core.GraphQLObjectMapper;
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 import lombok.RequiredArgsConstructor;

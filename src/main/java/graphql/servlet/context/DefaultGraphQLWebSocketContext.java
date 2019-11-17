@@ -1,6 +1,7 @@
 package graphql.servlet.context;
 
-import graphql.servlet.core.ApolloSubscriptionConnectionListener;
+import graphql.kickstart.execution.context.DefaultGraphQLContext;
+import graphql.servlet.apollo.ApolloSubscriptionConnectionListener;
 import org.dataloader.DataLoaderRegistry;
 
 import javax.security.auth.Subject;

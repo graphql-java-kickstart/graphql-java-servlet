@@ -3,6 +3,7 @@ package graphql.servlet;
 import static graphql.servlet.HttpRequestHandler.APPLICATION_JSON_UTF8;
 import static graphql.servlet.HttpRequestHandler.STATUS_OK;
 
+import graphql.ExecutionResult;
 import graphql.servlet.core.GraphQLObjectMapper;
 import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
@@ -12,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class SingleQueryResponseWriter implements QueryResponseWriter {
 
-  private final DecoratedExecutionResult result;
+  private final ExecutionResult result;
   private final GraphQLObjectMapper graphQLObjectMapper;
 
   @Override

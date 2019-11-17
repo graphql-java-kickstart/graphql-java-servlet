@@ -2,7 +2,7 @@ package graphql.servlet;
 
 import graphql.servlet.input.BatchInputPreProcessResult;
 import graphql.servlet.input.BatchInputPreProcessor;
-import graphql.servlet.input.GraphQLBatchedInvocationInput;
+import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

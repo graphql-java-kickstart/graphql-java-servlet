@@ -1,13 +1,11 @@
 package graphql.servlet;
 
 import static graphql.servlet.HttpRequestHandler.APPLICATION_EVENT_STREAM_UTF8;
-import static graphql.servlet.HttpRequestHandler.APPLICATION_JSON_UTF8;
 import static graphql.servlet.HttpRequestHandler.STATUS_OK;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.servlet.core.GraphQLObjectMapper;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +22,7 @@ import org.reactivestreams.Subscription;
 class SingleAsynchronousQueryResponseWriter implements QueryResponseWriter {
 
   @Getter
-  private final DecoratedExecutionResult result;
+  private final ExecutionResult result;
   private final GraphQLObjectMapper graphQLObjectMapper;
   private final long subscriptionTimeout;
 

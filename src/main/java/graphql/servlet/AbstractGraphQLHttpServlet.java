@@ -1,10 +1,10 @@
 package graphql.servlet;
 
 import graphql.schema.GraphQLFieldDefinition;
-import graphql.servlet.config.GraphQLConfiguration;
+import graphql.kickstart.execution.config.GraphQLConfiguration;
 import graphql.servlet.core.GraphQLMBean;
 import graphql.servlet.core.GraphQLObjectMapper;
-import graphql.servlet.core.GraphQLQueryInvoker;
+import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.servlet.core.GraphQLServletListener;
 import graphql.servlet.core.internal.GraphQLRequest;
 import graphql.servlet.input.GraphQLInvocationInputFactory;

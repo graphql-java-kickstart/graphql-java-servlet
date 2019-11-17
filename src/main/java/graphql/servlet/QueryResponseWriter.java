@@ -1,5 +1,6 @@
 package graphql.servlet;
 
+import graphql.kickstart.execution.GraphQLQueryResult;
 import graphql.servlet.core.GraphQLObjectMapper;
 import java.io.IOException;
 import java.util.Objects;
@@ -20,8 +21,7 @@ interface QueryResponseWriter {
     } else if (result.isAsynchronous()) {
       return new SingleAsynchronousQueryResponseWriter(result.getResult(), graphQLObjectMapper, subscriptionTimeout);
     } else if (result.isError()) {
-      GraphQLErrorQueryResult errorResult = (GraphQLErrorQueryResult) result;
-      return new ErrorQueryResponseWriter(errorResult.getStatusCode(), errorResult.getMessage());
+      return new ErrorQueryResponseWriter(result.getStatusCode(), result.getMessage());
     }
     return new SingleQueryResponseWriter(result.getResult(), graphQLObjectMapper);
   }

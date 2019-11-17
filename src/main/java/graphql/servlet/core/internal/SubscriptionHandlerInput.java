@@ -2,8 +2,8 @@ package graphql.servlet.core.internal;
 
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 import graphql.servlet.core.GraphQLObjectMapper;
-import graphql.servlet.core.GraphQLQueryInvoker;
-import graphql.servlet.core.SubscriptionConnectionListener;
+import graphql.kickstart.execution.GraphQLQueryInvoker;
+import graphql.kickstart.execution.subscription.SubscriptionConnectionListener;
 
 import java.util.Optional;
 

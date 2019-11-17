@@ -3,13 +3,14 @@ package graphql.servlet;
 import static graphql.servlet.QueryResponseWriter.createWriter;
 
 import graphql.GraphQLException;
-import graphql.servlet.config.GraphQLConfiguration;
-import graphql.servlet.core.GraphQLQueryInvoker;
+import graphql.kickstart.execution.GraphQLQueryResult;
+import graphql.kickstart.execution.config.GraphQLConfiguration;
+import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.servlet.input.BatchInputPreProcessResult;
 import graphql.servlet.input.BatchInputPreProcessor;
-import graphql.servlet.input.GraphQLBatchedInvocationInput;
-import graphql.servlet.input.GraphQLInvocationInput;
-import graphql.servlet.input.GraphQLSingleInvocationInput;
+import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
+import graphql.kickstart.execution.input.GraphQLInvocationInput;
+import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -79,7 +80,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
       return queryInvoker.query(result.getBatchedInvocationInput());
     }
 
-    return new GraphQLErrorQueryResult(result.getStatusCode(), result.getStatusMessage());
+    return GraphQLQueryResult.createError(result.getStatusCode(), result.getStatusMessage());
   }
 
 }

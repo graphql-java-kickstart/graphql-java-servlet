@@ -1,7 +1,7 @@
 package graphql.servlet;
 
 import graphql.servlet.core.GraphQLObjectMapper;
-import graphql.servlet.core.GraphQLQueryInvoker;
+import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 
 public class DefaultGraphQLServlet extends AbstractGraphQLHttpServlet {

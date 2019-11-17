@@ -1,5 +1,6 @@
 package graphql.servlet.context;
 
+import graphql.kickstart.execution.context.GraphQLContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.websocket.Session;
