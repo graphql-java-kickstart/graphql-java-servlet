@@ -1,145 +1,204 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2016 oEmbedler Inc. and Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ *  documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ *  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ *  persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 buildscript {
     repositories {
-        jcenter()
+        mavenLocal()
         mavenCentral()
+        jcenter()
+        maven { url "https://dl.bintray.com/graphql-java-kickstart/releases" }
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url 'https://repo.spring.io/plugins-release' }
     }
     dependencies {
-        classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:3.1.0'
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+"
+        classpath 'net.researchgate:gradle-release:2.7.0'
     }
 }
+
 plugins {
-    id "com.jfrog.bintray" version "1.8.4"
-    id "com.jfrog.artifactory" version "4.8.1"
     id 'net.researchgate.release' version '2.7.0'
-    id 'io.franzbecker.gradle-lombok' version '3.1.0'
+    id 'io.franzbecker.gradle-lombok' version '3.1.0' apply false
+    id "com.jfrog.artifactory" version "4.8.1" apply false
 }
 
-apply plugin: 'java'
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+subprojects {
+    apply plugin: 'idea'
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: "com.jfrog.bintray"
+    apply plugin: 'io.franzbecker.gradle-lombok'
+    apply plugin: 'com.jfrog.artifactory'
 
-// Tests
-apply plugin: 'groovy'
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-
-dependencies {
-    compile 'org.slf4j:slf4j-api:1.7.21'
-
-    // Useful utilities
-    compile 'com.google.guava:guava:24.1.1-jre'
-
-    // Unit testing
-    testCompile "org.codehaus.groovy:groovy-all:2.4.1"
-    testCompile "org.spockframework:spock-core:1.1-groovy-2.4-rc-3"
-    testRuntime "cglib:cglib-nodep:3.2.4"
-    testRuntime "org.objenesis:objenesis:2.5.1"
-    testCompile 'org.slf4j:slf4j-simple:1.7.24'
-    testCompile 'org.springframework:spring-test:4.3.7.RELEASE'
-    testRuntime 'org.springframework:spring-web:4.3.7.RELEASE'
-
-    // OSGi
-    compileOnly 'org.osgi:org.osgi.core:6.0.0'
-    compileOnly 'org.osgi:org.osgi.service.cm:1.5.0'
-    compileOnly 'org.osgi:org.osgi.service.component:1.3.0'
-    compileOnly 'biz.aQute.bnd:biz.aQute.bndlib:3.1.0'
-
-    // Servlet
-    compile 'javax.servlet:javax.servlet-api:3.1.0'
-    compile 'javax.websocket:javax.websocket-api:1.1'
-
-    // GraphQL
-    compile "com.graphql-java:graphql-java:$LIB_GRAPHQL_JAVA_VER"
-
-    testCompile 'io.github.graphql-java:graphql-java-annotations:5.2'
-
-    // JSON
-    compile "com.fasterxml.jackson.core:jackson-core:$LIB_JACKSON_VER"
-    compile "com.fasterxml.jackson.core:jackson-annotations:$LIB_JACKSON_VER"
-    compile "com.fasterxml.jackson.core:jackson-databind:$LIB_JACKSON_VER"
-    compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$LIB_JACKSON_VER"
-}
-
-apply plugin: 'osgi'
-apply plugin: 'java-library-distribution'
-apply plugin: 'biz.aQute.bnd.builder'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'maven-publish'
-apply plugin: 'idea'
-apply plugin: 'maven'
-
-jar {
-    manifest {
-        instruction 'Require-Capability', 'osgi.extender'
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+        maven { url "https://dl.bintray.com/graphql-java-kickstart/releases" }
+        maven { url "https://oss.jfrog.org/artifactory/oss-snapshot-local" }
+        maven { url "https://repo.spring.io/libs-milestone" }
     }
-}
 
-// custom tasks for creating source/javadoc jars
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
+    idea {
+        module {
+            downloadJavadoc = true
+            downloadSources = true
+        }
+    }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
+    compileJava {
+        sourceCompatibility = SOURCE_COMPATIBILITY
+        targetCompatibility = TARGET_COMPATIBILITY
+    }
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-            groupId 'com.graphql-java-kickstart'
-            artifactId project.name
-            version project.version
+    compileJava.dependsOn(processResources)
 
-            artifact sourcesJar
-            artifact javadocJar
+    lombok {
+        version = "1.18.4"
+        sha256 = ""
+    }
 
-            pom.withXml {
-                asNode().children().last() + {
-                    resolveStrategy = Closure.DELEGATE_FIRST
-                    name 'graphql-java-servlet'
-                    description 'relay.js-compatible GraphQL servlet'
-                    url 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
-                    inceptionYear '2016'
 
-                    scm {
-                        url 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
-                        connection 'scm:https://github.com/graphql-java-kickstart/graphql-java-servlet.git'
-                        developerConnection 'scm:git://github.com/graphql-java-kickstart/graphql-java-servlet.git'
+    if (!it.name.startsWith('example')) {
+
+        jar {
+            from "LICENSE.md"
+        }
+
+        task sourcesJar(type: Jar) {
+            dependsOn classes
+            classifier 'sources'
+            from sourceSets.main.allSource
+        }
+
+        task javadocJar(type: Jar, dependsOn: javadoc) {
+            classifier = 'javadoc'
+            from javadoc.destinationDir
+        }
+
+        artifacts {
+            archives sourcesJar
+            archives javadocJar
+        }
+
+        publishing {
+            publications {
+                mainProjectPublication(MavenPublication) {
+                    version version
+                    from components.java
+
+                    artifact sourcesJar {
+                        classifier "sources"
+                    }
+                    artifact javadocJar {
+                        classifier "javadoc"
                     }
 
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
+                    pom.withXml {
+                        asNode().children().last() + {
+                            resolveStrategy = Closure.DELEGATE_FIRST
+                            name 'graphql-java-servlet'
+                            description 'relay.js-compatible GraphQL servlet'
+                            url 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
+                            inceptionYear '2016'
 
-                    developers {
-                        developer {
-                            id 'yrashk'
-                            name 'Yurii Rashkovskii'
-                            email 'yrashk@gmail.com'
+                            scm {
+                                url 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
+                                connection 'scm:https://github.com/graphql-java-kickstart/graphql-java-servlet.git'
+                                developerConnection 'scm:git://github.com/graphql-java-kickstart/graphql-java-servlet.git'
+                            }
+
+                            licenses {
+                                license {
+                                    name 'The Apache Software License, Version 2.0'
+                                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                                    distribution 'repo'
+                                }
+                            }
+
+                            developers {
+                                developer {
+                                    id 'yrashk'
+                                    name 'Yurii Rashkovskii'
+                                    email 'yrashk@gmail.com'
+                                }
+                                developer {
+                                    id 'apottere'
+                                    name 'Andrew Potter'
+                                    email 'apottere@gmail.com'
+                                }
+                            }
                         }
-                        developer {
-                            id 'apottere'
-                            name 'Andrew Potter'
-                            email 'apottere@gmail.com'
-                        }
+                        // https://discuss.gradle.org/t/maven-publish-plugin-generated-pom-making-dependency-scope-runtime/7494/10
+                        asNode().dependencies.'*'.findAll() {
+                            it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
+                                dep.name == it.artifactId.text()
+                            }
+                        }.each { it.scope*.value = 'compile'}
                     }
                 }
-                // https://discuss.gradle.org/t/maven-publish-plugin-generated-pom-making-dependency-scope-runtime/7494/10
-                asNode().dependencies.'*'.findAll() {
-                    it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
-                        dep.name == it.artifactId.text()
+            }
+        }
+
+        bintray {
+            user = System.env.BINTRAY_USER ?: project.findProperty('BINTRAY_USER') ?: ''
+            key = System.env.BINTRAY_PASS ?: project.findProperty('BINTRAY_PASS') ?: ''
+            publications = ['mainProjectPublication']
+            publish = true
+            pkg {
+                repo = 'releases'
+                name = PROJECT_NAME
+                desc = PROJECT_DESC
+                licenses = [PROJECT_LICENSE]
+                vcsUrl = PROJECT_GIT_REPO_URL
+                userOrg = 'graphql-java-kickstart'
+                version {
+                    name = project.version
+                    mavenCentralSync {
+                        close = '1'
                     }
-                }.each { it.scope*.value = 'compile'}
+                }
+            }
+        }
+
+        artifactory {
+            contextUrl = 'https://oss.jfrog.org'
+            publish {
+                repository {
+                    repoKey = 'oss-snapshot-local'
+
+                    username = System.env.BINTRAY_USER ?: System.getProperty('BINTRAY_USER')
+                    password = System.env.BINTRAY_PASS ?: System.getProperty('BINTRAY_PASS')
+
+                    maven = true
+                }
+                defaults {
+                    publications 'maven'
+                    publishArtifacts = true
+                    publishPom = true
+                }
+            }
+            resolve {
+                repository {
+                    repoKey = 'jcenter'
+                }
             }
         }
     }
@@ -151,63 +210,12 @@ release {
     ignoredSnapshotDependencies = ['com.graphql-java-kickstart:graphql-java-servlet']
 }
 
-afterReleaseBuild.dependsOn bintrayUpload
-
-bintray {
-    user = System.env.BINTRAY_USER ?: project.findProperty('BINTRAY_USER') ?: ''
-    key = System.env.BINTRAY_PASS ?: project.findProperty('BINTRAY_PASS') ?: ''
-    publications = ['maven']
-    publish = true
-    pkg {
-        repo = 'releases'
-        name = project.name
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
-        userOrg = 'graphql-java-kickstart'
-        version {
-            name = project.version
-            mavenCentralSync {
-                close = '1'
-            }
-        }
-    }
+task build {
+    dependsOn subprojects.findResults { it.tasks.findByName('assemble') }
+    dependsOn subprojects.findResults { it.tasks.findByName('check') }
+    dependsOn subprojects.findResults { it.tasks.findByName('bintray') }
 }
 
-artifactory {
-    contextUrl = 'https://oss.jfrog.org'
-    publish {
-        repository {
-            repoKey = 'oss-snapshot-local'
-
-            username = System.env.BINTRAY_USER ?: System.getProperty('BINTRAY_USER')
-            password = System.env.BINTRAY_PASS ?: System.getProperty('BINTRAY_PASS')
-
-            maven = true
-        }
-        defaults {
-            publications 'maven'
-            publishArtifacts = true
-            publishPom = true
-        }
-    }
-    resolve {
-        repository {
-            repoKey = 'jcenter'
-        }
-    }
-}
-
-idea {
-    project {
-        languageLevel = '11'
-        vcs = 'Git'
-    }
-}
-
-wrapper {
-    gradleVersion = '4.10.3'
-}
-
-lombok {
-    version = '1.18.10'
+task wrapper(type: Wrapper) {
+    gradleVersion = "${GRADLE_WRAPPER_VER}"
 }
