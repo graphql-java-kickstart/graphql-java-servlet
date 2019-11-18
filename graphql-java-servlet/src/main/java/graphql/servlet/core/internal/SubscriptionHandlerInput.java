@@ -1,7 +1,7 @@
 package graphql.servlet.core.internal;
 
 import graphql.servlet.input.GraphQLInvocationInputFactory;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.kickstart.execution.subscription.SubscriptionConnectionListener;
 

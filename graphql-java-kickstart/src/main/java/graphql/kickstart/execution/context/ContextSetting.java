@@ -89,7 +89,7 @@ public enum ContextSetting {
       case PER_REQUEST_WITHOUT_INSTRUMENTATION:
         //Intentional fallthrough
       case PER_QUERY_WITHOUT_INSTRUMENTATION:
-        return instrumentation::get;
+        return instrumentation;
       default:
         throw new RuntimeException("Unconfigured context setting type");
     }

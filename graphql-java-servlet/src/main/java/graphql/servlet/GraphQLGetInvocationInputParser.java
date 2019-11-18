@@ -2,7 +2,7 @@ package graphql.servlet;
 
 import graphql.GraphQLException;
 import graphql.kickstart.execution.context.ContextSetting;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.servlet.input.GraphQLInvocationInputFactory;

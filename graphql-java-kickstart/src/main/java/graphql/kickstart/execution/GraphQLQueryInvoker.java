@@ -72,8 +72,7 @@ public class GraphQLQueryInvoker {
         .map(GraphQLSingleInvocationInput::getExecutionInput)
         .collect(Collectors.toList());
     Supplier<Instrumentation> configuredInstrumentation = contextSetting
-        .configureInstrumentationForContext(getInstrumentation, executionIds,
-            optionsSupplier.get());
+        .configureInstrumentationForContext(getInstrumentation, executionIds, optionsSupplier.get());
     return batchedInvocationInput.stream()
         .map(input -> this.queryAsync(input, configuredInstrumentation))
         //We want eager eval

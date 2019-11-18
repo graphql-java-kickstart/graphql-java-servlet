@@ -2,7 +2,7 @@ package graphql.servlet;
 
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.servlet.core.GraphQLMBean;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.servlet.core.GraphQLServletListener;
 import graphql.kickstart.execution.GraphQLRequest;

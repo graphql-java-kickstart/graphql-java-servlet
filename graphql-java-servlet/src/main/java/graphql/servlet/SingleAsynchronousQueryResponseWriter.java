@@ -5,7 +5,7 @@ import static graphql.servlet.HttpRequestHandler.STATUS_OK;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

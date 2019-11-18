@@ -1,9 +1,10 @@
 package graphql.servlet;
 
 import graphql.schema.GraphQLSchema;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
-import graphql.servlet.config.GraphQLSchemaProvider;
+import graphql.kickstart.execution.config.GraphQLSchemaProvider;
+import graphql.servlet.config.GraphQLSchemaServletProvider;
 import graphql.servlet.core.GraphQLServletListener;
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 
@@ -83,7 +84,7 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         return new Builder(GraphQLInvocationInputFactory.newBuilder(schema).build());
     }
 
-    public static Builder newBuilder(GraphQLSchemaProvider schemaProvider) {
+    public static Builder newBuilder(GraphQLSchemaServletProvider schemaProvider) {
         return new Builder(GraphQLInvocationInputFactory.newBuilder(schemaProvider).build());
     }
 

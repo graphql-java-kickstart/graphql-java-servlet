@@ -10,7 +10,7 @@ import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
 import graphql.schema.idl.errors.SchemaProblem
-import graphql.servlet.context.GraphQLContextBuilder
+import graphql.servlet.context.GraphQLServletContextBuilder
 import graphql.servlet.apollo.ApolloScalars
 import graphql.servlet.input.BatchInputPreProcessor
 import graphql.kickstart.execution.context.ContextSetting
@@ -49,7 +49,7 @@ class TestUtils {
                                         DataFetcher fieldDataFetcher = { env -> env.arguments.arg },
                                         DataFetcher otherDataFetcher,
                                         boolean asyncServletModeEnabled = false, ContextSetting contextSetting,
-                                        GraphQLContextBuilder contextBuilder) {
+                                        GraphQLServletContextBuilder contextBuilder) {
         GraphQLSchema schema = createGraphQlSchemaWithTwoLevels(queryDataFetcher, fieldDataFetcher, otherDataFetcher)
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(schema)

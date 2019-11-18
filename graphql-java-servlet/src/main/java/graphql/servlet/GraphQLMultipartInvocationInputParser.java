@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.joining;
 
 import graphql.GraphQLException;
 import graphql.kickstart.execution.context.ContextSetting;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.servlet.core.internal.VariableMapper;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
@@ -57,7 +57,14 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
         InputStream inputStream = queryItem.get().getInputStream();
 
         final Optional<Map<String, List<String>>> variablesMap =
-            getPart(parts, "map").map(graphQLObjectMapper::deserializeMultipartMap);
+            getPart(parts, "map")
+                .map(part -> {
+                  try (InputStream is = part.getInputStream()) {
+                    return graphQLObjectMapper.deserializeMultipartMap(is);
+                  } catch (IOException e) {
+                    throw new RuntimeException("Unable to read input stream from part", e);
+                  }
+                });
 
         String query = read(inputStream);
         if ("query".equals(key) && isSingleQuery(query)) {

@@ -4,7 +4,7 @@ import static graphql.servlet.HttpRequestHandler.APPLICATION_JSON_UTF8;
 import static graphql.servlet.HttpRequestHandler.STATUS_OK;
 
 import graphql.ExecutionResult;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

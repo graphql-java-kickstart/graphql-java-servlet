@@ -9,24 +9,25 @@ import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
 import graphql.kickstart.execution.config.DefaultExecutionStrategyProvider;
-import graphql.servlet.config.DefaultGraphQLSchemaProvider;
+import graphql.servlet.config.DefaultGraphQLSchemaServletProvider;
 import graphql.kickstart.execution.config.ExecutionStrategyProvider;
+import graphql.servlet.config.GraphQLSchemaServletProvider;
+import graphql.servlet.core.GraphQLServletRootObjectBuilder;
 import graphql.servlet.osgi.GraphQLCodeRegistryProvider;
 import graphql.servlet.osgi.GraphQLMutationProvider;
 import graphql.servlet.osgi.GraphQLProvider;
 import graphql.servlet.osgi.GraphQLQueryProvider;
-import graphql.servlet.config.GraphQLSchemaProvider;
 import graphql.servlet.osgi.GraphQLSubscriptionProvider;
 import graphql.servlet.osgi.GraphQLTypesProvider;
 import graphql.kickstart.execution.config.InstrumentationProvider;
-import graphql.servlet.context.DefaultGraphQLContextBuilder;
-import graphql.servlet.context.GraphQLContextBuilder;
+import graphql.servlet.context.DefaultGraphQLServletContextBuilder;
+import graphql.servlet.context.GraphQLServletContextBuilder;
 import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
 import graphql.servlet.core.DefaultGraphQLRootObjectBuilder;
 import graphql.kickstart.execution.error.GraphQLErrorHandler;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
-import graphql.servlet.core.GraphQLRootObjectBuilder;
+import graphql.kickstart.execution.GraphQLRootObjectBuilder;
 import graphql.servlet.core.GraphQLServletListener;
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 import graphql.kickstart.execution.instrumentation.NoOpInstrumentationProvider;
@@ -61,15 +62,15 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   private final GraphQLInvocationInputFactory invocationInputFactory;
   private final GraphQLObjectMapper graphQLObjectMapper;
 
-  private GraphQLContextBuilder contextBuilder = new DefaultGraphQLContextBuilder();
-  private GraphQLRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
+  private GraphQLServletContextBuilder contextBuilder = new DefaultGraphQLServletContextBuilder();
+  private GraphQLServletRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
   private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
   private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
   private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
   private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
   private GraphQLCodeRegistryProvider codeRegistryProvider = () -> GraphQLCodeRegistry.newCodeRegistry().build();
 
-  private GraphQLSchemaProvider schemaProvider;
+  private GraphQLSchemaServletProvider schemaProvider;
 
   private ScheduledExecutorService executor;
   private ScheduledFuture<?> updateFuture;
@@ -189,7 +190,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
       }
     }
 
-    this.schemaProvider = new DefaultGraphQLSchemaProvider(newSchema().query(queryTypeBuilder.build())
+    this.schemaProvider = new DefaultGraphQLSchemaServletProvider(newSchema().query(queryTypeBuilder.build())
         .mutation(mutationType)
         .subscription(subscriptionType)
         .additionalTypes(types)
@@ -290,12 +291,12 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-  public void setContextProvider(GraphQLContextBuilder contextBuilder) {
+  public void setContextProvider(GraphQLServletContextBuilder contextBuilder) {
     this.contextBuilder = contextBuilder;
   }
 
-  public void unsetContextProvider(GraphQLContextBuilder contextBuilder) {
-    this.contextBuilder = new DefaultGraphQLContextBuilder();
+  public void unsetContextProvider(GraphQLServletContextBuilder contextBuilder) {
+    this.contextBuilder = new DefaultGraphQLServletContextBuilder();
   }
 
   public void unsetRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
@@ -329,16 +330,16 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     updateSchema();
   }
 
-  public GraphQLContextBuilder getContextBuilder() {
+  public GraphQLServletContextBuilder getContextBuilder() {
     return contextBuilder;
   }
 
-  public GraphQLRootObjectBuilder getRootObjectBuilder() {
+  public GraphQLServletRootObjectBuilder getRootObjectBuilder() {
     return rootObjectBuilder;
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-  public void setRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
+  public void setRootObjectBuilder(GraphQLServletRootObjectBuilder rootObjectBuilder) {
     this.rootObjectBuilder = rootObjectBuilder;
   }
 
@@ -378,7 +379,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     this.preparsedDocumentProvider = preparsedDocumentProvider;
   }
 
-  public GraphQLSchemaProvider getSchemaProvider() {
+  public GraphQLSchemaServletProvider getSchemaProvider() {
     return schemaProvider;
   }
 

@@ -1,7 +1,7 @@
 package graphql.servlet;
 
 import graphql.ExecutionResult;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.CountDownLatch;

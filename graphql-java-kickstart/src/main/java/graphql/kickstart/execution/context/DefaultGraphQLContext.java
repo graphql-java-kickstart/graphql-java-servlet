@@ -1,35 +1,35 @@
 package graphql.kickstart.execution.context;
 
-import org.dataloader.DataLoaderRegistry;
-
-import javax.security.auth.Subject;
 import java.util.Optional;
+import javax.security.auth.Subject;
+import org.dataloader.DataLoaderRegistry;
 
 /**
  * An object for the DefaultGraphQLContextBuilder to return. Can be extended to include more context.
  */
-public class DefaultGraphQLContext implements GraphQLContext{
+public class DefaultGraphQLContext implements GraphQLContext {
 
-    private final Subject subject;
+  private final Subject subject;
 
-    private final DataLoaderRegistry dataLoaderRegistry;
+  private final DataLoaderRegistry dataLoaderRegistry;
 
-    public DefaultGraphQLContext(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
-        this.dataLoaderRegistry = dataLoaderRegistry;
-        this.subject = subject;
-    }
+  public DefaultGraphQLContext(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
+    this.dataLoaderRegistry = dataLoaderRegistry;
+    this.subject = subject;
+  }
 
-    public DefaultGraphQLContext() {
-        this(null, null);
-    }
+  public DefaultGraphQLContext() {
+    this(new DataLoaderRegistry(), null);
+  }
 
-    @Override
-    public Optional<Subject> getSubject() {
-        return Optional.ofNullable(subject);
-    }
+  @Override
+  public Optional<Subject> getSubject() {
+    return Optional.ofNullable(subject);
+  }
 
-    @Override
-    public Optional<DataLoaderRegistry> getDataLoaderRegistry() {
-        return Optional.ofNullable(dataLoaderRegistry);
-    }
+  @Override
+  public Optional<DataLoaderRegistry> getDataLoaderRegistry() {
+    return Optional.ofNullable(dataLoaderRegistry);
+  }
+
 }

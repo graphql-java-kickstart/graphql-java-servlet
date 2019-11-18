@@ -1,16 +1,17 @@
 package graphql.servlet.input;
 
+import graphql.kickstart.execution.GraphQLRequest;
+import graphql.kickstart.execution.config.GraphQLSchemaProvider;
+import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 import graphql.schema.GraphQLSchema;
-import graphql.servlet.config.DefaultGraphQLSchemaProvider;
-import graphql.servlet.config.GraphQLSchemaProvider;
-import graphql.kickstart.execution.context.ContextSetting;
-import graphql.servlet.context.DefaultGraphQLContextBuilder;
-import graphql.servlet.context.GraphQLContextBuilder;
+import graphql.servlet.config.DefaultGraphQLSchemaServletProvider;
+import graphql.servlet.config.GraphQLSchemaServletProvider;
+import graphql.servlet.context.DefaultGraphQLServletContextBuilder;
+import graphql.servlet.context.GraphQLServletContextBuilder;
 import graphql.servlet.core.DefaultGraphQLRootObjectBuilder;
-import graphql.servlet.core.GraphQLRootObjectBuilder;
-import graphql.kickstart.execution.GraphQLRequest;
+import graphql.servlet.core.GraphQLServletRootObjectBuilder;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.servlet.http.HttpServletRequest;
@@ -23,27 +24,27 @@ import javax.websocket.server.HandshakeRequest;
  */
 public class GraphQLInvocationInputFactory {
 
-  private final Supplier<GraphQLSchemaProvider> schemaProviderSupplier;
-  private final Supplier<GraphQLContextBuilder> contextBuilderSupplier;
-  private final Supplier<GraphQLRootObjectBuilder> rootObjectBuilderSupplier;
+  private final Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier;
+  private final Supplier<GraphQLServletContextBuilder> contextBuilderSupplier;
+  private final Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier;
 
-  protected GraphQLInvocationInputFactory(Supplier<GraphQLSchemaProvider> schemaProviderSupplier,
-      Supplier<GraphQLContextBuilder> contextBuilderSupplier,
-      Supplier<GraphQLRootObjectBuilder> rootObjectBuilderSupplier) {
+  protected GraphQLInvocationInputFactory(Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier,
+      Supplier<GraphQLServletContextBuilder> contextBuilderSupplier,
+      Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier) {
     this.schemaProviderSupplier = schemaProviderSupplier;
     this.contextBuilderSupplier = contextBuilderSupplier;
     this.rootObjectBuilderSupplier = rootObjectBuilderSupplier;
   }
 
   public static Builder newBuilder(GraphQLSchema schema) {
-    return new Builder(new DefaultGraphQLSchemaProvider(schema));
+    return new Builder(new DefaultGraphQLSchemaServletProvider(schema));
   }
 
-  public static Builder newBuilder(GraphQLSchemaProvider schemaProvider) {
+  public static Builder newBuilder(GraphQLSchemaServletProvider schemaProvider) {
     return new Builder(schemaProvider);
   }
 
-  public static Builder newBuilder(Supplier<GraphQLSchemaProvider> schemaProviderSupplier) {
+  public static Builder newBuilder(Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier) {
     return new Builder(schemaProviderSupplier);
   }
 
@@ -126,32 +127,32 @@ public class GraphQLInvocationInputFactory {
 
   public static class Builder {
 
-    private final Supplier<GraphQLSchemaProvider> schemaProviderSupplier;
-    private Supplier<GraphQLContextBuilder> contextBuilderSupplier = DefaultGraphQLContextBuilder::new;
-    private Supplier<GraphQLRootObjectBuilder> rootObjectBuilderSupplier = DefaultGraphQLRootObjectBuilder::new;
+    private final Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier;
+    private Supplier<GraphQLServletContextBuilder> contextBuilderSupplier = DefaultGraphQLServletContextBuilder::new;
+    private Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier = DefaultGraphQLRootObjectBuilder::new;
 
-    public Builder(GraphQLSchemaProvider schemaProvider) {
+    public Builder(GraphQLSchemaServletProvider schemaProvider) {
       this(() -> schemaProvider);
     }
 
-    public Builder(Supplier<GraphQLSchemaProvider> schemaProviderSupplier) {
+    public Builder(Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier) {
       this.schemaProviderSupplier = schemaProviderSupplier;
     }
 
-    public Builder withGraphQLContextBuilder(GraphQLContextBuilder contextBuilder) {
+    public Builder withGraphQLContextBuilder(GraphQLServletContextBuilder contextBuilder) {
       return withGraphQLContextBuilder(() -> contextBuilder);
     }
 
-    public Builder withGraphQLContextBuilder(Supplier<GraphQLContextBuilder> contextBuilderSupplier) {
+    public Builder withGraphQLContextBuilder(Supplier<GraphQLServletContextBuilder> contextBuilderSupplier) {
       this.contextBuilderSupplier = contextBuilderSupplier;
       return this;
     }
 
-    public Builder withGraphQLRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
+    public Builder withGraphQLRootObjectBuilder(GraphQLServletRootObjectBuilder rootObjectBuilder) {
       return withGraphQLRootObjectBuilder(() -> rootObjectBuilder);
     }
 
-    public Builder withGraphQLRootObjectBuilder(Supplier<GraphQLRootObjectBuilder> rootObjectBuilderSupplier) {
+    public Builder withGraphQLRootObjectBuilder(Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier) {
       this.rootObjectBuilderSupplier = rootObjectBuilderSupplier;
       return this;
     }

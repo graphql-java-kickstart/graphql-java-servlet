@@ -1,4 +1,4 @@
-package graphql.servlet.core;
+package graphql.kickstart.execution;
 
 import static java.util.stream.Collectors.toList;
 
@@ -13,13 +13,11 @@ import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import graphql.GraphQLError;
 import graphql.execution.ExecutionPath;
-import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
-import graphql.kickstart.execution.error.GraphQLErrorHandler;
 import graphql.kickstart.execution.config.ConfiguringObjectMapperProvider;
 import graphql.kickstart.execution.config.ObjectMapperConfigurer;
 import graphql.kickstart.execution.config.ObjectMapperProvider;
-import graphql.kickstart.execution.GraphQLRequest;
-import graphql.kickstart.execution.VariablesDeserializer;
+import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
+import graphql.kickstart.execution.error.GraphQLErrorHandler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
@@ -28,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import javax.servlet.http.Part;
 
 /**
  * @author Andrew Potter
@@ -182,9 +179,9 @@ public class GraphQLObjectMapper {
     }
   }
 
-  public Map<String, List<String>> deserializeMultipartMap(Part part) {
+  public Map<String, List<String>> deserializeMultipartMap(InputStream inputStream) {
     try {
-      return getJacksonMapper().readValue(part.getInputStream(), MULTIPART_MAP_TYPE_REFERENCE);
+      return getJacksonMapper().readValue(inputStream, MULTIPART_MAP_TYPE_REFERENCE);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

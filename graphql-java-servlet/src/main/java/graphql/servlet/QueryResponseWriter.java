@@ -1,7 +1,7 @@
 package graphql.servlet;
 
 import graphql.kickstart.execution.GraphQLQueryResult;
-import graphql.servlet.core.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import java.io.IOException;
 import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;

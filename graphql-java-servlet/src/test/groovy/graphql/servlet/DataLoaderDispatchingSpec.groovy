@@ -11,7 +11,7 @@ import graphql.schema.DataFetchingEnvironment
 import graphql.kickstart.execution.context.ContextSetting
 import graphql.kickstart.execution.context.DefaultGraphQLContext
 import graphql.kickstart.execution.context.GraphQLContext
-import graphql.servlet.context.GraphQLContextBuilder
+import graphql.servlet.context.GraphQLServletContextBuilder
 import graphql.kickstart.execution.instrumentation.ConfigurableDispatchInstrumentation
 import org.dataloader.BatchLoader
 import org.dataloader.DataLoader
@@ -84,7 +84,7 @@ class DataLoaderDispatchingSpec extends Specification {
     }
 
     def contextBuilder() {
-        return new GraphQLContextBuilder() {
+        return new GraphQLServletContextBuilder() {
             @Override
             GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
                 new DefaultGraphQLContext(registry(), null)

@@ -1,8 +1,6 @@
-package graphql.servlet.config;
+package graphql.kickstart.execution.config;
 
 import graphql.schema.GraphQLSchema;
-import javax.servlet.http.HttpServletRequest;
-import javax.websocket.server.HandshakeRequest;
 
 /**
  * @author Andrew Potter
@@ -21,24 +19,14 @@ public class DefaultGraphQLSchemaProvider implements GraphQLSchemaProvider {
     this.readOnlySchema = readOnlySchema;
   }
 
-
-  @Override
-  public GraphQLSchema getSchema(HttpServletRequest request) {
-    return getSchema();
-  }
-
-  @Override
-  public GraphQLSchema getSchema(HandshakeRequest request) {
-    return getSchema();
-  }
-
   @Override
   public GraphQLSchema getSchema() {
     return schema;
   }
 
   @Override
-  public GraphQLSchema getReadOnlySchema(HttpServletRequest request) {
+  public GraphQLSchema getReadOnlySchema() {
     return readOnlySchema;
   }
+
 }
