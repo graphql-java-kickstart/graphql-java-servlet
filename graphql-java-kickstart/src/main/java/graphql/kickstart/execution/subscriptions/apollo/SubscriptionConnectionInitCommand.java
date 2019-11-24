@@ -14,7 +14,7 @@ class SubscriptionConnectionInitCommand implements SubscriptionCommand {
 
   @Override
   public void apply(SubscriptionSession session, OperationMessage message) {
-    log.info("Apollo subscription connection init: {}", session);
+    log.debug("Apollo subscription connection init: {}", session);
     try {
       connectionListeners.forEach(it -> it.onConnect(session, message));
       session.sendMessage(new OperationMessage(Type.GQL_CONNECTION_ACK, message.getId(), null));

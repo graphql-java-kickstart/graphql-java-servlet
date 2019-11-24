@@ -17,7 +17,6 @@ public class WebSocketSendSubscriber implements Subscriber<String> {
 
   @Override
   public void onSubscribe(Subscription subscription) {
-    log.info("Subscribe to publisher");
     subscriptionRef.set(subscription);
     subscriptionRef.get().request(1);
   }
@@ -25,7 +24,6 @@ public class WebSocketSendSubscriber implements Subscriber<String> {
   @Override
   public void onNext(String message) {
     subscriptionRef.get().request(1);
-    log.info("Send message: {}", message);
     if (session.isOpen()) {
       try {
         session.getBasicRemote().sendText(message);
