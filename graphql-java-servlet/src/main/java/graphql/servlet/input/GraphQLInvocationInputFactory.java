@@ -5,6 +5,8 @@ import graphql.kickstart.execution.config.GraphQLSchemaProvider;
 import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
+import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionInvocationInputFactory;
+import graphql.kickstart.execution.subscriptions.SubscriptionSession;
 import graphql.schema.GraphQLSchema;
 import graphql.servlet.config.DefaultGraphQLSchemaServletProvider;
 import graphql.servlet.config.GraphQLSchemaServletProvider;
@@ -22,7 +24,7 @@ import javax.websocket.server.HandshakeRequest;
 /**
  * @author Andrew Potter
  */
-public class GraphQLInvocationInputFactory {
+public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocationInputFactory {
 
   private final Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier;
   private final Supplier<GraphQLServletContextBuilder> contextBuilderSupplier;
@@ -106,7 +108,8 @@ public class GraphQLInvocationInputFactory {
     );
   }
 
-  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, Session session, HandshakeRequest request) {
+  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, Session session) {
+    HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());
     return new GraphQLSingleInvocationInput(
         graphQLRequest,
         schemaProviderSupplier.get().getSchema(request),
@@ -115,8 +118,20 @@ public class GraphQLInvocationInputFactory {
     );
   }
 
+  @Override
+  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, SubscriptionSession session) {
+    HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());
+    return new GraphQLSingleInvocationInput(
+        graphQLRequest,
+        schemaProviderSupplier.get().getSchema(request),
+        contextBuilderSupplier.get().build((Session) session.unwrap(), request),
+        rootObjectBuilderSupplier.get().build(request)
+    );
+  }
+
   public GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequest,
-      Session session, HandshakeRequest request) {
+      Session session) {
+    HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());
     return contextSetting.getBatch(
         graphQLRequest,
         schemaProviderSupplier.get().getSchema(request),

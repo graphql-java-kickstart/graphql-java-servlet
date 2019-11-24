@@ -1,4 +1,4 @@
-package graphql.kickstart.execution.subscription;
+package graphql.kickstart.execution.subscriptions;
 
 public class SubscriptionException extends Exception {
 

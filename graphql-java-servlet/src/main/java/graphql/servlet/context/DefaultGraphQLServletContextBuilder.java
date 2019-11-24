@@ -14,9 +14,8 @@ public class DefaultGraphQLServletContextBuilder extends DefaultGraphQLContextBu
     GraphQLServletContextBuilder {
 
   @Override
-  public GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-    return DefaultGraphQLServletContext.createServletContext().with(httpServletRequest).with(httpServletResponse)
-        .build();
+  public GraphQLContext build(HttpServletRequest request, HttpServletResponse response) {
+    return DefaultGraphQLServletContext.createServletContext().with(request).with(response).build();
   }
 
   @Override
