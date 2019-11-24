@@ -1,5 +1,7 @@
 package graphql.kickstart.execution;
 
+import static java.util.stream.Collectors.toList;
+
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.kickstart.execution.context.ContextSetting;
@@ -45,10 +47,7 @@ public class GraphQLInvoker {
 //        .configureInstrumentationForContext(getInstrumentation, executionIds, optionsSupplier.get());
     return batchedInvocationInput.stream()
         .map(this::executeAsync)
-        //We want eager eval
-        .collect(Collectors.toList())
-        .stream()
         .map(CompletableFuture::join)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }
