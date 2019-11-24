@@ -23,14 +23,12 @@ public class DefaultSubscriptionSession implements SubscriptionSession {
   @Override
   public void send(String message) {
     Objects.requireNonNull(message, "message is required");
-    log.info("Offer message: {}", message);
     publisher.offer(message);
   }
 
   @Override
   public void sendMessage(Object payload) {
     Objects.requireNonNull(payload, "payload is required");
-    log.info("Send message: {}", payload);
     send(mapper.serialize(payload));
   }
 
@@ -66,6 +64,8 @@ public class DefaultSubscriptionSession implements SubscriptionSession {
 
   @Override
   public void close(String reason) {
+    log.debug("Closing subscription session {}", getId());
+    subscriptions.close();
     publisher.noMoreData();
   }
 
@@ -97,6 +97,11 @@ public class DefaultSubscriptionSession implements SubscriptionSession {
   @Override
   public Publisher<String> getPublisher() {
     return publisher;
+  }
+
+  @Override
+  public String toString() {
+    return getId();
   }
 
 }

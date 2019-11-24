@@ -13,7 +13,9 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 class SubscriptionStartCommand implements SubscriptionCommand {
 
@@ -24,6 +26,7 @@ class SubscriptionStartCommand implements SubscriptionCommand {
 
   @Override
   public void apply(SubscriptionSession session, OperationMessage message) {
+    log.info("Apollo subscription start: {} --> {}", session, message.getPayload());
     connectionListeners.forEach(it -> it.onStart(session, message));
     CompletableFuture<ExecutionResult> executionResult = executeAsync(message.getPayload(), session);
     executionResult.thenAccept(result -> handleSubscriptionStart(session, message.getId(), result));

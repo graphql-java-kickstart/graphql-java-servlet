@@ -4,7 +4,9 @@ import graphql.kickstart.execution.subscriptions.SubscriptionSession;
 import graphql.kickstart.execution.subscriptions.apollo.OperationMessage.Type;
 import java.util.Collection;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 class SubscriptionConnectionInitCommand implements SubscriptionCommand {
 
@@ -12,6 +14,7 @@ class SubscriptionConnectionInitCommand implements SubscriptionCommand {
 
   @Override
   public void apply(SubscriptionSession session, OperationMessage message) {
+    log.info("Apollo subscription connection init: {}", session);
     try {
       connectionListeners.forEach(it -> it.onConnect(session, message));
       session.sendMessage(new OperationMessage(Type.GQL_CONNECTION_ACK, message.getId(), null));
