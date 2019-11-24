@@ -1,3 +1,5 @@
+enableFeaturePreview('STABLE_PUBLISHING')
+
 rootProject.name = 'graphql-java-servlet'
 
 include ':graphql-java-kickstart'

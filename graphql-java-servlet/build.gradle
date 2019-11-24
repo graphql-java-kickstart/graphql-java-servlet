@@ -3,9 +3,6 @@ buildscript {
         jcenter()
         mavenCentral()
     }
-    dependencies {
-        classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:3.1.0'
-    }
 }
 
 apply plugin: 'groovy'
@@ -14,17 +11,11 @@ apply plugin: 'java-library-distribution'
 apply plugin: 'biz.aQute.bnd.builder'
 
 jar {
-    manifest {
-        instruction 'Require-Capability', 'osgi.extender'
-    }
+    bnd ('Require-Capability': 'osgi.extender')
 }
-
-//afterReleaseBuild.dependsOn bintrayUpload
 
 dependencies {
     compile(project(':graphql-java-kickstart'))
-
-//    compile 'org.slf4j:slf4j-api:1.7.21'
 
     // Useful utilities
     compile 'com.google.guava:guava:24.1.1-jre'
