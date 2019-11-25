@@ -3,6 +3,13 @@ package graphql.servlet;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
+import aQute.bnd.component.annotations.Activate;
+import aQute.bnd.component.annotations.Component;
+import aQute.bnd.component.annotations.Deactivate;
+import aQute.bnd.component.annotations.Reference;
+import aQute.bnd.component.annotations.ReferenceCardinality;
+import aQute.bnd.component.annotations.ReferencePolicy;
+import aQute.bnd.component.annotations.ReferencePolicyOption;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLCodeRegistry;
@@ -39,13 +46,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 @Component(
     service = {javax.servlet.http.HttpServlet.class, javax.servlet.Servlet.class},
