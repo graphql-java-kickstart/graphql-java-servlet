@@ -6,7 +6,6 @@ buildscript {
 }
 
 apply plugin: 'groovy'
-apply plugin: 'osgi'
 apply plugin: 'java-library-distribution'
 apply plugin: 'biz.aQute.bnd.builder'
 
