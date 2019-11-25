@@ -14,7 +14,7 @@ jar {
 }
 
 dependencies {
-    implementation(project(':graphql-java-kickstart'))
+    api(project(':graphql-java-kickstart'))
 
     // Useful utilities
     compile 'com.google.guava:guava:24.1.1-jre'
