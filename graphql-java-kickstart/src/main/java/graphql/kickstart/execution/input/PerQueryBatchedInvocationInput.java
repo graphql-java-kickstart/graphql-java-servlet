@@ -15,11 +15,12 @@ import lombok.Getter;
  */
 @Getter
 public class PerQueryBatchedInvocationInput implements GraphQLBatchedInvocationInput {
-    private final List<GraphQLSingleInvocationInput> executionInputs;
+
+    private final List<GraphQLSingleInvocationInput> invocationInputs;
     private final ContextSetting contextSetting;
 
     public PerQueryBatchedInvocationInput(List<GraphQLRequest> requests, GraphQLSchema schema, Supplier<GraphQLContext> contextSupplier, Object root, ContextSetting contextSetting) {
-        executionInputs = requests.stream()
+        invocationInputs = requests.stream()
             .map(request -> new GraphQLSingleInvocationInput(request, schema, contextSupplier.get(), root)).collect(Collectors.toList());
         this.contextSetting = contextSetting;
     }

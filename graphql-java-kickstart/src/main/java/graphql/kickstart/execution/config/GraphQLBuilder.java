@@ -9,25 +9,33 @@ import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
 import java.util.function.Supplier;
+import lombok.Getter;
 
 public class GraphQLBuilder {
 
   private Supplier<ExecutionStrategyProvider> executionStrategyProviderSupplier = DefaultExecutionStrategyProvider::new;
   private Supplier<PreparsedDocumentProvider> preparsedDocumentProviderSupplier = () -> NoOpPreparsedDocumentProvider.INSTANCE;
+  @Getter
   private Supplier<Instrumentation> instrumentationSupplier = () -> SimpleInstrumentation.INSTANCE;
 
   public GraphQLBuilder executionStrategyProvider(Supplier<ExecutionStrategyProvider> supplier) {
-    executionStrategyProviderSupplier = supplier;
+    if (supplier != null) {
+      executionStrategyProviderSupplier = supplier;
+    }
     return this;
   }
 
   public GraphQLBuilder preparsedDocumentProvider(Supplier<PreparsedDocumentProvider> supplier) {
-    preparsedDocumentProviderSupplier = supplier;
+    if (supplier != null) {
+      preparsedDocumentProviderSupplier = supplier;
+    }
     return this;
   }
 
   public GraphQLBuilder instrumentation(Supplier<Instrumentation> supplier) {
-    instrumentationSupplier = supplier;
+    if (supplier != null) {
+      instrumentationSupplier = supplier;
+    }
     return this;
   }
 
@@ -36,13 +44,17 @@ public class GraphQLBuilder {
   }
 
   public GraphQL build(GraphQLSchema schema) {
+    return build(schema, instrumentationSupplier);
+  }
+
+  public GraphQL build(GraphQLSchema schema, Supplier<Instrumentation> configuredInstrumentationSupplier) {
     ExecutionStrategyProvider executionStrategyProvider = executionStrategyProviderSupplier.get();
     GraphQL.Builder builder = GraphQL.newGraphQL(schema)
         .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
         .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
         .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
         .preparsedDocumentProvider(preparsedDocumentProviderSupplier.get());
-    Instrumentation instrumentation = instrumentationSupplier.get();
+    Instrumentation instrumentation = configuredInstrumentationSupplier.get();
     builder.instrumentation(instrumentation);
     if (containsDispatchInstrumentation(instrumentation)) {
       builder.doNotAddDefaultInstrumentations();

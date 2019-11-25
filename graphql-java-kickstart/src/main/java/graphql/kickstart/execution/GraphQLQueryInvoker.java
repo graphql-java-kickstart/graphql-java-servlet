@@ -54,7 +54,7 @@ public class GraphQLQueryInvoker {
       return GraphQLQueryResult.create(query((GraphQLSingleInvocationInput) invocationInput));
     }
     GraphQLBatchedInvocationInput batchedInvocationInput = (GraphQLBatchedInvocationInput) invocationInput;
-    return GraphQLQueryResult.create(query(batchedInvocationInput.getExecutionInputs(), batchedInvocationInput.getContextSetting()));
+    return GraphQLQueryResult.create(query(batchedInvocationInput.getInvocationInputs(), batchedInvocationInput.getContextSetting()));
   }
 
   public ExecutionResult query(GraphQLSingleInvocationInput singleInvocationInput) {
