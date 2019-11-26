@@ -3,8 +3,8 @@ package graphql.servlet;
 import static graphql.servlet.QueryResponseWriter.createWriter;
 
 import graphql.GraphQLException;
+import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
-import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.servlet.input.BatchInputPreProcessResult;
 import graphql.servlet.input.BatchInputPreProcessor;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
@@ -19,11 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 class HttpRequestHandlerImpl implements HttpRequestHandler {
 
   private final GraphQLConfiguration configuration;
-  private final GraphQLQueryInvoker queryInvoker;
+  private final GraphQLInvoker graphQLInvoker;
 
   HttpRequestHandlerImpl(GraphQLConfiguration configuration) {
     this.configuration = configuration;
-    queryInvoker = configuration.getQueryInvoker();
+    graphQLInvoker = configuration.getGraphQLInvoker();
   }
 
   @Override
@@ -65,7 +65,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
   private GraphQLQueryResult invoke(GraphQLInvocationInput invocationInput, HttpServletRequest request,
       HttpServletResponse response) {
     if (invocationInput instanceof GraphQLSingleInvocationInput) {
-      return queryInvoker.query(invocationInput);
+      return graphQLInvoker.query(invocationInput);
     }
     return invokeBatched((GraphQLBatchedInvocationInput) invocationInput, request, response);
   }
@@ -76,7 +76,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
     BatchInputPreProcessor preprocessor = configuration.getBatchInputPreProcessor();
     BatchInputPreProcessResult result = preprocessor.preProcessBatch(batchedInvocationInput, request, response);
     if (result.isExecutable()) {
-      return queryInvoker.query(result.getBatchedInvocationInput());
+      return graphQLInvoker.query(result.getBatchedInvocationInput());
     }
 
     return GraphQLQueryResult.createError(result.getStatusCode(), result.getStatusMessage());

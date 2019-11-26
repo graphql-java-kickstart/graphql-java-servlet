@@ -108,16 +108,6 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
     );
   }
 
-  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, Session session) {
-    HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());
-    return new GraphQLSingleInvocationInput(
-        graphQLRequest,
-        schemaProviderSupplier.get().getSchema(request),
-        contextBuilderSupplier.get().build(session, request),
-        rootObjectBuilderSupplier.get().build(request)
-    );
-  }
-
   @Override
   public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, SubscriptionSession session) {
     HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());

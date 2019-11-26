@@ -1,14 +1,17 @@
 package graphql.servlet;
 
-import graphql.schema.GraphQLFieldDefinition;
-import graphql.servlet.core.GraphQLMBean;
+import static graphql.kickstart.execution.GraphQLRequest.createQueryOnlyRequest;
+
+import graphql.ExecutionResult;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
-import graphql.servlet.core.GraphQLServletListener;
 import graphql.kickstart.execution.GraphQLRequest;
+import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
+import graphql.schema.GraphQLFieldDefinition;
+import graphql.servlet.core.GraphQLMBean;
+import graphql.servlet.core.GraphQLServletListener;
 import graphql.servlet.input.GraphQLInvocationInputFactory;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -115,8 +118,10 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
   @Override
   public String executeQuery(String query) {
     try {
-      return configuration.getObjectMapper().serializeResultAsJson(configuration.getQueryInvoker()
-          .query(configuration.getInvocationInputFactory().create(new GraphQLRequest(query, new HashMap<>(), null))));
+      GraphQLRequest graphQLRequest = createQueryOnlyRequest(query);
+      GraphQLSingleInvocationInput invocationInput = configuration.getInvocationInputFactory().create(graphQLRequest);
+      ExecutionResult result = configuration.getGraphQLInvoker().query(invocationInput).getResult();
+      return configuration.getObjectMapper().serializeResultAsJson(result);
     } catch (Exception e) {
       return e.getMessage();
     }

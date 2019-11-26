@@ -1,29 +1,16 @@
 package graphql.kickstart.execution;
 
-import graphql.ExecutionInput;
-import graphql.ExecutionResult;
-import graphql.GraphQL;
 import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.SimpleInstrumentation;
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
-import graphql.schema.GraphQLSchema;
 import graphql.kickstart.execution.config.DefaultExecutionStrategyProvider;
 import graphql.kickstart.execution.config.ExecutionStrategyProvider;
-import graphql.kickstart.execution.context.ContextSetting;
-import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
-import graphql.kickstart.execution.input.GraphQLInvocationInput;
-import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+import graphql.kickstart.execution.config.GraphQLBuilder;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import javax.security.auth.Subject;
 
 /**
  * @author Andrew Potter
@@ -49,81 +36,12 @@ public class GraphQLQueryInvoker {
     return new Builder();
   }
 
-  public GraphQLQueryResult query(GraphQLInvocationInput invocationInput) {
-    if (invocationInput instanceof GraphQLSingleInvocationInput) {
-      return GraphQLQueryResult.create(query((GraphQLSingleInvocationInput) invocationInput));
-    }
-    GraphQLBatchedInvocationInput batchedInvocationInput = (GraphQLBatchedInvocationInput) invocationInput;
-    return GraphQLQueryResult.create(query(batchedInvocationInput.getInvocationInputs(), batchedInvocationInput.getContextSetting()));
-  }
-
-  public ExecutionResult query(GraphQLSingleInvocationInput singleInvocationInput) {
-    return queryAsync(singleInvocationInput, getInstrumentation).join();
-  }
-
-  private CompletableFuture<ExecutionResult> queryAsync(GraphQLSingleInvocationInput singleInvocationInput,
-      Supplier<Instrumentation> configuredInstrumentation) {
-    return query(singleInvocationInput, configuredInstrumentation, singleInvocationInput.getExecutionInput());
-  }
-
-  public List<ExecutionResult> query(List<GraphQLSingleInvocationInput> batchedInvocationInput,
-      ContextSetting contextSetting) {
-    List<ExecutionInput> executionIds = batchedInvocationInput.stream()
-        .map(GraphQLSingleInvocationInput::getExecutionInput)
-        .collect(Collectors.toList());
-    Supplier<Instrumentation> configuredInstrumentation = contextSetting
-        .configureInstrumentationForContext(getInstrumentation, executionIds, optionsSupplier.get());
-    return batchedInvocationInput.stream()
-        .map(input -> this.queryAsync(input, configuredInstrumentation))
-        //We want eager eval
-        .collect(Collectors.toList())
-        .stream()
-        .map(CompletableFuture::join)
-        .collect(Collectors.toList());
-  }
-
-  private GraphQL newGraphQL(GraphQLSchema schema, Supplier<Instrumentation> configuredInstrumentation) {
-    ExecutionStrategyProvider executionStrategyProvider = getExecutionStrategyProvider.get();
-    GraphQL.Builder builder = GraphQL.newGraphQL(schema)
-        .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
-        .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
-        .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
-        .preparsedDocumentProvider(getPreparsedDocumentProvider.get());
-    Instrumentation instrumentation = configuredInstrumentation.get();
-    builder.instrumentation(instrumentation);
-    if (containsDispatchInstrumentation(instrumentation)) {
-      builder.doNotAddDefaultInstrumentations();
-    }
-    return builder.build();
-  }
-
-  private boolean containsDispatchInstrumentation(Instrumentation instrumentation) {
-    if (instrumentation instanceof ChainedInstrumentation) {
-      return ((ChainedInstrumentation) instrumentation).getInstrumentations().stream()
-          .anyMatch(this::containsDispatchInstrumentation);
-    }
-    return instrumentation instanceof DataLoaderDispatcherInstrumentation;
-  }
-
-  private CompletableFuture<ExecutionResult> query(GraphQLSingleInvocationInput invocationInput,
-      Supplier<Instrumentation> configuredInstrumentation, ExecutionInput executionInput) {
-    if (Subject.getSubject(AccessController.getContext()) == null && invocationInput.getSubject().isPresent()) {
-      return Subject
-          .doAs(invocationInput.getSubject().get(), (PrivilegedAction<CompletableFuture<ExecutionResult>>) () -> {
-            try {
-              return query(invocationInput.getSchema(), executionInput, configuredInstrumentation);
-            } catch (Exception e) {
-              throw new RuntimeException(e);
-            }
-          });
-    }
-
-    return query(invocationInput.getSchema(), executionInput, configuredInstrumentation);
-  }
-
-  private CompletableFuture<ExecutionResult> query(GraphQLSchema schema, ExecutionInput executionInput,
-      Supplier<Instrumentation> configuredInstrumentation) {
-    return newGraphQL(schema, configuredInstrumentation).executeAsync(executionInput);
+  public GraphQLInvoker toGraphQLInvoker() {
+    GraphQLBuilder graphQLBuilder = new GraphQLBuilder()
+        .executionStrategyProvider(getExecutionStrategyProvider)
+        .instrumentation(getInstrumentation)
+        .preparsedDocumentProvider(getPreparsedDocumentProvider);
+    return new GraphQLInvoker(graphQLBuilder, new BatchedDataLoaderGraphQLBuilder(optionsSupplier));
   }
 
   public static class Builder {

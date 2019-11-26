@@ -1,5 +1,6 @@
 package graphql.servlet;
 
+import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.kickstart.execution.context.ContextSetting;
@@ -24,6 +25,7 @@ public class GraphQLConfiguration {
   private final GraphQLInvocationInputFactory invocationInputFactory;
   private final Supplier<BatchInputPreProcessor> batchInputPreProcessor;
   private final GraphQLQueryInvoker queryInvoker;
+  private final GraphQLInvoker graphQLInvoker;
   private final GraphQLObjectMapper objectMapper;
   private final List<GraphQLServletListener> listeners;
   private final boolean asyncServletModeEnabled;
@@ -31,12 +33,14 @@ public class GraphQLConfiguration {
   private final long subscriptionTimeout;
   private final ContextSetting contextSetting;
 
-  private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory, GraphQLQueryInvoker queryInvoker,
+  private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory,
+      GraphQLQueryInvoker queryInvoker,
       GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled,
       Executor asyncExecutor, long subscriptionTimeout, ContextSetting contextSetting,
       Supplier<BatchInputPreProcessor> batchInputPreProcessor) {
     this.invocationInputFactory = invocationInputFactory;
     this.queryInvoker = queryInvoker;
+    this.graphQLInvoker = queryInvoker.toGraphQLInvoker();
     this.objectMapper = objectMapper;
     this.listeners = listeners;
     this.asyncServletModeEnabled = asyncServletModeEnabled;
@@ -62,8 +66,10 @@ public class GraphQLConfiguration {
     return invocationInputFactory;
   }
 
-  public GraphQLQueryInvoker getQueryInvoker() {
-    return queryInvoker;
+  public GraphQLQueryInvoker getQueryInvoker() { return queryInvoker; }
+
+  public GraphQLInvoker getGraphQLInvoker() {
+    return graphQLInvoker;
   }
 
   public GraphQLObjectMapper getObjectMapper() {
