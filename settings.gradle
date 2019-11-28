@@ -1,4 +1,4 @@
-rootProject.name = 'graphql-java-kickstart-servlet'
+rootProject.name = 'graphql-java-servlet'
 
 include ':graphql-java-kickstart'
 include ':graphql-java-servlet'

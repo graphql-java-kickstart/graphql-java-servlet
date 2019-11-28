@@ -114,7 +114,7 @@ subprojects {
                     pom.withXml {
                         asNode().children().last() + {
                             resolveStrategy = Closure.DELEGATE_FIRST
-                            name 'graphql-java-servlet'
+                            name PROJECT_NAME
                             description 'relay.js-compatible GraphQL servlet'
                             url 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
                             inceptionYear '2016'
