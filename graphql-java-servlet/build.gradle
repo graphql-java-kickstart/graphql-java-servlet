@@ -1,0 +1,42 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'java-library-distribution'
+apply plugin: 'biz.aQute.bnd.builder'
+
+jar {
+    bnd ('Require-Capability': 'osgi.extender')
+}
+
+dependencies {
+    api(project(':graphql-java-kickstart'))
+
+    // Useful utilities
+    compile 'com.google.guava:guava:24.1.1-jre'
+
+    // Servlet
+    compile 'javax.servlet:javax.servlet-api:3.1.0'
+    compile 'javax.websocket:javax.websocket-api:1.1'
+
+    // OSGi
+    compileOnly 'org.osgi:org.osgi.core:6.0.0'
+    compileOnly 'org.osgi:org.osgi.service.cm:1.5.0'
+    compileOnly 'org.osgi:org.osgi.service.component:1.3.0'
+    compileOnly 'biz.aQute.bnd:biz.aQute.bndlib:4.3.1'
+
+    testCompile 'io.github.graphql-java:graphql-java-annotations:5.2'
+
+    // Unit testing
+    testCompile "org.codehaus.groovy:groovy-all:2.4.1"
+    testCompile "org.spockframework:spock-core:1.1-groovy-2.4-rc-3"
+    testRuntime "cglib:cglib-nodep:3.2.4"
+    testRuntime "org.objenesis:objenesis:2.5.1"
+    testCompile 'org.slf4j:slf4j-simple:1.7.24'
+    testCompile 'org.springframework:spring-test:4.3.7.RELEASE'
+    testRuntime 'org.springframework:spring-web:4.3.7.RELEASE'
+}

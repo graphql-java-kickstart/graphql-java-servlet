@@ -1,0 +1,10 @@
+dependencies {
+    // GraphQL
+    compile "com.graphql-java:graphql-java:$LIB_GRAPHQL_JAVA_VER"
+
+    // JSON
+    compile "com.fasterxml.jackson.core:jackson-core:$LIB_JACKSON_VER"
+    compile "com.fasterxml.jackson.core:jackson-annotations:$LIB_JACKSON_VER"
+    compile "com.fasterxml.jackson.core:jackson-databind:$LIB_JACKSON_VER"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$LIB_JACKSON_VER"
+}
