@@ -42,6 +42,8 @@ public class GraphQLInvoker {
     GraphQL graphQL = batchedDataLoaderGraphQLBuilder.newGraphQL(batchedInvocationInput, graphQLBuilder);
     return batchedInvocationInput.getExecutionInputs().stream()
         .map(executionInput -> proxy.executeAsync(graphQL, executionInput))
+        .collect(toList())
+        .stream()
         .map(CompletableFuture::join)
         .collect(toList());
   }
