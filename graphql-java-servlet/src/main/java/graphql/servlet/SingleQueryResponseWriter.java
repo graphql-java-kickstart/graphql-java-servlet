@@ -6,6 +6,8 @@ import static graphql.servlet.HttpRequestHandler.STATUS_OK;
 import graphql.ExecutionResult;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,7 @@ class SingleQueryResponseWriter implements QueryResponseWriter {
     response.setContentType(APPLICATION_JSON_UTF8);
     response.setStatus(STATUS_OK);
     String responseContent = graphQLObjectMapper.serializeResultAsJson(result);
-    response.setContentLength(responseContent.length());
+    response.setContentLength(responseContent.getBytes(StandardCharsets.UTF_8).length);
     response.getWriter().write(responseContent);
   }
 
