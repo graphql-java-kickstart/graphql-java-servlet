@@ -2,11 +2,12 @@ package graphql.kickstart.servlet;
 
 import graphql.ExecutionResult;
 import graphql.kickstart.execution.GraphQLObjectMapper;
+import lombok.RequiredArgsConstructor;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 class SingleQueryResponseWriter implements QueryResponseWriter {
@@ -16,8 +17,9 @@ class SingleQueryResponseWriter implements QueryResponseWriter {
 
   @Override
   public void write(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    response.setContentType(HttpRequestHandler.APPLICATION_JSON_UTF8);
-    response.setStatus(HttpRequestHandler.STATUS_OK);
+    response.setContentType(APPLICATION_JSON_UTF8);
+    response.setStatus(STATUS_OK);
+    response.setCharacterEncoding(StandardCharsets.UTF_8.displayName());
     String responseContent = graphQLObjectMapper.serializeResultAsJson(result);
     response.setContentLength(responseContent.getBytes(StandardCharsets.UTF_8).length);
     response.getWriter().write(responseContent);
