@@ -1,4 +1,4 @@
-package graphql.servlet.examples.osgi;
+package graphql.kickstart.servlet.examples.osgi;
 
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLType;
