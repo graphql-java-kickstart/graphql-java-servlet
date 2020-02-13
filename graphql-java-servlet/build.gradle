@@ -16,9 +16,6 @@ jar {
 dependencies {
     api(project(':graphql-java-kickstart'))
 
-    // Useful utilities
-    compile 'com.google.guava:guava:24.1.1-jre'
-
     // Servlet
     compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile 'javax.websocket:javax.websocket-api:1.1'
@@ -39,4 +36,5 @@ dependencies {
     testCompile 'org.slf4j:slf4j-simple:1.7.24'
     testCompile 'org.springframework:spring-test:4.3.7.RELEASE'
     testRuntime 'org.springframework:spring-web:4.3.7.RELEASE'
+    testCompile 'com.google.guava:guava:24.1.1-jre'
 }
