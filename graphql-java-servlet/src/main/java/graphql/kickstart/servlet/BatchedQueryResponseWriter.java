@@ -3,6 +3,7 @@ package graphql.kickstart.servlet;
 import graphql.ExecutionResult;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +33,7 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
     responseBuilder.append(']');
 
     String responseContent = responseBuilder.toString();
-    response.setContentLength(responseContent.length());
+    response.setContentLength(responseContent.getBytes(StandardCharsets.UTF_8).length);
     response.getWriter().write(responseContent);
   }
 
