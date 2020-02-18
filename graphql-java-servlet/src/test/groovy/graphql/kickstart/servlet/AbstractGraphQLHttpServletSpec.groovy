@@ -13,6 +13,7 @@ import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
 import spock.lang.Specification
 
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -108,8 +109,22 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         then:
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
-        response.getContentLength() == mapper.writeValueAsString(["data": ["echo": "test"]]).length()
+        response.getContentLength() == mapper.writeValueAsString(["data": ["echo": "test"]]).getBytes(StandardCharsets.UTF_8).length
         getResponseContent().data.echo == "test"
+    }
+
+    def "query over HTTP GET returns data with correct contentLength"() {
+        setup:
+        request.addParameter('query', 'query { echo(arg:"special char á") }')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        response.getContentLength() == mapper.writeValueAsString(["data": ["echo": "special char á"]]).getBytes(StandardCharsets.UTF_8).length
+        getResponseContent().data.echo == "special char á"
     }
 
     def "async query over HTTP GET starts async request"() {
@@ -210,6 +225,21 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         response.getStatus() == STATUS_OK
         response.getContentType() == CONTENT_TYPE_JSON_UTF8
         getBatchedResponseContent()[0].data.echo == "test"
+        getBatchedResponseContent()[1].data.echo == "test"
+    }
+
+    def "batched query over HTTP GET returns data with correct contentLength"() {
+        setup:
+        request.addParameter('query', '[{ "query": "query { echo(arg:\\"special char á\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]')
+
+        when:
+        servlet.doGet(request, response)
+
+        then:
+        response.getStatus() == STATUS_OK
+        response.getContentType() == CONTENT_TYPE_JSON_UTF8
+        response.getContentLength() == mapper.writeValueAsString([["data": ["echo": "special char á"]], ["data": ["echo": "test"]]]).getBytes(StandardCharsets.UTF_8).length
+        getBatchedResponseContent()[0].data.echo == "special char á"
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
