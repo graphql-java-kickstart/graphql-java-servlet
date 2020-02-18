@@ -1,4 +1,4 @@
-package graphql.servlet
+package graphql.kickstart.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.ExecutionResultImpl
