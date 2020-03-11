@@ -1,0 +1,2 @@
+Export-Package: graphql.kickstart.*
+Require-Capability: osgi.extender

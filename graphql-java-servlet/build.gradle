@@ -10,7 +10,7 @@ apply plugin: 'java-library-distribution'
 apply plugin: 'biz.aQute.bnd.builder'
 
 jar {
-    bnd ('Require-Capability': 'osgi.extender')
+    bndfile = 'bnd.bnd'
 }
 
 dependencies {
