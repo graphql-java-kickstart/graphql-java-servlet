@@ -10,7 +10,7 @@ apply plugin: 'java-library-distribution'
 apply plugin: 'biz.aQute.bnd.builder'
 
 jar {
-    bnd ('Require-Capability': 'osgi.extender')
+    bndfile = 'bnd.bnd'
 }
 
 dependencies {
@@ -24,7 +24,9 @@ dependencies {
     compileOnly 'org.osgi:org.osgi.core:6.0.0'
     compileOnly 'org.osgi:org.osgi.service.cm:1.5.0'
     compileOnly 'org.osgi:org.osgi.service.component:1.3.0'
-    compileOnly 'biz.aQute.bnd:biz.aQute.bndlib:4.3.1'
+    compileOnly 'org.osgi:org.osgi.service.component.annotations:1.3.0'
+    compileOnly 'org.osgi:org.osgi.service.metatype.annotations:1.3.0'
+    compileOnly 'org.osgi:org.osgi.annotation:6.0.0'
 
     testCompile 'io.github.graphql-java:graphql-java-annotations:5.2'
 

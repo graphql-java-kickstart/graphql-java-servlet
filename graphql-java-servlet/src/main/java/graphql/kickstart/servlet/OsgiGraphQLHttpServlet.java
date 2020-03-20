@@ -3,13 +3,13 @@ package graphql.kickstart.servlet;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
-import aQute.bnd.component.annotations.Activate;
-import aQute.bnd.component.annotations.Component;
-import aQute.bnd.component.annotations.Deactivate;
-import aQute.bnd.component.annotations.Reference;
-import aQute.bnd.component.annotations.ReferenceCardinality;
-import aQute.bnd.component.annotations.ReferencePolicy;
-import aQute.bnd.component.annotations.ReferencePolicyOption;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.kickstart.servlet.config.DefaultGraphQLSchemaServletProvider;
@@ -38,6 +38,8 @@ import graphql.kickstart.execution.GraphQLRootObjectBuilder;
 import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import graphql.kickstart.execution.instrumentation.NoOpInstrumentationProvider;
+import org.osgi.service.metatype.annotations.Designate;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -49,8 +51,9 @@ import java.util.concurrent.TimeUnit;
 
 @Component(
     service = {javax.servlet.http.HttpServlet.class, javax.servlet.Servlet.class},
-    property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"}
+    property = {"service.description=GraphQL HTTP Servlet"}
 )
+@Designate(ocd = OsgiGraphQLHttpServletConfiguration.class, factory = true)
 public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
   private final List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
