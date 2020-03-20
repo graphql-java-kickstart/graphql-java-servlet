@@ -57,6 +57,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
     } catch (Throwable t) {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
+      log.debug("Possibly due to exception: ", t);
     }
   }
 
