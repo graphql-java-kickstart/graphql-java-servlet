@@ -1,24 +1,24 @@
 package graphql.kickstart.execution.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import graphql.kickstart.execution.error.DefaultObjectMapperConfigurer;
+import graphql.kickstart.execution.error.DefaultGraphQLServletObjectMapperConfigurer;
 
 public class ConfiguringObjectMapperProvider implements ObjectMapperProvider {
 
   private final ObjectMapper objectMapperTemplate;
 
-  private final ObjectMapperConfigurer objectMapperConfigurer;
+  private final GraphQLServletObjectMapperConfigurer objectMapperConfigurer;
 
-  public ConfiguringObjectMapperProvider(ObjectMapper objectMapperTemplate, ObjectMapperConfigurer objectMapperConfigurer) {
+  public ConfiguringObjectMapperProvider(ObjectMapper objectMapperTemplate, GraphQLServletObjectMapperConfigurer objectMapperConfigurer) {
     this.objectMapperTemplate = objectMapperTemplate == null ? new ObjectMapper() : objectMapperTemplate;
-    this.objectMapperConfigurer = objectMapperConfigurer == null ? new DefaultObjectMapperConfigurer() : objectMapperConfigurer;
+    this.objectMapperConfigurer = objectMapperConfigurer == null ? new DefaultGraphQLServletObjectMapperConfigurer() : objectMapperConfigurer;
   }
 
   public ConfiguringObjectMapperProvider(ObjectMapper objectMapperTemplate) {
       this(objectMapperTemplate, null);
   }
 
-  public ConfiguringObjectMapperProvider(ObjectMapperConfigurer objectMapperConfigurer) {
+  public ConfiguringObjectMapperProvider(GraphQLServletObjectMapperConfigurer objectMapperConfigurer) {
     this(null, objectMapperConfigurer);
   }
 

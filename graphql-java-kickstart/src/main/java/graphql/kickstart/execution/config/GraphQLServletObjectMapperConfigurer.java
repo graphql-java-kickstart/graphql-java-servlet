@@ -5,6 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * @author Andrew Potter
  */
-public interface ObjectMapperConfigurer {
+public interface GraphQLServletObjectMapperConfigurer {
     void configure(ObjectMapper mapper);
 }

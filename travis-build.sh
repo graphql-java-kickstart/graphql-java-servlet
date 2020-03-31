@@ -14,7 +14,7 @@ EOL
     chmod 600 $HOME/.netrc
 }
 
-if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ] && [ "${RELEASE}" = "true" ]; then
     saveGitCredentials
     git checkout -f ${TRAVIS_BRANCH}
     if [ "${RELEASE}" = "true" ]; then

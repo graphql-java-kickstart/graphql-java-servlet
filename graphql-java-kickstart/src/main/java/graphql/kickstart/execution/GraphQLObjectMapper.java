@@ -14,7 +14,7 @@ import graphql.ExecutionResultImpl;
 import graphql.GraphQLError;
 import graphql.execution.ExecutionPath;
 import graphql.kickstart.execution.config.ConfiguringObjectMapperProvider;
-import graphql.kickstart.execution.config.ObjectMapperConfigurer;
+import graphql.kickstart.execution.config.GraphQLServletObjectMapperConfigurer;
 import graphql.kickstart.execution.config.ObjectMapperProvider;
 import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
 import graphql.kickstart.execution.error.GraphQLErrorHandler;
@@ -192,11 +192,11 @@ public class GraphQLObjectMapper {
     private ObjectMapperProvider objectMapperProvider = new ConfiguringObjectMapperProvider();
     private Supplier<GraphQLErrorHandler> graphQLErrorHandler = DefaultGraphQLErrorHandler::new;
 
-    public Builder withObjectMapperConfigurer(ObjectMapperConfigurer objectMapperConfigurer) {
+    public Builder withObjectMapperConfigurer(GraphQLServletObjectMapperConfigurer objectMapperConfigurer) {
       return withObjectMapperConfigurer(() -> objectMapperConfigurer);
     }
 
-    public Builder withObjectMapperConfigurer(Supplier<ObjectMapperConfigurer> objectMapperConfigurer) {
+    public Builder withObjectMapperConfigurer(Supplier<GraphQLServletObjectMapperConfigurer> objectMapperConfigurer) {
       this.objectMapperProvider = new ConfiguringObjectMapperProvider(objectMapperConfigurer.get());
       return this;
     }
