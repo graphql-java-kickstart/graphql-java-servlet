@@ -179,27 +179,27 @@ subprojects {
         }
 
         artifactory {
-            contextUrl = 'https://oss.jfrog.org'
+            contextUrl = 'http://oss.jfrog.org'
             publish {
                 repository {
-                    repoKey = 'oss-snapshot-local'
-
-                    username = System.env.BINTRAY_USER ?: System.getProperty('BINTRAY_USER')
-                    password = System.env.BINTRAY_PASS ?: System.getProperty('BINTRAY_PASS')
-
-                    maven = true
+                    if (project.version.endsWith("-SNAPSHOT")) {
+                        repoKey = 'oss-snapshot-local'
+                    } else {
+                        repoKey = 'oss-release-local'
+                    }
+                    username = System.env.BINTRAY_USER ?: project.findProperty('BINTRAY_USER') ?: ''
+                    password = System.env.BINTRAY_PASS ?: project.findProperty('BINTRAY_PASS') ?: ''
                 }
                 defaults {
-                    publications 'maven'
+                    publications('mainProjectPublication')
                     publishArtifacts = true
                     publishPom = true
                 }
             }
             resolve {
-                repository {
-                    repoKey = 'jcenter'
-                }
+                repoKey = 'oss-snapshot-local'
             }
+            clientConfig.info.setBuildNumber(System.getProperty('build.number'))
         }
     }
 }
