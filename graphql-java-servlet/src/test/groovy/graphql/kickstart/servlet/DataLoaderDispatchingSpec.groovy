@@ -233,7 +233,7 @@ class DataLoaderDispatchingSpec extends Specification {
 
     def "PER_REQUEST_WITH_INSTRUMENTATION adds instrumentation"() {
         setup:
-        ExecutionInput mockInput = ExecutionInput.newExecutionInput().dataLoaderRegistry(new DataLoaderRegistry()).build()
+        ExecutionInput mockInput = ExecutionInput.newExecutionInput().query("query { query(arg:\"test\")").dataLoaderRegistry(new DataLoaderRegistry()).build()
         when:
         def chainedFromContext = ContextSetting.PER_REQUEST_WITH_INSTRUMENTATION
                 .configureInstrumentationForContext(chainedSupplier, Collections.singletonList(mockInput), DataLoaderDispatcherInstrumentationOptions.newOptions())
