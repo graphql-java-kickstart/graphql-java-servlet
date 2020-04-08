@@ -21,8 +21,9 @@ class SingleQueryResponseWriter implements QueryResponseWriter {
     response.setStatus(HttpRequestHandler.STATUS_OK);
     response.setCharacterEncoding(StandardCharsets.UTF_8.name());
     String responseContent = graphQLObjectMapper.serializeResultAsJson(result);
-    response.setContentLength(responseContent.getBytes(StandardCharsets.UTF_8).length);
-    response.getWriter().write(responseContent);
+    byte[] contentBytes = responseContent.getBytes(StandardCharsets.UTF_8);
+    response.setContentLength(contentBytes.length);
+    response.getOutputStream().write(contentBytes);
   }
 
 }

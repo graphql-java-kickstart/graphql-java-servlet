@@ -7,8 +7,10 @@ import org.codehaus.groovy.runtime.StringBufferWriter
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import java.nio.charset.StandardCharsets
 
 class SingleQueryResponseWriterTest extends Specification {
 
@@ -20,17 +22,15 @@ class SingleQueryResponseWriterTest extends Specification {
 
       def requestMock = Mock(HttpServletRequest)
       def responseMock = Mock(HttpServletResponse)
+      responseMock.getOutputStream() >> Mock(ServletOutputStream)
 
-      def responseContentBuffer = new StringBuffer()
-      responseMock.getWriter() >> new PrintWriter(new StringBufferWriter(responseContentBuffer))
       1 * responseMock.setContentLength(expectedContentLenght)
-      1 * responseMock.setCharacterEncoding("UTF-8")
+      1 * responseMock.setCharacterEncoding(StandardCharsets.UTF_8.name())
+      1 * responseMock.getOutputStream().write(expectedResponseContent.getBytes(StandardCharsets.UTF_8))
 
     expect:
       def writer = new SingleQueryResponseWriter(new ExecutionResultImpl(result, []), graphQLObjectMapperMock)
       writer.write(requestMock, responseMock)
-
-      responseContentBuffer.toString() == expectedResponseContent
 
     where:
       result                || expectedContentLenght | expectedResponseContent
