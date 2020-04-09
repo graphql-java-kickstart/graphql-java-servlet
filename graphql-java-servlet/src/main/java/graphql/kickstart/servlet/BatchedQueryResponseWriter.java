@@ -33,8 +33,9 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
     responseBuilder.append(']');
 
     String responseContent = responseBuilder.toString();
-    response.setContentLength(responseContent.getBytes(StandardCharsets.UTF_8).length);
-    response.getWriter().write(responseContent);
+    byte[] contentBytes = responseContent.getBytes(StandardCharsets.UTF_8);
+    response.setContentLength(contentBytes.length);
+    response.getOutputStream().write(contentBytes);
   }
 
 }
