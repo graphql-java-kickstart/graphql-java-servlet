@@ -37,6 +37,7 @@ plugins {
     id 'io.franzbecker.gradle-lombok' version '3.2.0' apply false
     id "com.jfrog.artifactory" version "4.11.0" apply false
     id "biz.aQute.bnd.builder" version "5.0.0" apply false
+    id "org.javamodularity.moduleplugin" version "1.5.0" apply false
 }
 
 subprojects {
@@ -46,6 +47,7 @@ subprojects {
     apply plugin: "com.jfrog.bintray"
     apply plugin: 'io.franzbecker.gradle-lombok'
     apply plugin: 'com.jfrog.artifactory'
+    apply plugin: 'org.javamodularity.moduleplugin'
 
     repositories {
         mavenLocal()
