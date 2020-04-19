@@ -1,6 +1,6 @@
 language: java
 dist: trusty
 jdk:
-  - oraclejdk9
+  - oraclejdk11
 script:
   - sh travis-build.sh
