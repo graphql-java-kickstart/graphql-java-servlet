@@ -29,8 +29,8 @@ class SingleQueryResponseWriterTest extends Specification {
       1 * responseMock.getOutputStream().write(expectedResponseContent.getBytes(StandardCharsets.UTF_8))
 
     expect:
-      def writer = new SingleQueryResponseWriter(new ExecutionResultImpl(result, []), graphQLObjectMapperMock)
-      writer.write(requestMock, responseMock)
+      def writer = new SingleQueryResponseWriter(new ExecutionResultImpl(result, []), graphQLObjectMapperMock, null)
+      writer.write(requestMock, responseMock, null)
 
     where:
       result                || expectedContentLenght | expectedResponseContent
