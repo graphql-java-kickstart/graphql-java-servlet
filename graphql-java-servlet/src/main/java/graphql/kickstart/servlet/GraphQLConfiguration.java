@@ -4,6 +4,7 @@ import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.kickstart.execution.context.ContextSetting;
+import graphql.kickstart.servlet.cache.GraphQLResponseCache;
 import graphql.kickstart.servlet.config.DefaultGraphQLSchemaServletProvider;
 import graphql.kickstart.servlet.config.GraphQLSchemaServletProvider;
 import graphql.kickstart.servlet.context.GraphQLServletContextBuilder;
@@ -33,12 +34,13 @@ public class GraphQLConfiguration {
   private final Executor asyncExecutor;
   private final long subscriptionTimeout;
   private final ContextSetting contextSetting;
+  private final GraphQLResponseCache responseCache;
 
   private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory,
       GraphQLQueryInvoker queryInvoker,
       GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled,
       Executor asyncExecutor, long subscriptionTimeout, ContextSetting contextSetting,
-      Supplier<BatchInputPreProcessor> batchInputPreProcessor) {
+      Supplier<BatchInputPreProcessor> batchInputPreProcessor, GraphQLResponseCache responseCache) {
     this.invocationInputFactory = invocationInputFactory;
     this.queryInvoker = queryInvoker;
     this.graphQLInvoker = queryInvoker.toGraphQLInvoker();
@@ -49,6 +51,7 @@ public class GraphQLConfiguration {
     this.subscriptionTimeout = subscriptionTimeout;
     this.contextSetting = contextSetting;
     this.batchInputPreProcessor = batchInputPreProcessor;
+    this.responseCache = responseCache;
   }
 
   public static GraphQLConfiguration.Builder with(GraphQLSchema schema) {
@@ -109,6 +112,10 @@ public class GraphQLConfiguration {
     return batchInputPreProcessor.get();
   }
 
+  public GraphQLResponseCache getResponseCache() {
+    return responseCache;
+  }
+
   public static class Builder {
 
     private GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder;
@@ -121,6 +128,7 @@ public class GraphQLConfiguration {
     private long subscriptionTimeout = 0;
     private ContextSetting contextSetting = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION;
     private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier = () -> new NoOpBatchInputPreProcessor();
+    private GraphQLResponseCache responseCache;
 
     private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
       this.invocationInputFactoryBuilder = invocationInputFactoryBuilder;
@@ -199,6 +207,11 @@ public class GraphQLConfiguration {
       return this;
     }
 
+    public Builder with(GraphQLResponseCache responseCache) {
+      this.responseCache = responseCache;
+      return this;
+    }
+
     public GraphQLConfiguration build() {
       return new GraphQLConfiguration(
           this.invocationInputFactory != null ? this.invocationInputFactory : invocationInputFactoryBuilder.build(),
@@ -209,7 +222,8 @@ public class GraphQLConfiguration {
           asyncExecutor,
           subscriptionTimeout,
           contextSetting,
-          batchInputPreProcessorSupplier
+          batchInputPreProcessorSupplier,
+          responseCache
       );
     }
 
