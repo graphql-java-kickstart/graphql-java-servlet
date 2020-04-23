@@ -44,7 +44,7 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
 
     if (responseCache != null) {
       try {
-        responseCache.cacheResponse(invocationInput, CachedResponse.ofContent(contentBytes));
+        responseCache.cacheResponse(request, invocationInput, CachedResponse.ofContent(contentBytes));
       } catch (Throwable t) {
         log.warn(t.getMessage(), t);
         log.warn("Ignore read from cache, unexpected error happened");

@@ -55,7 +55,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
       if (configuration.getResponseCache() != null) {
         CachedResponse cachedResponse = null;
         try {
-          cachedResponse = configuration.getResponseCache().getCachedResponse(invocationInput);
+          cachedResponse = configuration.getResponseCache().getCachedResponse(request, invocationInput);
         } catch (Throwable t) {
           log.warn(t.getMessage(), t);
           log.warn("Ignore read from cache, unexpected error happened");
