@@ -10,6 +10,7 @@ public interface GraphQLResponseCache {
   /**
    * Retrieve the cache by input data. If this query was not cached before, will return empty {@link Optional}.
    *
+   * @param request         the http request
    * @param invocationInput input data
    * @return cached response if something available in cache or {@literal null} if nothing cached
    */
@@ -18,6 +19,7 @@ public interface GraphQLResponseCache {
   /**
    * Decide to cache or not this response. It depends on the implementation.
    *
+   * @param request         the http request
    * @param invocationInput input data
    * @param cachedResponse  response to cache
    */
