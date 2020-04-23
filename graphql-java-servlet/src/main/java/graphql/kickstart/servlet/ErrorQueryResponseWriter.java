@@ -22,7 +22,7 @@ class ErrorQueryResponseWriter implements QueryResponseWriter {
   public void write(HttpServletRequest request, HttpServletResponse response, GraphQLResponseCache responseCache) throws IOException {
     if (responseCache != null) {
       try {
-        responseCache.cacheResponse(invocationInput, CachedResponse.ofError(statusCode, message));
+        responseCache.cacheResponse(request, invocationInput, CachedResponse.ofError(statusCode, message));
       } catch (Throwable t) {
         log.warn(t.getMessage(), t);
         log.warn("Ignore read from cache, unexpected error happened");
