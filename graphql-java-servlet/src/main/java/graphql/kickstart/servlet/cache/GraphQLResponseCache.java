@@ -14,15 +14,23 @@ public interface GraphQLResponseCache {
    * @param invocationInput input data
    * @return cached response if something available in cache or {@literal null} if nothing cached
    */
-  CachedResponse getCachedResponse(HttpServletRequest request, GraphQLInvocationInput invocationInput);
+  CachedResponse get(HttpServletRequest request, GraphQLInvocationInput invocationInput);
 
   /**
    * Decide to cache or not this response. It depends on the implementation.
    *
    * @param request         the http request
    * @param invocationInput input data
+   */
+  boolean isCacheable(HttpServletRequest request, GraphQLInvocationInput invocationInput);
+
+  /**
+   * Cache this response. It depends on the implementation.
+   *
+   * @param request         the http request
+   * @param invocationInput input data
    * @param cachedResponse  response to cache
    */
-  void cacheResponse(HttpServletRequest request, GraphQLInvocationInput invocationInput, CachedResponse cachedResponse);
+  void put(HttpServletRequest request, GraphQLInvocationInput invocationInput, CachedResponse cachedResponse);
 
 }

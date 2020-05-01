@@ -20,9 +20,9 @@ class ErrorQueryResponseWriter implements QueryResponseWriter {
 
   @Override
   public void write(HttpServletRequest request, HttpServletResponse response, GraphQLResponseCache responseCache) throws IOException {
-    if (responseCache != null) {
+    if (responseCache != null && responseCache.isCacheable(request, invocationInput)) {
       try {
-        responseCache.cacheResponse(request, invocationInput, CachedResponse.ofError(statusCode, message));
+        responseCache.put(request, invocationInput, CachedResponse.ofError(statusCode, message));
       } catch (Throwable t) {
         log.warn(t.getMessage(), t);
         log.warn("Ignore read from cache, unexpected error happened");

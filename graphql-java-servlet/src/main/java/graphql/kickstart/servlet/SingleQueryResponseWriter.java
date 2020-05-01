@@ -29,9 +29,9 @@ class SingleQueryResponseWriter implements QueryResponseWriter {
     String responseContent = graphQLObjectMapper.serializeResultAsJson(result);
     byte[] contentBytes = responseContent.getBytes(StandardCharsets.UTF_8);
 
-    if (responseCache != null) {
+    if (responseCache != null && responseCache.isCacheable(request, invocationInput)) {
       try {
-        responseCache.cacheResponse(request, invocationInput, CachedResponse.ofContent(contentBytes));
+        responseCache.put(request, invocationInput, CachedResponse.ofContent(contentBytes));
       } catch (Throwable t) {
         log.warn(t.getMessage(), t);
         log.warn("Ignore read from cache, unexpected error happened");
