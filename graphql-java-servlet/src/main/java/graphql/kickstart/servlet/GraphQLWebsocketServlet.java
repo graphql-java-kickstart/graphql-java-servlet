@@ -63,6 +63,19 @@ public class GraphQLWebsocketServlet extends Endpoint {
   private final AtomicBoolean isShutDown = new AtomicBoolean(false);
   private final Object cacheLock = new Object();
 
+  public GraphQLWebsocketServlet(GraphQLConfiguration configuration) {
+    this(configuration, null);
+  }
+
+  public GraphQLWebsocketServlet(GraphQLConfiguration configuration, Collection<SubscriptionConnectionListener> connectionListeners) {
+    this(
+        configuration.getGraphQLInvoker(),
+        configuration.getInvocationInputFactory(),
+        configuration.getObjectMapper(),
+        null
+    );
+  }
+
   public GraphQLWebsocketServlet(
       GraphQLInvoker graphQLInvoker,
       GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
