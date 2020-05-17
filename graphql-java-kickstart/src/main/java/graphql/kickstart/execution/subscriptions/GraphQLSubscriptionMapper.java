@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import graphql.ExecutionResult;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLRequest;
-import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -15,12 +13,7 @@ public class GraphQLSubscriptionMapper {
   private final GraphQLObjectMapper graphQLObjectMapper;
 
   public GraphQLRequest readGraphQLRequest(Object payload) {
-    Objects.requireNonNull(payload, "Payload is required");
-    try {
-      return graphQLObjectMapper.readGraphQLRequest(payload.toString());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return graphQLObjectMapper.getJacksonMapper().convertValue(payload, GraphQLRequest.class);
   }
 
   public ExecutionResult sanitizeErrors(ExecutionResult executionResult) {

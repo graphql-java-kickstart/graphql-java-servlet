@@ -7,6 +7,7 @@ import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionInvocationInputFactory;
 import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionMapper;
 import graphql.kickstart.execution.subscriptions.SubscriptionSession;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -30,6 +31,7 @@ public class FallbackSubscriptionConsumer implements Consumer<String> {
   }
 
   private CompletableFuture<ExecutionResult> executeAsync(Object payload, SubscriptionSession session) {
+    Objects.requireNonNull(payload, "Payload is required");
     GraphQLRequest graphQLRequest = mapper.readGraphQLRequest(payload);
 
     GraphQLSingleInvocationInput invocationInput = invocationInputFactory.create(graphQLRequest, session);

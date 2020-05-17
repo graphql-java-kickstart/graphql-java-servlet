@@ -10,6 +10,7 @@ import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionInvocationIn
 import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionMapper;
 import graphql.kickstart.execution.subscriptions.SubscriptionSession;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ class SubscriptionStartCommand implements SubscriptionCommand {
   }
 
   private CompletableFuture<ExecutionResult> executeAsync(Object payload, SubscriptionSession session) {
+    Objects.requireNonNull(payload, "Payload is required");
     GraphQLRequest graphQLRequest = mapper.readGraphQLRequest(payload);
 
     GraphQLSingleInvocationInput invocationInput = invocationInputFactory.create(graphQLRequest, session);
