@@ -1,5 +1,6 @@
 package graphql.kickstart.servlet;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -20,6 +21,7 @@ import graphql.kickstart.servlet.subscriptions.WebSocketSubscriptionProtocolFact
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -192,8 +194,9 @@ public class GraphQLWebsocketServlet extends Endpoint {
       response.getHeaders().put(HandshakeResponse.SEC_WEBSOCKET_ACCEPT, allSubscriptionProtocols);
     }
     if (!protocol.isEmpty()) {
+      //noinspection ArraysAsListWithZeroOrOneArgument
       response.getHeaders().put(HandshakeRequest.SEC_WEBSOCKET_PROTOCOL,
-          singletonList(subscriptionProtocolFactory.getProtocol()));
+          new ArrayList<>(asList(subscriptionProtocolFactory.getProtocol())));
     }
   }
 

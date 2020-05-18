@@ -120,7 +120,7 @@ public class GraphQLConfiguration {
     private Executor asyncExecutor = Executors.newCachedThreadPool(new GraphQLThreadFactory());
     private long subscriptionTimeout = 0;
     private ContextSetting contextSetting = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION;
-    private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier = () -> new NoOpBatchInputPreProcessor();
+    private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier = NoOpBatchInputPreProcessor::new;
 
     private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
       this.invocationInputFactoryBuilder = invocationInputFactoryBuilder;
