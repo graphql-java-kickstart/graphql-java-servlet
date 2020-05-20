@@ -198,6 +198,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
       response.getHeaders().put(HandshakeRequest.SEC_WEBSOCKET_PROTOCOL,
           new ArrayList<>(asList(subscriptionProtocolFactory.getProtocol())));
     }
+
   }
 
   /**
