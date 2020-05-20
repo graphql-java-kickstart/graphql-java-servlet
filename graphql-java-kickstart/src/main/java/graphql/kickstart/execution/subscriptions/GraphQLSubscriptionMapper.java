@@ -2,6 +2,7 @@ package graphql.kickstart.execution.subscriptions;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import graphql.ExecutionResult;
+import graphql.GraphQLException;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLRequest;
 import java.util.Map;
@@ -13,7 +14,11 @@ public class GraphQLSubscriptionMapper {
   private final GraphQLObjectMapper graphQLObjectMapper;
 
   public GraphQLRequest readGraphQLRequest(Object payload) {
-    return graphQLObjectMapper.getJacksonMapper().convertValue(payload, GraphQLRequest.class);
+    try {
+      return graphQLObjectMapper.getJacksonMapper().readValue(payload.toString(), GraphQLRequest.class);
+    } catch (JsonProcessingException e) {
+      throw  new GraphQLException(e);
+    }
   }
 
   public ExecutionResult sanitizeErrors(ExecutionResult executionResult) {
