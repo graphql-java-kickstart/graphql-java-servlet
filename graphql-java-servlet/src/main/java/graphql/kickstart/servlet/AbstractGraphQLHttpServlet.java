@@ -130,6 +130,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
   private void doRequestAsync(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler) {
     if (configuration.isAsyncServletModeEnabled()) {
       AsyncContext asyncContext = request.startAsync(request, response);
+      asyncContext.setTimeout(configuration.getAsyncTimeout());
       HttpServletRequest asyncRequest = (HttpServletRequest) asyncContext.getRequest();
       HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
       configuration.getAsyncExecutor().execute(() -> doRequest(asyncRequest, asyncResponse, handler, asyncContext));
