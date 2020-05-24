@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
+import lombok.Getter;
 
 public class GraphQLConfiguration {
 
@@ -33,13 +34,15 @@ public class GraphQLConfiguration {
   private final boolean asyncServletModeEnabled;
   private final Executor asyncExecutor;
   private final long subscriptionTimeout;
+  @Getter
+  private final long asyncTimeout;
   private final ContextSetting contextSetting;
   private final GraphQLResponseCache responseCache;
 
   private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory,
       GraphQLQueryInvoker queryInvoker,
       GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled,
-      Executor asyncExecutor, long subscriptionTimeout, ContextSetting contextSetting,
+      Executor asyncExecutor, long subscriptionTimeout, long asyncTimeout, ContextSetting contextSetting,
       Supplier<BatchInputPreProcessor> batchInputPreProcessor, GraphQLResponseCache responseCache) {
     this.invocationInputFactory = invocationInputFactory;
     this.queryInvoker = queryInvoker;
@@ -49,6 +52,7 @@ public class GraphQLConfiguration {
     this.asyncServletModeEnabled = asyncServletModeEnabled;
     this.asyncExecutor = asyncExecutor;
     this.subscriptionTimeout = subscriptionTimeout;
+    this.asyncTimeout = asyncTimeout;
     this.contextSetting = contextSetting;
     this.batchInputPreProcessor = batchInputPreProcessor;
     this.responseCache = responseCache;
@@ -126,8 +130,9 @@ public class GraphQLConfiguration {
     private boolean asyncServletModeEnabled = false;
     private Executor asyncExecutor = Executors.newCachedThreadPool(new GraphQLThreadFactory());
     private long subscriptionTimeout = 0;
+    private long asyncTimeout = 30;
     private ContextSetting contextSetting = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION;
-    private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier = () -> new NoOpBatchInputPreProcessor();
+    private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier = NoOpBatchInputPreProcessor::new;
     private GraphQLResponseCache responseCache;
 
     private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
@@ -186,6 +191,11 @@ public class GraphQLConfiguration {
       return this;
     }
 
+    public Builder asyncTimeout(long asyncTimeout) {
+      this.asyncTimeout = asyncTimeout;
+      return this;
+    }
+
     public Builder with(ContextSetting contextSetting) {
       if (contextSetting != null) {
         this.contextSetting = contextSetting;
@@ -221,6 +231,7 @@ public class GraphQLConfiguration {
           asyncServletModeEnabled,
           asyncExecutor,
           subscriptionTimeout,
+          asyncTimeout,
           contextSetting,
           batchInputPreProcessorSupplier,
           responseCache

@@ -34,7 +34,7 @@ class SubscriptionStartCommand implements SubscriptionCommand {
 
   private CompletableFuture<ExecutionResult> executeAsync(Object payload, SubscriptionSession session) {
     Objects.requireNonNull(payload, "Payload is required");
-    GraphQLRequest graphQLRequest = mapper.readGraphQLRequest(payload);
+    GraphQLRequest graphQLRequest = mapper.convertGraphQLRequest(payload);
 
     GraphQLSingleInvocationInput invocationInput = invocationInputFactory.create(graphQLRequest, session);
     return graphQLInvoker.executeAsync(invocationInput);
@@ -42,7 +42,7 @@ class SubscriptionStartCommand implements SubscriptionCommand {
 
   private void handleSubscriptionStart(SubscriptionSession session, String id, ExecutionResult executionResult) {
     ExecutionResult sanitizedExecutionResult = mapper.sanitizeErrors(executionResult);
-    if (!mapper.areErrorsPresent(sanitizedExecutionResult)) {
+    if (mapper.hasNoErrors(sanitizedExecutionResult)) {
       session.subscribe(id, sanitizedExecutionResult.getData());
     } else {
       Object payload = mapper.convertSanitizedExecutionResult(sanitizedExecutionResult);
