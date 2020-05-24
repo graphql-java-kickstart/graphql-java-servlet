@@ -6,8 +6,7 @@ import graphql.kickstart.execution.GraphQLQueryResult;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
-import graphql.kickstart.servlet.cache.CacheResponseWriter;
-import graphql.kickstart.servlet.cache.CachedResponse;
+import graphql.kickstart.servlet.cache.CacheReader;
 import graphql.kickstart.servlet.input.BatchInputPreProcessResult;
 import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,31 +51,20 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
   private void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
       HttpServletResponse response) {
     try {
-      if (configuration.getResponseCache() != null) {
-        CachedResponse cachedResponse = null;
-        try {
-          cachedResponse = configuration.getResponseCache().get(request, invocationInput);
-        } catch (Throwable t) {
-          log.warn(t.getMessage(), t);
-          log.warn("Ignore read from cache, unexpected error happened");
-        }
+      // try to return value from cache if cache manager was set, otherwise processed the query
+      if (configuration.getResponseCacheManager() != null &&
+              !CacheReader.responseFromCache(invocationInput, request, response, configuration.getResponseCacheManager())) {
+        GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
 
-        if (cachedResponse != null) {
-          CacheResponseWriter cacheResponseWriter = new CacheResponseWriter();
-          cacheResponseWriter.write(request, response, cachedResponse);
-          return;
-        }
+        QueryResponseWriter queryResponseWriter = QueryResponseWriter.createWriter(
+                queryResult,
+                configuration.getObjectMapper(),
+                configuration.getSubscriptionTimeout(),
+                invocationInput,
+                configuration.getResponseCacheManager()
+        );
+        queryResponseWriter.write(request, response);
       }
-
-      GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
-
-      QueryResponseWriter queryResponseWriter = QueryResponseWriter.createWriter(
-              queryResult,
-              configuration.getObjectMapper(),
-              configuration.getSubscriptionTimeout(),
-              invocationInput
-      );
-      queryResponseWriter.write(request, response, configuration.getResponseCache());
     } catch (Throwable t) {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");

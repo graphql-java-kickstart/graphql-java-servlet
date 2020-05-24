@@ -5,7 +5,7 @@ import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
-public interface GraphQLResponseCache {
+public interface GraphQLResponseCacheManager {
 
   /**
    * Retrieve the cache by input data. If this query was not cached before, will return empty {@link Optional}.

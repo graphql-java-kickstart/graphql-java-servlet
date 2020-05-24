@@ -10,16 +10,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import graphql.kickstart.execution.input.GraphQLInvocationInput;
-import graphql.kickstart.servlet.cache.GraphQLResponseCache;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 
-@Slf4j
 @RequiredArgsConstructor
 class SingleAsynchronousQueryResponseWriter implements QueryResponseWriter {
 
@@ -27,14 +22,9 @@ class SingleAsynchronousQueryResponseWriter implements QueryResponseWriter {
   private final ExecutionResult result;
   private final GraphQLObjectMapper graphQLObjectMapper;
   private final long subscriptionTimeout;
-  private final GraphQLInvocationInput invocationInput;
 
   @Override
-  public void write(HttpServletRequest request, HttpServletResponse response, GraphQLResponseCache responseCache) {
-    if (responseCache != null) {
-      log.warn("Response cache for asynchronous query are not implemented yet");
-    }
-
+  public void write(HttpServletRequest request, HttpServletResponse response) {
     Objects.requireNonNull(request, "Http servlet request cannot be null");
     response.setContentType(HttpRequestHandler.APPLICATION_EVENT_STREAM_UTF8);
     response.setStatus(HttpRequestHandler.STATUS_OK);
