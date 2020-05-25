@@ -52,8 +52,10 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
       HttpServletResponse response) {
     try {
       // try to return value from cache if cache manager was set, otherwise processed the query
-      if (configuration.getResponseCacheManager() != null &&
-              !CacheReader.responseFromCache(invocationInput, request, response, configuration.getResponseCacheManager())) {
+      boolean returnedFromCache = configuration.getResponseCacheManager() != null &&
+              !CacheReader.responseFromCache(invocationInput, request, response, configuration.getResponseCacheManager());
+
+      if (!returnedFromCache) {
         GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
 
         QueryResponseWriter queryResponseWriter = QueryResponseWriter.createWriter(
