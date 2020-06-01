@@ -2,9 +2,6 @@ package graphql.kickstart.servlet;
 
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryResult;
-import graphql.kickstart.execution.input.GraphQLInvocationInput;
-import graphql.kickstart.servlet.cache.CachingQueryResponseWriter;
-import graphql.kickstart.servlet.cache.GraphQLResponseCacheManager;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -28,20 +25,6 @@ public interface QueryResponseWriter {
       return new ErrorQueryResponseWriter(result.getStatusCode(), result.getMessage());
     }
     return new SingleQueryResponseWriter(result.getResult(), graphQLObjectMapper);
-  }
-
-  static QueryResponseWriter createCacheWriter(
-      GraphQLQueryResult result,
-      GraphQLObjectMapper graphQLObjectMapper,
-      long subscriptionTimeout,
-      GraphQLInvocationInput invocationInput,
-      GraphQLResponseCacheManager responseCache
-  ) {
-    QueryResponseWriter writer = createWriter(result, graphQLObjectMapper, subscriptionTimeout);
-    if (responseCache != null) {
-      return new CachingQueryResponseWriter(writer, responseCache, invocationInput, result.isError());
-    }
-    return writer;
   }
 
   void write(HttpServletRequest request, HttpServletResponse response) throws IOException;

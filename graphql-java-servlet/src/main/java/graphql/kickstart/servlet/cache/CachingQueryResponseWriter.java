@@ -1,5 +1,7 @@
 package graphql.kickstart.servlet.cache;
 
+import graphql.kickstart.execution.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLQueryResult;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.QueryResponseWriter;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,20 @@ import java.io.IOException;
 
 @Slf4j
 public class CachingQueryResponseWriter implements QueryResponseWriter {
+
+  static QueryResponseWriter createCacheWriter(
+          GraphQLQueryResult result,
+          GraphQLObjectMapper graphQLObjectMapper,
+          long subscriptionTimeout,
+          GraphQLInvocationInput invocationInput,
+          GraphQLResponseCacheManager responseCache
+  ) {
+    QueryResponseWriter writer = QueryResponseWriter.createWriter(result, graphQLObjectMapper, subscriptionTimeout);
+    if (responseCache != null) {
+      return new CachingQueryResponseWriter(writer, responseCache, invocationInput, result.isError());
+    }
+    return writer;
+  }
 
   private final QueryResponseWriter delegate;
   private final GraphQLResponseCacheManager responseCache;
