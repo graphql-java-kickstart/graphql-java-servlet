@@ -23,6 +23,7 @@ public class CachingHttpRequestHandlerImpl extends HttpRequestHandlerImpl {
     this.configuration = configuration;
   }
 
+  @Override
   protected void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
                HttpServletResponse response) {
     // try to return value from cache if cache exists, otherwise processed the query
