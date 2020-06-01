@@ -3,25 +3,23 @@ package graphql.kickstart.servlet;
 import graphql.GraphQLException;
 import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
+import graphql.kickstart.servlet.input.BatchInputPreProcessResult;
+import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
-import graphql.kickstart.servlet.cache.CacheReader;
-import graphql.kickstart.servlet.input.BatchInputPreProcessResult;
-import graphql.kickstart.servlet.input.BatchInputPreProcessor;
-import lombok.extern.slf4j.Slf4j;
-
+import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class HttpRequestHandlerImpl implements HttpRequestHandler {
+public class HttpRequestHandlerImpl implements HttpRequestHandler {
 
   private final GraphQLConfiguration configuration;
   private final GraphQLInvoker graphQLInvoker;
 
-  HttpRequestHandlerImpl(GraphQLConfiguration configuration) {
+  public HttpRequestHandlerImpl(GraphQLConfiguration configuration) {
     this.configuration = configuration;
     graphQLInvoker = configuration.getGraphQLInvoker();
   }
@@ -48,30 +46,23 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
     }
   }
 
-  private void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
+  protected void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
       HttpServletResponse response) {
     try {
-      // try to return value from cache if cache manager was set, otherwise processed the query
-      boolean returnedFromCache = configuration.getResponseCacheManager() != null &&
-              !CacheReader.responseFromCache(invocationInput, request, response, configuration.getResponseCacheManager());
+      GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
 
-      if (!returnedFromCache) {
-        GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
-
-        QueryResponseWriter queryResponseWriter = QueryResponseWriter.createWriter(
-                queryResult,
-                configuration.getObjectMapper(),
-                configuration.getSubscriptionTimeout(),
-                invocationInput,
-                configuration.getResponseCacheManager()
-        );
-        queryResponseWriter.write(request, response);
-      }
+      QueryResponseWriter queryResponseWriter = createWriter(invocationInput, queryResult);
+      queryResponseWriter.write(request, response);
     } catch (Throwable t) {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
       log.debug("Possibly due to exception: ", t);
     }
+  }
+
+  protected QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput, GraphQLQueryResult queryResult) {
+    return QueryResponseWriter.createWriter(queryResult, configuration.getObjectMapper(),
+            configuration.getSubscriptionTimeout());
   }
 
   private GraphQLQueryResult invoke(GraphQLInvocationInput invocationInput, HttpServletRequest request,

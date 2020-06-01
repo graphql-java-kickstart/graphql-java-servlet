@@ -23,9 +23,9 @@ public final class CacheReader {
    * @throws IOException if can not read value from the cache
    */
   public static boolean responseFromCache(GraphQLInvocationInput invocationInput,
-                      HttpServletRequest request,
-                      HttpServletResponse response,
-                      GraphQLResponseCacheManager cacheManager) throws IOException {
+                                          HttpServletRequest request,
+                                          HttpServletResponse response,
+                                          GraphQLResponseCacheManager cacheManager) throws IOException {
     CachedResponse cachedResponse = null;
     try {
       cachedResponse = cacheManager.get(request, invocationInput);
@@ -42,7 +42,7 @@ public final class CacheReader {
   }
 
   private static void write(HttpServletResponse response, CachedResponse cachedResponse)
-          throws IOException {
+      throws IOException {
     if (cachedResponse.isError()) {
       response.sendError(cachedResponse.getErrorStatusCode(), cachedResponse.getErrorMessage());
     } else {
