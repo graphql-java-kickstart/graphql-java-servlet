@@ -75,7 +75,6 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
     try {
       queryResponseWriter.write(request, response);
     } catch (IOException e) {
-      // will be processed by the exceptionally() call below
       throw new UncheckedIOException(e);
     }
   }
