@@ -9,6 +9,9 @@ import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.concurrent.CompletableFuture;
+import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -48,37 +51,60 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
 
   private void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
       HttpServletResponse response) {
-    try {
-      GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
-
-      QueryResponseWriter queryResponseWriter = QueryResponseWriter.createWriter(queryResult, configuration.getObjectMapper(),
-          configuration.getSubscriptionTimeout());
-      queryResponseWriter.write(request, response);
-    } catch (Throwable t) {
-      response.setStatus(STATUS_BAD_REQUEST);
-      log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
-      log.debug("Possibly due to exception: ", t);
+    if (request.isAsyncSupported()) {
+      AsyncContext asyncContext = request.startAsync(request, response);
+      asyncContext.setTimeout(configuration.getAsyncTimeout());
+      invoke(invocationInput, request, response)
+          .thenAccept(result -> writeResultResponse(result, request, response))
+          .exceptionally(t -> writeErrorResponse(t, response))
+          .thenAccept(aVoid -> asyncContext.complete());
+    } else {
+      try {
+        GraphQLQueryResult result = invoke(invocationInput, request, response).join();
+        writeResultResponse(result, request, response);
+      } catch (Throwable t) {
+        writeErrorResponse(t, response);
+      }
     }
   }
 
-  private GraphQLQueryResult invoke(GraphQLInvocationInput invocationInput, HttpServletRequest request,
+  private void writeResultResponse(GraphQLQueryResult queryResult, HttpServletRequest request,
+      HttpServletResponse response) {
+    QueryResponseWriter queryResponseWriter = QueryResponseWriter.createWriter(queryResult, configuration.getObjectMapper(),
+        configuration.getSubscriptionTimeout());
+    try {
+      queryResponseWriter.write(request, response);
+    } catch (IOException e) {
+      // will be processed by the exceptionally() call below
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  private Void writeErrorResponse(Throwable t, HttpServletResponse response) {
+    response.setStatus(STATUS_BAD_REQUEST);
+    log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
+    log.debug("Possibly due to exception: ", t);
+    return null;
+  }
+
+  private CompletableFuture<GraphQLQueryResult> invoke(GraphQLInvocationInput invocationInput, HttpServletRequest request,
       HttpServletResponse response) {
     if (invocationInput instanceof GraphQLSingleInvocationInput) {
-      return graphQLInvoker.query(invocationInput);
+      return graphQLInvoker.queryAsync(invocationInput);
     }
     return invokeBatched((GraphQLBatchedInvocationInput) invocationInput, request, response);
   }
 
-  private GraphQLQueryResult invokeBatched(GraphQLBatchedInvocationInput batchedInvocationInput,
+  private CompletableFuture<GraphQLQueryResult> invokeBatched(GraphQLBatchedInvocationInput batchedInvocationInput,
       HttpServletRequest request,
       HttpServletResponse response) {
     BatchInputPreProcessor preprocessor = configuration.getBatchInputPreProcessor();
     BatchInputPreProcessResult result = preprocessor.preProcessBatch(batchedInvocationInput, request, response);
     if (result.isExecutable()) {
-      return graphQLInvoker.query(result.getBatchedInvocationInput());
+      return graphQLInvoker.queryAsync(result.getBatchedInvocationInput());
     }
 
-    return GraphQLQueryResult.createError(result.getStatusCode(), result.getStatusMessage());
+    return CompletableFuture.completedFuture(GraphQLQueryResult.createError(result.getStatusCode(), result.getStatusMessage()));
   }
 
 }
