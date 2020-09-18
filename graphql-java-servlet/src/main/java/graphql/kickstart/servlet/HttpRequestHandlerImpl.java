@@ -52,7 +52,9 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
   private void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
       HttpServletResponse response) {
     if (request.isAsyncSupported()) {
-      AsyncContext asyncContext = request.startAsync(request, response);
+      AsyncContext asyncContext = request.isAsyncStarted()
+          ? request.getAsyncContext()
+          : request.startAsync(request, response);
       asyncContext.setTimeout(configuration.getAsyncTimeout());
       invoke(invocationInput, request, response)
           .thenAccept(result -> writeResultResponse(result, request, response))
