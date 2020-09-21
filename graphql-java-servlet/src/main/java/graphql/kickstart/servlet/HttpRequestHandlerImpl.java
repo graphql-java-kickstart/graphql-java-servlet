@@ -83,8 +83,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
 
   private Void writeErrorResponse(Throwable t, HttpServletResponse response) {
     response.setStatus(STATUS_BAD_REQUEST);
-    log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
-    log.debug("Possibly due to exception: ", t);
+    log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given", t);
     return null;
   }
 
