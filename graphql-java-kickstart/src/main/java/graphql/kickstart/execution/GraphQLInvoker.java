@@ -51,7 +51,7 @@ public class GraphQLInvoker {
   private <T> CompletableFuture<List<T>> sequence(List<CompletableFuture<T>> futures) {
     CompletableFuture[] futuresArray = futures.toArray(new CompletableFuture[0]);
     return CompletableFuture.allOf(futuresArray).thenApply(aVoid -> {
-      List<T> result =  new ArrayList<>();
+      List<T> result =  new ArrayList<>(futures.size());
       for (CompletableFuture future : futuresArray) {
         assert future.isDone(); // per the API contract of allOf()
         result.add((T) future.join());
