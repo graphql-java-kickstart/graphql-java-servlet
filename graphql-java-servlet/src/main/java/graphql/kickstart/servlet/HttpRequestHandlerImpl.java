@@ -1,5 +1,6 @@
 package graphql.kickstart.servlet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import graphql.GraphQLException;
 import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
@@ -38,7 +39,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
       );
       GraphQLInvocationInput invocationInput = invocationInputParser.getGraphQLInvocationInput(request, response);
       execute(invocationInput, request, response);
-    } catch (GraphQLException e) {
+    } catch (GraphQLException| JsonProcessingException e) {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad request: cannot create invocation input parser", e);
       throw e;
