@@ -55,9 +55,9 @@ commitNextVersion() {
 echo "Deploying release to Bintray"
 removeSnapshots
 
-./gradlew clean assemble && ./gradlew check --info #&& ./gradlew bintrayUpload -x check --info
+./gradlew clean assemble #&& ./gradlew bintrayUpload -x check --info
 
 commitRelease
 bumpVersion
 commitNextVersion
-git push --follow-tags
+#git push --follow-tags
