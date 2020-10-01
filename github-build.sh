@@ -52,6 +52,9 @@ commitNextVersion() {
   git commit -a -m "Update version for release"
 }
 
+git config --global user.email "actions@github.com"
+git config --global user.name "GitHub Actions"
+
 echo "Deploying release to Bintray"
 removeSnapshots
 
