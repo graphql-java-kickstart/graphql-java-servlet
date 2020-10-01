@@ -1,5 +1,8 @@
-name: CI
-on: [push, pull_request]
+name: Snapshot
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   validation:
@@ -8,26 +11,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: gradle/wrapper-validation-action@v1
-  test:
-    name: Test run
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        java: [8, 11, 15]
-    needs: validation
-    runs-on: ${{ matrix.os }}
+  build:
+    name: Publish snapshot
+    runs-on: unbuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: ${{ matrix.java }}
+          java-version: 8
       - name: Cache Gradle
         uses: actions/cache@v2
         env:
-          java-version: ${{ matrix.java }}
+          java-version: 8
         with:
           path: |
             ~/.gradle/caches
@@ -35,13 +32,10 @@ jobs:
           key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-${{ env.java-version }}-gradle-
-      - name: Make gradlew executable (non-Windows only)
-        if: matrix.os != 'windows-latest'
+      - name: Make gradlew executable
         run: chmod +x ./gradlew
-      - name: Gradle Check (non-Windows)
-        if: matrix.os != 'windows-latest'
-        run: ./gradlew --info check
-      - name: Gradle Check (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: cmd
-        run: gradlew --info check
+      - name: Gradle Check
+        env:
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          BINTRAY_PASS: ${{ secrets.BINTRAY_PASSWORD }}
+        run: ./gradlew artifactoryPublish -Dsnapshot=true -Dbuild.number=${{ env.GITHUB_RUN_NUMBER }}
