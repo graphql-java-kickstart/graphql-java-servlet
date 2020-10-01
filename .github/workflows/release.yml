@@ -63,7 +63,7 @@ jobs:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_PASS: ${{ secrets.BINTRAY_PASSWORD }}
         run: bash github-build.sh
-      - name: Commit release tag and next version
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          push_options: '--follow-tags'
+#      - name: Commit release tag and next version
+#        uses: stefanzweifel/git-auto-commit-action@v4
+#        with:
+#          push_options: '--follow-tags'
