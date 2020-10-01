@@ -36,7 +36,7 @@ plugins {
     id 'net.researchgate.release' version '2.7.0'
     id 'io.franzbecker.gradle-lombok' version '3.2.0' apply false
     id "com.jfrog.artifactory" version "4.11.0" apply false
-    id "biz.aQute.bnd.builder" version "5.0.0" apply false
+    id "biz.aQute.bnd.builder" version "5.1.2" apply false
 }
 
 subprojects {
