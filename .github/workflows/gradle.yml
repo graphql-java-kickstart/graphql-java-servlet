@@ -22,8 +22,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Setup Java
         uses: actions/setup-java@v1
-        env:
-          JAVA_VERSION: ${{ matrix.java }}
         with:
           java-version: ${{ matrix.java }}
       - name: Cache Gradle
@@ -32,9 +30,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-${{ JAVA_VERSION }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
-            ${{ runner.os }}-${{ JAVA_VERSION }}-gradle-
+            ${{ runner.os }}-gradle-
       - name: Make gradlew executable (non-Windows only)
         if: matrix.os != 'windows-latest'
         run: chmod +x ./gradlew
