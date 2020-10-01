@@ -1,4 +1,4 @@
-name: Snapshot
+name: "Publish snapshot"
 on:
   push:
     branches:
@@ -34,7 +34,7 @@ jobs:
             ${{ runner.os }}-${{ env.java-version }}-gradle-
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-      - name: Gradle Check
+      - name: Gradle Publish Snapshot
         env:
           BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
           BINTRAY_PASS: ${{ secrets.BINTRAY_PASSWORD }}
