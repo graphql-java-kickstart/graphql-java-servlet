@@ -3,7 +3,7 @@ on:
   push:
     branches-ignore:
       - master
-  pull-request:
+  pull_request:
 
 jobs:
   validation:
