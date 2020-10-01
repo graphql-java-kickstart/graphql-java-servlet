@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/graphql-java-kickstart/graphql-java-servlet/workflows/Publish%20snapshot/badge.svg)](https://github.com/graphql-java-kickstart/graphql-java-servlet/workflows/Publish%20snapshot/badge.svg)
+[![Build Status](https://github.com/graphql-java-kickstart/graphql-java-servlet/workflows/Publish%20snapshot/badge.svg)](https://github.com/graphql-java-kickstart/graphql-java-servlet/actions?query=workflow%3A%22Publish+snapshot%22)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet/badge.svg?service=github)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet)
 [![Chat on Slack](https://img.shields.io/badge/slack-join%20chat-informational)](https://graphqljavakickstart.slack.com)
 
