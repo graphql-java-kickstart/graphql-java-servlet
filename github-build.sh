@@ -62,5 +62,5 @@ removeSnapshots
 
 commitRelease
 bumpVersion
-commitNextVersion
+#commitNextVersion
 #git push --follow-tags
