@@ -30,15 +30,15 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          key: ${{ runner.os }}-${{ martix.java }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-${{ martix.java }}-gradle-
       - name: Make gradlew executable (non-Windows only)
         if: matrix.os != 'windows-latest'
         run: chmod +x ./gradlew
       - name: Gradle Check (non-Windows)
         if: matrix.os != 'windows-latest'
-        run: ./gradlew --info --stacktrace check
+        run: ./gradlew --info check
       - name: Gradle Check (Windows)
         if: matrix.os == 'windows-latest'
         shell: cmd
