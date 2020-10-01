@@ -23,7 +23,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         env:
-          JAVA_VERSION: ${{ martix.java }}
+          JAVA_VERSION: ${{ matrix.java }}
         with:
           java-version: ${{ matrix.java }}
       - name: Cache Gradle
