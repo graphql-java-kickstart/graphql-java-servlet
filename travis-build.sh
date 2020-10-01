@@ -52,7 +52,8 @@ commitNextVersion() {
   git commit -a -m "Update version for release"
 }
 
-if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+#  && [ "${TRAVIS_BRANCH}" = "master" ]
+if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
   if [ "${RELEASE}" = "true" ]; then
     echo "Deploying release to Bintray"
     saveGitCredentials
