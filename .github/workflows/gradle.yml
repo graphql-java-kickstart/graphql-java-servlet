@@ -30,9 +30,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-${{ martix.java }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          key: ${{ runner.os }}-${{ java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
-            ${{ runner.os }}-${{ martix.java }}-gradle-
+            ${{ runner.os }}-${{ java-version }}-gradle-
       - name: Make gradlew executable (non-Windows only)
         if: matrix.os != 'windows-latest'
         run: chmod +x ./gradlew
