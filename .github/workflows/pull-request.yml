@@ -1,8 +1,5 @@
-name: Pull request
+name: "Pull request"
 on: [push, pull_request]
-  push:
-    branches-ignore:
-      - master
 
 jobs:
   validation:
