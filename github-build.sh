@@ -25,7 +25,7 @@ removeSnapshots() {
 commitRelease() {
   local APP_VERSION=$(getVersion)
   git commit -a -m "Update version for release"
-#  git tag -a "v${APP_VERSION}" -m "Tag release version"
+  git tag -a "v${APP_VERSION}" -m "Tag release version"
 }
 
 bumpVersion() {
@@ -58,7 +58,7 @@ git config --global user.name "GitHub Actions"
 echo "Deploying release to Bintray"
 removeSnapshots
 
-./gradlew clean assemble #&& ./gradlew bintrayUpload -x check --info
+./gradlew clean assemble && ./gradlew bintrayUpload -x check --info
 
 commitRelease
 bumpVersion
