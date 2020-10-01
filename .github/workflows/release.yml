@@ -65,5 +65,5 @@ jobs:
         run: bash github-build.sh
       - name: Commit release tag and next version
         uses: stefanzweifel/git-auto-commit-action@v4
-          with:
-            push_options: '--follow-tags'
+        with:
+          push_options: '--follow-tags'
