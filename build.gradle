@@ -171,13 +171,8 @@ subprojects {
                 userOrg = 'graphql-java-kickstart'
                 version {
                     name = project.version
-                    gpg {
-                        sign = true
-                    }
-                    mavenCentralSync {
-                        user = System.env.OSS_USER_TOKEN_KEY ?: project.findProperty('OSS_USER_TOKEN_KEY') ?: ''
-                        password = System.env.OSS_USER_TOKEN_PASS ?: project.findProperty('OSS_USER_TOKEN_PASS') ?: ''
-                    }
+
+                    
                 }
             }
         }
