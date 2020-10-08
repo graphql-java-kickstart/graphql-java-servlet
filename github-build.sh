@@ -1,21 +1,8 @@
 #!/bin/bash
 set -ev
 
-#saveGitCredentials() {
-#    cat >$HOME/.netrc <<EOL
-#machine github.com
-#login ${GITHUB_USERNAME}
-#password ${GITHUB_TOKEN}
-#
-#machine api.github.com
-#login ${GITHUB_USERNAME}
-#password ${GITHUB_TOKEN}
-#EOL
-#    chmod 600 $HOME/.netrc
-#}
-
 getVersion() {
-  ./gradlew properties -q | grep "version:" | grep -v "kotlin_version:" | awk '{print $2}' | tr -d '[:space:]'
+  ./gradlew properties -q | grep -E "^version" | awk '{print $2}' | tr -d '[:space:]'
 }
 
 removeSnapshots() {
