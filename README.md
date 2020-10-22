@@ -1,9 +1,14 @@
+# GraphQL Java Servlet
 [![Build Status](https://github.com/graphql-java-kickstart/graphql-java-servlet/workflows/Publish%20snapshot/badge.svg)](https://github.com/graphql-java-kickstart/graphql-java-servlet/actions?query=workflow%3A%22Publish+snapshot%22)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet/badge.svg?service=github)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet)
-[![Chat on Slack](https://img.shields.io/badge/slack-join%20chat-informational)](https://graphqljavakickstart.slack.com)
+[![Chat on Spectrum](https://img.shields.io/badge/spectrum-join%20the%20community-%23800080)](https://spectrum.chat/graphql-java-kick)
 
-# GraphQL Servlet
+## We are looking for contributors!
+Are you interested in improving our documentation, working on the codebase, reviewing PRs?
 
+[Reach out to us on Spectrum](https://spectrum.chat/graphql-java-kick) and join the team!
+
+## Overview
 Implementation of GraphQL Java Servlet including support for Relay.js, Apollo and OSGi out of the box.
 This project wraps the Java implementation of GraphQL provided by [GraphQL Java](https://www.graphql-java.com).
 See [GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
