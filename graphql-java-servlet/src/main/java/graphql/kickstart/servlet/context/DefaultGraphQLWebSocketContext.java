@@ -6,14 +6,16 @@ import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import org.dataloader.DataLoaderRegistry;
 
+import java.util.Locale;
+
 public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implements GraphQLWebSocketContext {
 
   private final Session session;
   private final HandshakeRequest handshakeRequest;
 
   private DefaultGraphQLWebSocketContext(DataLoaderRegistry dataLoaderRegistry, Subject subject,
-      Session session, HandshakeRequest handshakeRequest) {
-    super(dataLoaderRegistry, subject);
+                                         Locale locale, Session session, HandshakeRequest handshakeRequest) {
+    super(dataLoaderRegistry, subject,locale);
     this.session = session;
     this.handshakeRequest = handshakeRequest;
   }
@@ -42,6 +44,7 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implem
     private HandshakeRequest handshakeRequest;
     private DataLoaderRegistry dataLoaderRegistry;
     private Subject subject;
+    private Locale locale;
 
     private Builder(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
       this.dataLoaderRegistry = dataLoaderRegistry;
@@ -49,7 +52,7 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implem
     }
 
     public DefaultGraphQLWebSocketContext build() {
-      return new DefaultGraphQLWebSocketContext(dataLoaderRegistry, subject, session, handshakeRequest);
+      return new DefaultGraphQLWebSocketContext(dataLoaderRegistry, subject, locale, session, handshakeRequest);
     }
 
     public Builder with(Session session) {
@@ -69,6 +72,11 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implem
 
     public Builder with(Subject subject) {
       this.subject = subject;
+      return this;
+    }
+
+    public Builder with(Locale locale) {
+      this.locale = locale;
       return this;
     }
   }

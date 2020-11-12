@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -16,10 +17,14 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext implemen
   private final HttpServletRequest httpServletRequest;
   private final HttpServletResponse httpServletResponse;
 
-  protected DefaultGraphQLServletContext(DataLoaderRegistry dataLoaderRegistry, Subject subject,
-      HttpServletRequest httpServletRequest,
-      HttpServletResponse httpServletResponse) {
-    super(dataLoaderRegistry, subject);
+  protected DefaultGraphQLServletContext(
+          DataLoaderRegistry dataLoaderRegistry,
+          Subject subject,
+          Locale locale,
+          HttpServletRequest httpServletRequest,
+          HttpServletResponse httpServletResponse
+  ) {
+    super(dataLoaderRegistry, subject,locale);
     this.httpServletRequest = httpServletRequest;
     this.httpServletResponse = httpServletResponse;
   }
@@ -70,6 +75,7 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext implemen
     private HttpServletResponse httpServletResponse;
     private DataLoaderRegistry dataLoaderRegistry;
     private Subject subject;
+    private Locale locale;
 
     private Builder(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
       this.dataLoaderRegistry = dataLoaderRegistry;
@@ -77,7 +83,7 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext implemen
     }
 
     public DefaultGraphQLServletContext build() {
-      return new DefaultGraphQLServletContext(dataLoaderRegistry, subject, httpServletRequest, httpServletResponse);
+      return new DefaultGraphQLServletContext(dataLoaderRegistry, subject,locale, httpServletRequest, httpServletResponse);
     }
 
     public Builder with(HttpServletRequest httpServletRequest) {
@@ -92,6 +98,11 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext implemen
 
     public Builder with(Subject subject) {
       this.subject = subject;
+      return this;
+    }
+
+    public Builder with(Locale locale) {
+      this.locale = locale;
       return this;
     }
 
