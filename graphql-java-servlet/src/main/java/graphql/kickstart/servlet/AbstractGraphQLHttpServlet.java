@@ -83,7 +83,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
   public void init() {
     if (configuration == null) {
       this.configuration = getConfiguration();
-      this.requestHandler = new HttpRequestHandlerImpl(configuration);
+      this.requestHandler = HttpRequestHandlerFactory.create(configuration);
     }
   }
 
