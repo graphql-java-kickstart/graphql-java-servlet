@@ -235,7 +235,7 @@ class TestUtils {
 
         try {
             def registry = new SchemaParser().parse(new StringReader(sdl))
-            def options = SchemaGenerator.Options.defaultOptions().enforceSchemaDirectives(false)
+            def options = SchemaGenerator.Options.defaultOptions()
             return new SchemaGenerator().makeExecutableSchema(options, registry, wiring)
         } catch (SchemaProblem e) {
             assert false: "The schema could not be compiled : ${e}"

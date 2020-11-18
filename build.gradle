@@ -36,7 +36,7 @@ plugins {
     id 'net.researchgate.release' version '2.7.0'
     id 'io.franzbecker.gradle-lombok' version '3.2.0' apply false
     id "com.jfrog.artifactory" version "4.11.0" apply false
-    id "biz.aQute.bnd.builder" version "5.0.0" apply false
+    id "biz.aQute.bnd.builder" version "5.1.2" apply false
 }
 
 subprojects {
@@ -171,8 +171,12 @@ subprojects {
                 userOrg = 'graphql-java-kickstart'
                 version {
                     name = project.version
+                    gpg {
+                        sign = true
+                    }
                     mavenCentralSync {
-                        close = '1'
+                        user = System.env.OSS_USER_TOKEN_KEY ?: project.findProperty('OSS_USER_TOKEN_KEY') ?: ''
+                        password = System.env.OSS_USER_TOKEN_PASS ?: project.findProperty('OSS_USER_TOKEN_PASS') ?: ''
                     }
                 }
             }
