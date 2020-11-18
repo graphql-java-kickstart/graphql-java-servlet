@@ -87,7 +87,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
       if (configuration.getResponseCacheManager() != null) {
         this.requestHandler = new CachingHttpRequestHandlerImpl(configuration);
       } else {
-        this.requestHandler = new HttpRequestHandlerImpl(configuration);
+        this.requestHandler = HttpRequestHandlerFactory.create(configuration);
       }
     }
   }

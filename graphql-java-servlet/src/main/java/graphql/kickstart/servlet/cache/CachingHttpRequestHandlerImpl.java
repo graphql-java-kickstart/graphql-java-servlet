@@ -25,7 +25,7 @@ public class CachingHttpRequestHandlerImpl extends HttpRequestHandlerImpl {
 
   @Override
   protected void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
-               HttpServletResponse response) {
+               HttpServletResponse response) throws IOException {
     // try to return value from cache if cache exists, otherwise processed the query
     boolean returnedFromCache;
 

@@ -37,27 +37,21 @@ public class HttpRequestHandlerImpl implements HttpRequestHandler {
       execute(invocationInput, request, response);
     } catch (GraphQLException e) {
       response.setStatus(STATUS_BAD_REQUEST);
-      log.info("Bad request: cannot create invocation input parser", e);
+      log.info("Bad request: cannot handle http request", e);
       throw e;
     } catch (Throwable t) {
       response.setStatus(500);
-      log.info("Bad request: cannot create invocation input parser", t);
+      log.error("Cannot handle http request", t);
       throw t;
     }
   }
 
   protected void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
-      HttpServletResponse response) {
-    try {
+      HttpServletResponse response) throws IOException {
       GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
 
       QueryResponseWriter queryResponseWriter = createWriter(invocationInput, queryResult);
       queryResponseWriter.write(request, response);
-    } catch (Throwable t) {
-      response.setStatus(STATUS_BAD_REQUEST);
-      log.info("Bad GET request: path was not \"/schema.json\" or no query variable named \"query\" given");
-      log.debug("Possibly due to exception: ", t);
-    }
   }
 
   protected QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput, GraphQLQueryResult queryResult) {

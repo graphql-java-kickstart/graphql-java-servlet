@@ -1,0 +1,51 @@
+name: "Pull request"
+on:
+  push:
+    branches-ignore:
+      - master
+  pull_request:
+
+jobs:
+  validation:
+    name: Gradle Wrapper Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: gradle/wrapper-validation-action@v1
+  test:
+    name: Test run
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        java: [8, 11, 15]
+    needs: validation
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Cache Gradle
+        uses: actions/cache@v2
+        env:
+          java-version: ${{ matrix.java }}
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.java-version }}-gradle-
+      - name: Make gradlew executable (non-Windows only)
+        if: matrix.os != 'windows-latest'
+        run: chmod +x ./gradlew
+      - name: Gradle Check (non-Windows)
+        if: matrix.os != 'windows-latest'
+        run: ./gradlew --info check
+      - name: Gradle Check (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: cmd
+        run: gradlew --info check
