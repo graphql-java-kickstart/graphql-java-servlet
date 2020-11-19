@@ -25,8 +25,8 @@ import org.dataloader.DataLoaderRegistry;
 public enum ContextSetting {
 
   /**
-   * A context object, and therefor dataloader registry and subject, should be shared between all GraphQL executions in
-   * a http request.
+   * A context object, and therefor dataloader registry and subject, should be shared between all
+   * GraphQL executions in a http request.
    */
   PER_REQUEST_WITH_INSTRUMENTATION,
   PER_REQUEST_WITHOUT_INSTRUMENTATION,
@@ -41,7 +41,8 @@ public enum ContextSetting {
    *
    * @param requests the GraphQL requests to execute.
    * @param schema the GraphQL schema to execute the requests against.
-   * @param contextSupplier method that returns the context to use for each execution or for the request as a whole.
+   * @param contextSupplier method that returns the context to use for each execution or for the
+   * request as a whole.
    * @param root the root object to use for each execution.
    * @return a configured batch input.
    */
@@ -62,29 +63,35 @@ public enum ContextSetting {
   }
 
   /**
-   * Augments the provided instrumentation supplier to also supply the correct dispatching instrumentation.
+   * Augments the provided instrumentation supplier to also supply the correct dispatching
+   * instrumentation.
    *
    * @param instrumentation the instrumentation supplier to augment
    * @param executionInputs the inputs that will be dispatched by the instrumentation
    * @param options the DataLoader dispatching instrumentation options that will be used.
    * @return augmented instrumentation supplier.
    */
-  public Supplier<Instrumentation> configureInstrumentationForContext(Supplier<Instrumentation> instrumentation,
+  public Supplier<Instrumentation> configureInstrumentationForContext(
+      Supplier<Instrumentation> instrumentation,
       List<ExecutionInput> executionInputs,
       DataLoaderDispatcherInstrumentationOptions options) {
     ConfigurableDispatchInstrumentation dispatchInstrumentation;
     switch (this) {
       case PER_REQUEST_WITH_INSTRUMENTATION:
-        DataLoaderRegistry registry = executionInputs.stream().findFirst().map(ExecutionInput::getDataLoaderRegistry)
+        DataLoaderRegistry registry = executionInputs.stream().findFirst()
+            .map(ExecutionInput::getDataLoaderRegistry)
             .orElseThrow(IllegalArgumentException::new);
-        List<ExecutionId> executionIds = executionInputs.stream().map(ExecutionInput::getExecutionId)
+        List<ExecutionId> executionIds = executionInputs.stream()
+            .map(ExecutionInput::getExecutionId)
             .collect(Collectors.toList());
-        RequestLevelTrackingApproach requestTrackingApproach = new RequestLevelTrackingApproach(executionIds, registry);
+        RequestLevelTrackingApproach requestTrackingApproach = new RequestLevelTrackingApproach(
+            executionIds, registry);
         dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options,
             (dataLoaderRegistry -> requestTrackingApproach));
         break;
       case PER_QUERY_WITH_INSTRUMENTATION:
-        dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options, FieldLevelTrackingApproach::new);
+        dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options,
+            FieldLevelTrackingApproach::new);
         break;
       case PER_REQUEST_WITHOUT_INSTRUMENTATION:
         //Intentional fallthrough
@@ -93,6 +100,7 @@ public enum ContextSetting {
       default:
         throw new RuntimeException("Unconfigured context setting type");
     }
-    return () -> new ChainedInstrumentation(Arrays.asList(dispatchInstrumentation, instrumentation.get()));
+    return () -> new ChainedInstrumentation(
+        Arrays.asList(dispatchInstrumentation, instrumentation.get()));
   }
 }

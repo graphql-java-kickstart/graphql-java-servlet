@@ -1,7 +1,6 @@
 package graphql.kickstart.servlet
 
 import javax.servlet.http.Part
-import java.nio.charset.StandardCharsets
 
 /**
  * @author Andrew Potter
@@ -15,10 +14,12 @@ class TestMultipartContentBuilder {
     static class MockPart implements Part {
         final String name
         final String content
+
         MockPart(String name, String content) {
             this.name = name
             this.content = content
         }
+
         @Override
         InputStream getInputStream() throws IOException {
             return new ByteArrayInputStream(content.getBytes())

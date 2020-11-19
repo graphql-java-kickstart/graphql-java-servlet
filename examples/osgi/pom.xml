@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>graphql-java-servlet-osgi-examples</artifactId>
 
-    <groupId>com.graphql-java-kickstart</groupId>
-    <artifactId>graphql-java-servlet-osgi-examples</artifactId>
-    <version>7.3.4-SNAPSHOT</version>
-    <packaging>pom</packaging>
+  <groupId>com.graphql-java-kickstart</groupId>
+  <modelVersion>4.0.0</modelVersion>
+  <modules>
+    <module>providers</module>
+    <module>apache-karaf-feature</module>
+    <module>apache-karaf-package</module>
+  </modules>
+  <packaging>pom</packaging>
 
-    <properties>
-        <karaf.version>4.2.4</karaf.version>
-        <graphql.java.servlet.version>7.3.4-SNAPSHOT</graphql.java.servlet.version>
-        <graphql.java.version>11.0</graphql.java.version>
-    </properties>
+  <properties>
+    <graphql.java.servlet.version>7.3.4-SNAPSHOT</graphql.java.servlet.version>
+    <graphql.java.version>11.0</graphql.java.version>
+    <karaf.version>4.2.4</karaf.version>
+  </properties>
 
-    <modules>
-        <module>providers</module>
-        <module>apache-karaf-feature</module>
-        <module>apache-karaf-package</module>
-    </modules>
+  <version>7.3.4-SNAPSHOT</version>
 
 </project>

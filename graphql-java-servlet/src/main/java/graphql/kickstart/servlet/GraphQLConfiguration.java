@@ -8,14 +8,13 @@ import graphql.kickstart.servlet.cache.GraphQLResponseCacheManager;
 import graphql.kickstart.servlet.config.DefaultGraphQLSchemaServletProvider;
 import graphql.kickstart.servlet.config.GraphQLSchemaServletProvider;
 import graphql.kickstart.servlet.context.GraphQLServletContextBuilder;
-import graphql.kickstart.servlet.input.BatchInputPreProcessor;
-import graphql.kickstart.servlet.input.NoOpBatchInputPreProcessor;
-import graphql.schema.GraphQLSchema;
 import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder;
 import graphql.kickstart.servlet.core.internal.GraphQLThreadFactory;
+import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
-
+import graphql.kickstart.servlet.input.NoOpBatchInputPreProcessor;
+import graphql.schema.GraphQLSchema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -41,9 +40,12 @@ public class GraphQLConfiguration {
 
   private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory,
       GraphQLQueryInvoker queryInvoker,
-      GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners, boolean asyncServletModeEnabled,
-      Executor asyncExecutor, long subscriptionTimeout, long asyncTimeout, ContextSetting contextSetting,
-      Supplier<BatchInputPreProcessor> batchInputPreProcessor, GraphQLResponseCacheManager responseCacheManager) {
+      GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners,
+      boolean asyncServletModeEnabled,
+      Executor asyncExecutor, long subscriptionTimeout, long asyncTimeout,
+      ContextSetting contextSetting,
+      Supplier<BatchInputPreProcessor> batchInputPreProcessor,
+      GraphQLResponseCacheManager responseCacheManager) {
     this.invocationInputFactory = invocationInputFactory;
     this.queryInvoker = queryInvoker;
     this.graphQLInvoker = queryInvoker.toGraphQLInvoker();
@@ -66,7 +68,8 @@ public class GraphQLConfiguration {
     return new Builder(GraphQLInvocationInputFactory.newBuilder(schemaProvider));
   }
 
-  public static GraphQLConfiguration.Builder with(GraphQLInvocationInputFactory invocationInputFactory) {
+  public static GraphQLConfiguration.Builder with(
+      GraphQLInvocationInputFactory invocationInputFactory) {
     return new Builder(invocationInputFactory);
   }
 
@@ -74,7 +77,9 @@ public class GraphQLConfiguration {
     return invocationInputFactory;
   }
 
-  public GraphQLQueryInvoker getQueryInvoker() { return queryInvoker; }
+  public GraphQLQueryInvoker getQueryInvoker() {
+    return queryInvoker;
+  }
 
   public GraphQLInvoker getGraphQLInvoker() {
     return graphQLInvoker;
@@ -224,7 +229,8 @@ public class GraphQLConfiguration {
 
     public GraphQLConfiguration build() {
       return new GraphQLConfiguration(
-          this.invocationInputFactory != null ? this.invocationInputFactory : invocationInputFactoryBuilder.build(),
+          this.invocationInputFactory != null ? this.invocationInputFactory
+              : invocationInputFactoryBuilder.build(),
           queryInvoker,
           objectMapper,
           listeners,

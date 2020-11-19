@@ -30,7 +30,8 @@ public class FallbackSubscriptionProtocolFactory extends SubscriptionProtocolFac
 
   @Override
   public Consumer<String> createConsumer(SubscriptionSession session) {
-    return new FallbackSubscriptionConsumer(session, mapper, invocationInputFactory, graphQLInvoker);
+    return new FallbackSubscriptionConsumer(session, mapper, invocationInputFactory,
+        graphQLInvoker);
   }
 
   @Override

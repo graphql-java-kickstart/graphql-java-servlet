@@ -2,12 +2,11 @@ package graphql.kickstart.servlet.cache;
 
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.HttpRequestHandler;
-import lombok.extern.slf4j.Slf4j;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class CacheReader {
@@ -18,14 +17,14 @@ public final class CacheReader {
   /**
    * Response from cache if possible, if nothing in cache will not produce any response
    *
-   * @return {@literal true} if response was fulfilled from cache, {@literal false} is cache not found or an error
-   * occurred while reading value from cache
+   * @return {@literal true} if response was fulfilled from cache, {@literal false} is cache not
+   * found or an error occurred while reading value from cache
    * @throws IOException if can not read value from the cache
    */
   public static boolean responseFromCache(GraphQLInvocationInput invocationInput,
-                                          HttpServletRequest request,
-                                          HttpServletResponse response,
-                                          GraphQLResponseCacheManager cacheManager) throws IOException {
+      HttpServletRequest request,
+      HttpServletResponse response,
+      GraphQLResponseCacheManager cacheManager) throws IOException {
     CachedResponse cachedResponse = null;
     try {
       cachedResponse = cacheManager.get(request, invocationInput);

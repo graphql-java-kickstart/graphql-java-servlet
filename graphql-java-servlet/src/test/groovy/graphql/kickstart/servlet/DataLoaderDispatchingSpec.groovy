@@ -6,12 +6,12 @@ import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.Instrumentation
 import graphql.execution.instrumentation.SimpleInstrumentation
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions
-import graphql.schema.DataFetcher
-import graphql.schema.DataFetchingEnvironment
 import graphql.kickstart.execution.context.ContextSetting
 import graphql.kickstart.execution.context.DefaultGraphQLContext
 import graphql.kickstart.execution.context.GraphQLContext
 import graphql.kickstart.execution.instrumentation.ConfigurableDispatchInstrumentation
+import graphql.schema.DataFetcher
+import graphql.schema.DataFetchingEnvironment
 import org.dataloader.BatchLoader
 import org.dataloader.DataLoader
 import org.dataloader.DataLoaderRegistry

@@ -80,7 +80,8 @@ public class GraphQLObjectMapper {
     return getGraphQLRequestMapper().readValue(text);
   }
 
-  public List<GraphQLRequest> readBatchedGraphQLRequest(InputStream inputStream) throws IOException {
+  public List<GraphQLRequest> readBatchedGraphQLRequest(InputStream inputStream)
+      throws IOException {
     MappingIterator<GraphQLRequest> iterator = getGraphQLRequestMapper().readValues(inputStream);
     List<GraphQLRequest> requests = new ArrayList<>();
 
@@ -104,13 +105,15 @@ public class GraphQLObjectMapper {
 
   public String serializeResultAsJson(ExecutionResult executionResult) {
     try {
-      return getJacksonMapper().writeValueAsString(createResultFromExecutionResult(executionResult));
+      return getJacksonMapper()
+          .writeValueAsString(createResultFromExecutionResult(executionResult));
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
 
-  public void serializeResultAsJson(Writer writer, ExecutionResult executionResult) throws IOException {
+  public void serializeResultAsJson(Writer writer, ExecutionResult executionResult)
+      throws IOException {
     getJacksonMapper().writeValue(writer, createResultFromExecutionResult(executionResult));
   }
 
@@ -148,11 +151,13 @@ public class GraphQLObjectMapper {
     return convertSanitizedExecutionResult(executionResult, true);
   }
 
-  public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult, boolean includeData) {
+  public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult,
+      boolean includeData) {
     final Map<String, Object> result = new LinkedHashMap<>();
 
     if (areErrorsPresent(executionResult)) {
-      result.put("errors", executionResult.getErrors().stream().map(GraphQLError::toSpecification).collect(toList()));
+      result.put("errors", executionResult.getErrors().stream().map(GraphQLError::toSpecification)
+          .collect(toList()));
     }
 
     if (executionResult.getExtensions() != null && !executionResult.getExtensions().isEmpty()) {
@@ -173,7 +178,8 @@ public class GraphQLObjectMapper {
   public Map<String, Object> deserializeVariables(String variables) {
     try {
       return VariablesDeserializer
-          .deserializeVariablesObject(getJacksonMapper().readValue(variables, Object.class), getJacksonMapper());
+          .deserializeVariablesObject(getJacksonMapper().readValue(variables, Object.class),
+              getJacksonMapper());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -192,11 +198,13 @@ public class GraphQLObjectMapper {
     private ObjectMapperProvider objectMapperProvider = new ConfiguringObjectMapperProvider();
     private Supplier<GraphQLErrorHandler> graphQLErrorHandler = DefaultGraphQLErrorHandler::new;
 
-    public Builder withObjectMapperConfigurer(GraphQLServletObjectMapperConfigurer objectMapperConfigurer) {
+    public Builder withObjectMapperConfigurer(
+        GraphQLServletObjectMapperConfigurer objectMapperConfigurer) {
       return withObjectMapperConfigurer(() -> objectMapperConfigurer);
     }
 
-    public Builder withObjectMapperConfigurer(Supplier<GraphQLServletObjectMapperConfigurer> objectMapperConfigurer) {
+    public Builder withObjectMapperConfigurer(
+        Supplier<GraphQLServletObjectMapperConfigurer> objectMapperConfigurer) {
       this.objectMapperProvider = new ConfiguringObjectMapperProvider(objectMapperConfigurer.get());
       return this;
     }

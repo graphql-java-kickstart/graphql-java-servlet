@@ -30,18 +30,21 @@ class SingleAsynchronousQueryResponseWriter implements QueryResponseWriter {
     response.setStatus(HttpRequestHandler.STATUS_OK);
 
     boolean isInAsyncThread = request.isAsyncStarted();
-    AsyncContext asyncContext = isInAsyncThread ? request.getAsyncContext() : request.startAsync(request, response);
+    AsyncContext asyncContext =
+        isInAsyncThread ? request.getAsyncContext() : request.startAsync(request, response);
     asyncContext.setTimeout(subscriptionTimeout);
     AtomicReference<Subscription> subscriptionRef = new AtomicReference<>();
     asyncContext.addListener(new SubscriptionAsyncListener(subscriptionRef));
-    ExecutionResultSubscriber subscriber = new ExecutionResultSubscriber(subscriptionRef, asyncContext,
+    ExecutionResultSubscriber subscriber = new ExecutionResultSubscriber(subscriptionRef,
+        asyncContext,
         graphQLObjectMapper);
     List<Publisher<ExecutionResult>> publishers = new ArrayList<>();
     if (result.getData() instanceof Publisher) {
       publishers.add(result.getData());
     } else {
       publishers.add(new StaticDataPublisher<>(result));
-      final Publisher<ExecutionResult> deferredResultsPublisher = (Publisher<ExecutionResult>) result.getExtensions()
+      final Publisher<ExecutionResult> deferredResultsPublisher = (Publisher<ExecutionResult>) result
+          .getExtensions()
           .get(GraphQL.DEFERRED_RESULTS);
       publishers.add(deferredResultsPublisher);
     }

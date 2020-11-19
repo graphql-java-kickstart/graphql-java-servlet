@@ -31,7 +31,9 @@ public interface GraphQLQueryResult {
     return emptyList();
   }
 
-  default boolean isError() { return false; }
+  default boolean isError() {
+    return false;
+  }
 
   default int getStatusCode() {
     return 200;

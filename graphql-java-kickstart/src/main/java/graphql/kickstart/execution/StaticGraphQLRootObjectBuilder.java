@@ -14,7 +14,7 @@ public class StaticGraphQLRootObjectBuilder implements GraphQLRootObjectBuilder 
   }
 
   protected Object getRootObject() {
-      return rootObject;
+    return rootObject;
   }
 
 }

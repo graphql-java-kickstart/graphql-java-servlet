@@ -5,7 +5,8 @@ import javax.security.auth.Subject;
 import org.dataloader.DataLoaderRegistry;
 
 /**
- * An object for the DefaultGraphQLContextBuilder to return. Can be extended to include more context.
+ * An object for the DefaultGraphQLContextBuilder to return. Can be extended to include more
+ * context.
  */
 public class DefaultGraphQLContext implements GraphQLContext {
 

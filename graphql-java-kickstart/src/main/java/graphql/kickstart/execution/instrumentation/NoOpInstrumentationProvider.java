@@ -6,8 +6,8 @@ import graphql.kickstart.execution.config.InstrumentationProvider;
 
 public class NoOpInstrumentationProvider implements InstrumentationProvider {
 
-    @Override
-    public Instrumentation getInstrumentation() {
-        return SimpleInstrumentation.INSTANCE;
-    }
+  @Override
+  public Instrumentation getInstrumentation() {
+    return SimpleInstrumentation.INSTANCE;
+  }
 }

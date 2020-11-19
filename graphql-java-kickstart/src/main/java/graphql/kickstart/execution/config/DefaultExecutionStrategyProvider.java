@@ -20,7 +20,8 @@ public class DefaultExecutionStrategyProvider implements ExecutionStrategyProvid
   }
 
   public DefaultExecutionStrategyProvider(ExecutionStrategy queryExecutionStrategy,
-      ExecutionStrategy mutationExecutionStrategy, ExecutionStrategy subscriptionExecutionStrategy) {
+      ExecutionStrategy mutationExecutionStrategy,
+      ExecutionStrategy subscriptionExecutionStrategy) {
     this.queryExecutionStrategy = queryExecutionStrategy;
     this.mutationExecutionStrategy = mutationExecutionStrategy;
     this.subscriptionExecutionStrategy = subscriptionExecutionStrategy;
