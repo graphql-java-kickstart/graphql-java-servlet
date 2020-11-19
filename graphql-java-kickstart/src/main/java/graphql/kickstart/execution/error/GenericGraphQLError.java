@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import graphql.ErrorType;
 import graphql.GraphQLError;
 import graphql.language.SourceLocation;
-
 import java.util.List;
 
 /**
@@ -12,26 +11,26 @@ import java.util.List;
  */
 public class GenericGraphQLError implements GraphQLError {
 
-    private final String message;
+  private final String message;
 
-    public GenericGraphQLError(String message) {
-        this.message = message;
-    }
+  public GenericGraphQLError(String message) {
+    this.message = message;
+  }
 
-    @Override
-    public String getMessage() {
-        return message;
-    }
+  @Override
+  public String getMessage() {
+    return message;
+  }
 
-    @Override
-    @JsonIgnore
-    public List<SourceLocation> getLocations() {
-        return null;
-    }
+  @Override
+  @JsonIgnore
+  public List<SourceLocation> getLocations() {
+    return null;
+  }
 
-    @Override
-    @JsonIgnore
-    public ErrorType getErrorType() {
-        return null;
-    }
+  @Override
+  @JsonIgnore
+  public ErrorType getErrorType() {
+    return null;
+  }
 }

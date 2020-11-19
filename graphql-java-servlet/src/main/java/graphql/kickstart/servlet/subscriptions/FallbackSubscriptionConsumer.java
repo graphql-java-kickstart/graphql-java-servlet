@@ -27,18 +27,22 @@ public class FallbackSubscriptionConsumer implements Consumer<String> {
   @Override
   public void accept(String text) {
     CompletableFuture<ExecutionResult> executionResult = executeAsync(text, session);
-    executionResult.thenAccept(result -> handleSubscriptionStart(session, UUID.randomUUID().toString(), result));
+    executionResult.thenAccept(
+        result -> handleSubscriptionStart(session, UUID.randomUUID().toString(), result));
   }
 
-  private CompletableFuture<ExecutionResult> executeAsync(String payload, SubscriptionSession session) {
+  private CompletableFuture<ExecutionResult> executeAsync(String payload,
+      SubscriptionSession session) {
     Objects.requireNonNull(payload, "Payload is required");
     GraphQLRequest graphQLRequest = mapper.readGraphQLRequest(payload);
 
-    GraphQLSingleInvocationInput invocationInput = invocationInputFactory.create(graphQLRequest, session);
+    GraphQLSingleInvocationInput invocationInput = invocationInputFactory
+        .create(graphQLRequest, session);
     return graphQLInvoker.executeAsync(invocationInput);
   }
 
-  private void handleSubscriptionStart(SubscriptionSession session, String id, ExecutionResult executionResult) {
+  private void handleSubscriptionStart(SubscriptionSession session, String id,
+      ExecutionResult executionResult) {
     ExecutionResult sanitizedExecutionResult = mapper.sanitizeErrors(executionResult);
     if (mapper.hasNoErrors(sanitizedExecutionResult)) {
       session.subscribe(id, sanitizedExecutionResult.getData());

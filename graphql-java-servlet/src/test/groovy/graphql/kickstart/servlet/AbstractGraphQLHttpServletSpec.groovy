@@ -5,9 +5,9 @@ import graphql.Scalars
 import graphql.execution.ExecutionStepInfo
 import graphql.execution.MergedField
 import graphql.execution.reactive.SingleSubscriberPublisher
+import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory
 import graphql.language.Field
 import graphql.schema.GraphQLNonNull
-import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared

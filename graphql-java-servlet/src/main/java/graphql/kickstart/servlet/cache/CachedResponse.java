@@ -13,7 +13,8 @@ public class CachedResponse implements Serializable {
   private final Integer errorStatusCode;
   private final String errorMessage;
 
-  private CachedResponse(byte[] contentBytes, boolean error, Integer errorStatusCode, String errorMessage) {
+  private CachedResponse(byte[] contentBytes, boolean error, Integer errorStatusCode,
+      String errorMessage) {
     this.contentBytes = contentBytes;
     this.error = error;
     this.errorStatusCode = errorStatusCode;
@@ -35,7 +36,7 @@ public class CachedResponse implements Serializable {
    * Constructor for error response
    *
    * @param errorStatusCode the status code for the error response
-   * @param errorMessage  the error message for the error response
+   * @param errorMessage the error message for the error response
    */
   public static CachedResponse ofError(int errorStatusCode, String errorMessage) {
     return new CachedResponse(null, true, errorStatusCode, errorMessage);
@@ -49,7 +50,8 @@ public class CachedResponse implements Serializable {
   }
 
   /**
-   * @return the response body for success requests, {@literal null} when {@link #isError()} is {@literal true}
+   * @return the response body for success requests, {@literal null} when {@link #isError()} is
+   * {@literal true}
    */
   public byte[] getContentBytes() {
     return contentBytes;

@@ -5,12 +5,11 @@ import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.GraphQLConfiguration;
 import graphql.kickstart.servlet.HttpRequestHandlerImpl;
 import graphql.kickstart.servlet.QueryResponseWriter;
-import lombok.extern.slf4j.Slf4j;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Objects;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CachingHttpRequestHandlerImpl extends HttpRequestHandlerImpl {
@@ -19,13 +18,14 @@ public class CachingHttpRequestHandlerImpl extends HttpRequestHandlerImpl {
 
   public CachingHttpRequestHandlerImpl(GraphQLConfiguration configuration) {
     super(configuration);
-    Objects.requireNonNull(configuration.getResponseCacheManager(), "Response Cache Manager cannot be null");
+    Objects.requireNonNull(configuration.getResponseCacheManager(),
+        "Response Cache Manager cannot be null");
     this.configuration = configuration;
   }
 
   @Override
   protected void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
-               HttpServletResponse response) throws IOException {
+      HttpServletResponse response) throws IOException {
     // try to return value from cache if cache exists, otherwise processed the query
     boolean returnedFromCache;
 
@@ -44,7 +44,8 @@ public class CachingHttpRequestHandlerImpl extends HttpRequestHandlerImpl {
     }
   }
 
-  protected QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput, GraphQLQueryResult queryResult) {
+  protected QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput,
+      GraphQLQueryResult queryResult) {
     return CachingQueryResponseWriter.createCacheWriter(
         queryResult,
         configuration.getObjectMapper(),

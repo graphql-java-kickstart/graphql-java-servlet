@@ -8,10 +8,10 @@ import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 import graphql.kickstart.servlet.cache.CachingHttpRequestHandlerImpl;
-import graphql.schema.GraphQLFieldDefinition;
 import graphql.kickstart.servlet.core.GraphQLMBean;
 import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
+import graphql.schema.GraphQLFieldDefinition;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +29,8 @@ import lombok.extern.slf4j.Slf4j;
  * @author Andrew Potter
  */
 @Slf4j
-public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements Servlet, GraphQLMBean {
+public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements Servlet,
+    GraphQLMBean {
 
   /**
    * @deprecated use {@link #getConfiguration()} instead
@@ -116,7 +117,8 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
   @Override
   public String[] getMutations() {
-    return configuration.getInvocationInputFactory().getSchemaProvider().getSchema().getMutationType()
+    return configuration.getInvocationInputFactory().getSchemaProvider().getSchema()
+        .getMutationType()
         .getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
   }
 
@@ -124,7 +126,8 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
   public String executeQuery(String query) {
     try {
       GraphQLRequest graphQLRequest = createQueryOnlyRequest(query);
-      GraphQLSingleInvocationInput invocationInput = configuration.getInvocationInputFactory().create(graphQLRequest);
+      GraphQLSingleInvocationInput invocationInput = configuration.getInvocationInputFactory()
+          .create(graphQLRequest);
       ExecutionResult result = configuration.getGraphQLInvoker().query(invocationInput).getResult();
       return configuration.getObjectMapper().serializeResultAsJson(result);
     } catch (Exception e) {
@@ -132,22 +135,26 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     }
   }
 
-  private void doRequestAsync(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler) {
+  private void doRequestAsync(HttpServletRequest request, HttpServletResponse response,
+      HttpRequestHandler handler) {
     if (configuration.isAsyncServletModeEnabled()) {
       AsyncContext asyncContext = request.startAsync(request, response);
       asyncContext.setTimeout(configuration.getAsyncTimeout());
       HttpServletRequest asyncRequest = (HttpServletRequest) asyncContext.getRequest();
       HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
-      configuration.getAsyncExecutor().execute(() -> doRequest(asyncRequest, asyncResponse, handler, asyncContext));
+      configuration.getAsyncExecutor()
+          .execute(() -> doRequest(asyncRequest, asyncResponse, handler, asyncContext));
     } else {
       doRequest(request, response, handler, null);
     }
   }
 
-  private void doRequest(HttpServletRequest request, HttpServletResponse response, HttpRequestHandler handler,
+  private void doRequest(HttpServletRequest request, HttpServletResponse response,
+      HttpRequestHandler handler,
       AsyncContext asyncContext) {
 
-    List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(l -> l.onRequest(request, response));
+    List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(
+        l -> l.onRequest(request, response));
 
     try {
       handler.handle(request, response);

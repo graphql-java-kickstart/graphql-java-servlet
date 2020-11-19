@@ -3,43 +3,34 @@ package graphql.kickstart.servlet;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
-import graphql.kickstart.servlet.config.DefaultGraphQLSchemaServletProvider;
-import graphql.schema.GraphQLCodeRegistry;
-import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLType;
+import graphql.kickstart.execution.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLQueryInvoker;
+import graphql.kickstart.execution.GraphQLRootObjectBuilder;
 import graphql.kickstart.execution.config.DefaultExecutionStrategyProvider;
 import graphql.kickstart.execution.config.ExecutionStrategyProvider;
+import graphql.kickstart.execution.config.InstrumentationProvider;
+import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
+import graphql.kickstart.execution.error.GraphQLErrorHandler;
+import graphql.kickstart.execution.instrumentation.NoOpInstrumentationProvider;
+import graphql.kickstart.servlet.config.DefaultGraphQLSchemaServletProvider;
 import graphql.kickstart.servlet.config.GraphQLSchemaServletProvider;
+import graphql.kickstart.servlet.context.DefaultGraphQLServletContextBuilder;
+import graphql.kickstart.servlet.context.GraphQLServletContextBuilder;
+import graphql.kickstart.servlet.core.DefaultGraphQLRootObjectBuilder;
+import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder;
+import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import graphql.kickstart.servlet.osgi.GraphQLCodeRegistryProvider;
 import graphql.kickstart.servlet.osgi.GraphQLMutationProvider;
 import graphql.kickstart.servlet.osgi.GraphQLProvider;
 import graphql.kickstart.servlet.osgi.GraphQLQueryProvider;
 import graphql.kickstart.servlet.osgi.GraphQLSubscriptionProvider;
 import graphql.kickstart.servlet.osgi.GraphQLTypesProvider;
-import graphql.kickstart.execution.config.InstrumentationProvider;
-import graphql.kickstart.servlet.context.DefaultGraphQLServletContextBuilder;
-import graphql.kickstart.servlet.context.GraphQLServletContextBuilder;
-import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
-import graphql.kickstart.servlet.core.DefaultGraphQLRootObjectBuilder;
-import graphql.kickstart.execution.error.GraphQLErrorHandler;
-import graphql.kickstart.execution.GraphQLObjectMapper;
-import graphql.kickstart.execution.GraphQLQueryInvoker;
-import graphql.kickstart.execution.GraphQLRootObjectBuilder;
-import graphql.kickstart.servlet.core.GraphQLServletListener;
-import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
-import graphql.kickstart.execution.instrumentation.NoOpInstrumentationProvider;
-import org.osgi.service.metatype.annotations.Designate;
-
+import graphql.schema.GraphQLCodeRegistry;
+import graphql.schema.GraphQLObjectType;
+import graphql.schema.GraphQLType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +39,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.metatype.annotations.Designate;
 
 @Component(
     service = {javax.servlet.http.HttpServlet.class, javax.servlet.Servlet.class},
@@ -71,7 +70,8 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
   private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
   private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
-  private GraphQLCodeRegistryProvider codeRegistryProvider = () -> GraphQLCodeRegistry.newCodeRegistry().build();
+  private GraphQLCodeRegistryProvider codeRegistryProvider = () -> GraphQLCodeRegistry
+      .newCodeRegistry().build();
 
   private GraphQLSchemaServletProvider schemaProvider;
 
@@ -100,16 +100,16 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   @Activate
   public void activate(Config config) {
     this.schemaUpdateDelay = config.schema_update_delay();
-      if (schemaUpdateDelay != 0) {
-          executor = Executors.newSingleThreadScheduledExecutor();
-      }
+    if (schemaUpdateDelay != 0) {
+      executor = Executors.newSingleThreadScheduledExecutor();
+    }
   }
 
   @Deactivate
   public void deactivate() {
-      if (executor != null) {
-          executor.shutdown();
-      }
+    if (executor != null) {
+      executor.shutdown();
+    }
   }
 
   @Override
@@ -136,9 +136,9 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     if (schemaUpdateDelay == 0) {
       doUpdateSchema();
     } else {
-        if (updateFuture != null) {
-            updateFuture.cancel(true);
-        }
+      if (updateFuture != null) {
+        updateFuture.cancel(true);
+      }
 
       updateFuture = executor.schedule(new Runnable() {
         @Override
@@ -150,7 +150,8 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   }
 
   private void doUpdateSchema() {
-    final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query").description("Root query type");
+    final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query")
+        .description("Root query type");
 
     for (GraphQLQueryProvider provider : queryProviders) {
       if (provider.getQueries() != null && !provider.getQueries().isEmpty()) {
@@ -193,12 +194,13 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
       }
     }
 
-    this.schemaProvider = new DefaultGraphQLSchemaServletProvider(newSchema().query(queryTypeBuilder.build())
-        .mutation(mutationType)
-        .subscription(subscriptionType)
-        .additionalTypes(types)
-        .codeRegistry(codeRegistryProvider.getCodeRegistry())
-        .build());
+    this.schemaProvider = new DefaultGraphQLSchemaServletProvider(
+        newSchema().query(queryTypeBuilder.build())
+            .mutation(mutationType)
+            .subscription(subscriptionType)
+            .additionalTypes(types)
+            .codeRegistry(codeRegistryProvider.getCodeRegistry())
+            .build());
   }
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)

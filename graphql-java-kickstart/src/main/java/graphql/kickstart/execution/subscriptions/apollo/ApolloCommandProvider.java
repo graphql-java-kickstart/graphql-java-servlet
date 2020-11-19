@@ -17,11 +17,15 @@ public class ApolloCommandProvider {
       GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
       GraphQLInvoker graphQLInvoker,
       Collection<ApolloSubscriptionConnectionListener> connectionListeners
-      ) {
-    commands.put(Type.GQL_CONNECTION_INIT, new SubscriptionConnectionInitCommand(connectionListeners));
-    commands.put(Type.GQL_START, new SubscriptionStartCommand(mapper, invocationInputFactory, graphQLInvoker, connectionListeners));
+  ) {
+    commands
+        .put(Type.GQL_CONNECTION_INIT, new SubscriptionConnectionInitCommand(connectionListeners));
+    commands.put(Type.GQL_START,
+        new SubscriptionStartCommand(mapper, invocationInputFactory, graphQLInvoker,
+            connectionListeners));
     commands.put(Type.GQL_STOP, new SubscriptionStopCommand(connectionListeners));
-    commands.put(Type.GQL_CONNECTION_TERMINATE, new SubscriptionConnectionTerminateCommand(connectionListeners));
+    commands.put(Type.GQL_CONNECTION_TERMINATE,
+        new SubscriptionConnectionTerminateCommand(connectionListeners));
   }
 
   public SubscriptionCommand getByType(Type type) {

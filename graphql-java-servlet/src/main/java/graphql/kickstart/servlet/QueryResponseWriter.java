@@ -2,11 +2,10 @@ package graphql.kickstart.servlet;
 
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryResult;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Objects;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public interface QueryResponseWriter {
 
@@ -20,7 +19,8 @@ public interface QueryResponseWriter {
     if (result.isBatched()) {
       return new BatchedQueryResponseWriter(result.getResults(), graphQLObjectMapper);
     } else if (result.isAsynchronous()) {
-      return new SingleAsynchronousQueryResponseWriter(result.getResult(), graphQLObjectMapper, subscriptionTimeout);
+      return new SingleAsynchronousQueryResponseWriter(result.getResult(), graphQLObjectMapper,
+          subscriptionTimeout);
     } else if (result.isError()) {
       return new ErrorQueryResponseWriter(result.getStatusCode(), result.getMessage());
     }

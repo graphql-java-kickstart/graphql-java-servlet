@@ -4,7 +4,6 @@ import static graphql.kickstart.execution.OperationNameExtractor.extractOperatio
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import graphql.introspection.IntrospectionQuery;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +31,8 @@ public class GraphQLRequest {
   }
 
   public static GraphQLRequest createIntrospectionRequest() {
-    return new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), "IntrospectionQuery");
+    return new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(),
+        "IntrospectionQuery");
   }
 
   public static GraphQLRequest createQueryOnlyRequest(String query) {

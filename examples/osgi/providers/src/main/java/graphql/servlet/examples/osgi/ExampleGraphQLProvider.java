@@ -15,29 +15,31 @@ import static graphql.Scalars.GraphQLString;
 import static graphql.schema.GraphQLFieldDefinition.*;
 
 @Component(
-        name="ExampleGraphQLProvider",
-        immediate=true
+    name = "ExampleGraphQLProvider",
+    immediate = true
 )
-public class ExampleGraphQLProvider implements GraphQLQueryProvider, GraphQLMutationProvider, GraphQLTypesProvider {
+public class ExampleGraphQLProvider implements GraphQLQueryProvider, GraphQLMutationProvider,
+    GraphQLTypesProvider {
 
-    public Collection<GraphQLFieldDefinition> getQueries() {
-        List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<GraphQLFieldDefinition>();
-        fieldDefinitions.add(newFieldDefinition()
-                .type(GraphQLString)
-                .name("hello")
-                .description("Basic example of a GraphQL Java Servlet provider using the Apache Karaf OSGi Runtime")
-                .staticValue("world")
-                .build());
-        return fieldDefinitions;
-    }
+  public Collection<GraphQLFieldDefinition> getQueries() {
+    List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<GraphQLFieldDefinition>();
+    fieldDefinitions.add(newFieldDefinition()
+        .type(GraphQLString)
+        .name("hello")
+        .description(
+            "Basic example of a GraphQL Java Servlet provider using the Apache Karaf OSGi Runtime")
+        .staticValue("world")
+        .build());
+    return fieldDefinitions;
+  }
 
-    public Collection<GraphQLFieldDefinition> getMutations() {
-        return new ArrayList<GraphQLFieldDefinition>();
-    }
+  public Collection<GraphQLFieldDefinition> getMutations() {
+    return new ArrayList<GraphQLFieldDefinition>();
+  }
 
-    public Collection<GraphQLType> getTypes() {
+  public Collection<GraphQLType> getTypes() {
 
-        List<GraphQLType> types = new ArrayList<GraphQLType>();
-        return types;
-    }
+    List<GraphQLType> types = new ArrayList<GraphQLType>();
+    return types;
+  }
 }

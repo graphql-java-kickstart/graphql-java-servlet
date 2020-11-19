@@ -21,7 +21,8 @@ public class PerRequestBatchedInvocationInput implements GraphQLBatchedInvocatio
   public PerRequestBatchedInvocationInput(List<GraphQLRequest> requests, GraphQLSchema schema,
       Supplier<GraphQLContext> contextSupplier, Object root, ContextSetting contextSetting) {
     GraphQLContext context = contextSupplier.get();
-    invocationInputs = requests.stream().map(request -> new GraphQLSingleInvocationInput(request, schema, context, root))
+    invocationInputs = requests.stream()
+        .map(request -> new GraphQLSingleInvocationInput(request, schema, context, root))
         .collect(Collectors.toList());
     this.contextSetting = contextSetting;
   }

@@ -18,7 +18,8 @@ class DecoratedExecutionResult implements ExecutionResult {
   }
 
   private boolean isDeferred() {
-    return result.getExtensions() != null && result.getExtensions().containsKey(GraphQL.DEFERRED_RESULTS);
+    return result.getExtensions() != null && result.getExtensions()
+        .containsKey(GraphQL.DEFERRED_RESULTS);
   }
 
   @Override

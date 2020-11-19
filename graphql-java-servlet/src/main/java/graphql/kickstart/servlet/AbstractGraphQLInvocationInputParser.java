@@ -1,7 +1,7 @@
 package graphql.kickstart.servlet;
 
-import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.GraphQLObjectMapper;
+import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import lombok.RequiredArgsConstructor;
 
