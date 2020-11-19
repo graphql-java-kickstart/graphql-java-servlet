@@ -32,3 +32,10 @@ We use Google Style guides for our projects. See the
 description. You can download the 
 [IntelliJ Java Google Style](https://github.com/google/styleguide/blob/gh-pages/intellij-java-google-style.xml)
 to import in these settings in IntelliJ.
+
+### SonarLint
+
+It would also be very helpful to install the SonarLint plugin in your IDE and fix any
+relevant SonarLint issues before pushing a PR. We're aware that the current state
+of the code raises a lot of SonarLint issues out of the box, but any help in reducing
+that is appreciated. More importantly we don't increase that technical debt.
