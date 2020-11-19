@@ -1,0 +1,72 @@
+package graphql.kickstart.servlet.cache;
+
+import graphql.kickstart.execution.GraphQLObjectMapper;
+import graphql.kickstart.execution.GraphQLQueryResult;
+import graphql.kickstart.execution.input.GraphQLInvocationInput;
+import graphql.kickstart.servlet.QueryResponseWriter;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@Slf4j
+public class CachingQueryResponseWriter implements QueryResponseWriter {
+
+  static QueryResponseWriter createCacheWriter(
+          GraphQLQueryResult result,
+          GraphQLObjectMapper graphQLObjectMapper,
+          long subscriptionTimeout,
+          GraphQLInvocationInput invocationInput,
+          GraphQLResponseCacheManager responseCache
+  ) {
+    QueryResponseWriter writer = QueryResponseWriter.createWriter(result, graphQLObjectMapper, subscriptionTimeout);
+    if (responseCache != null) {
+      return new CachingQueryResponseWriter(writer, responseCache, invocationInput, result.isError());
+    }
+    return writer;
+  }
+
+  private final QueryResponseWriter delegate;
+  private final GraphQLResponseCacheManager responseCache;
+  private final GraphQLInvocationInput invocationInput;
+  private final boolean error;
+
+  public CachingQueryResponseWriter(QueryResponseWriter delegate, GraphQLResponseCacheManager responseCache,
+                    GraphQLInvocationInput invocationInput, boolean error) {
+    this.delegate = delegate;
+    this.responseCache = responseCache;
+    this.invocationInput = invocationInput;
+    this.error = error;
+  }
+
+  @Override
+  public void write(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    if (responseCache.isCacheable(request, invocationInput)) {
+      BufferedHttpServletResponse cachingResponseWrapper = new BufferedHttpServletResponse(response);
+
+      delegate.write(request, cachingResponseWrapper);
+
+      try {
+        if (error) {
+          int errorStatusCode = cachingResponseWrapper.getStatus();
+          String errorMessage = cachingResponseWrapper.getErrorMessage();
+
+          responseCache.put(request, invocationInput, CachedResponse.ofError(errorStatusCode, errorMessage));
+        } else {
+          byte[] contentBytes = cachingResponseWrapper.getContentAsByteArray();
+
+          responseCache.put(request, invocationInput, CachedResponse.ofContent(contentBytes));
+        }
+      } catch (Throwable t) {
+        log.warn("Ignore read from cache, unexpected error happened", t);
+      }
+
+      cachingResponseWrapper.flushBuffer();
+      cachingResponseWrapper.close();
+    } else {
+      delegate.write(request, response);
+    }
+  }
+
+}

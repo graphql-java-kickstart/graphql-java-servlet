@@ -1,13 +1,14 @@
 package graphql.kickstart.servlet;
 
-import graphql.kickstart.execution.GraphQLQueryResult;
 import graphql.kickstart.execution.GraphQLObjectMapper;
-import java.io.IOException;
-import java.util.Objects;
+import graphql.kickstart.execution.GraphQLQueryResult;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Objects;
 
-interface QueryResponseWriter {
+public interface QueryResponseWriter {
 
   static QueryResponseWriter createWriter(
       GraphQLQueryResult result,

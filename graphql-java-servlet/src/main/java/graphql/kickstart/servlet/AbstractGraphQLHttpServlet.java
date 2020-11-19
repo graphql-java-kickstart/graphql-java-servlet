@@ -7,6 +7,7 @@ import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
+import graphql.kickstart.servlet.cache.CachingHttpRequestHandlerImpl;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.kickstart.servlet.core.GraphQLMBean;
 import graphql.kickstart.servlet.core.GraphQLServletListener;
@@ -83,7 +84,11 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
   public void init() {
     if (configuration == null) {
       this.configuration = getConfiguration();
-      this.requestHandler = HttpRequestHandlerFactory.create(configuration);
+      if (configuration.getResponseCacheManager() != null) {
+        this.requestHandler = new CachingHttpRequestHandlerImpl(configuration);
+      } else {
+        this.requestHandler = HttpRequestHandlerFactory.create(configuration);
+      }
     }
   }
 
