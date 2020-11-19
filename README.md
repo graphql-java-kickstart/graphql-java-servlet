@@ -16,10 +16,12 @@ This project wraps the Java implementation of GraphQL provided by [GraphQL Java]
 See [GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
 regarding GraphQL Java itself. 
 
-We try to stay up to date with GraphQL Java as much as possible. The current version supports **GraphQL Java 14.0**.
+We try to stay up to date with GraphQL Java as much as possible. The current version supports
+ **GraphQL Java 15.0**.
  
 This project requires at least Java 8.
 
 ## Installation and getting started
 
-See [Getting started](https://www.graphql-java-kickstart.com/servlet/getting-started/) for more detailed instructions.
+See [Getting started](https://www.graphql-java-kickstart.com/servlet/getting-started/) for more
+detailed instructions.
