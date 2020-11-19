@@ -8,6 +8,8 @@ Are you interested in improving our documentation, working on the codebase, revi
 
 [Reach out to us on Spectrum](https://spectrum.chat/graphql-java-kick) and join the team!
 
+We hope you'll get involved! Read our [Contributors' Guide](CONTRIBUTING.md) for more details.
+
 ## Overview
 Implementation of GraphQL Java Servlet including support for Relay.js, Apollo and OSGi out of the box.
 This project wraps the Java implementation of GraphQL provided by [GraphQL Java](https://www.graphql-java.com).
