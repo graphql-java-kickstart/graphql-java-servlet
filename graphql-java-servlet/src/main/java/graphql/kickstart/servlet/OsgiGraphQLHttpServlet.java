@@ -3,6 +3,7 @@ package graphql.kickstart.servlet;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
+import graphql.Scalars;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.kickstart.execution.GraphQLObjectMapper;
@@ -29,6 +30,7 @@ import graphql.kickstart.servlet.osgi.GraphQLQueryProvider;
 import graphql.kickstart.servlet.osgi.GraphQLSubscriptionProvider;
 import graphql.kickstart.servlet.osgi.GraphQLTypesProvider;
 import graphql.schema.GraphQLCodeRegistry;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
 import java.util.ArrayList;
@@ -153,10 +155,20 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query")
         .description("Root query type");
 
-    for (GraphQLQueryProvider provider : queryProviders) {
-      if (provider.getQueries() != null && !provider.getQueries().isEmpty()) {
-        provider.getQueries().forEach(queryTypeBuilder::field);
+    if (!queryProviders.isEmpty()) {
+      for (GraphQLQueryProvider provider : queryProviders) {
+        if (provider.getQueries() != null && !provider.getQueries().isEmpty()) {
+            provider.getQueries().forEach(queryTypeBuilder::field);
+        }
       }
+    } else {
+      // graphql-java enforces Query type to be there with at least some field.
+      queryTypeBuilder.field(
+        GraphQLFieldDefinition
+          .newFieldDefinition()
+          .name("_empty")
+          .type(Scalars.GraphQLBoolean)
+          .build());
     }
 
     final Set<GraphQLType> types = new HashSet<>();

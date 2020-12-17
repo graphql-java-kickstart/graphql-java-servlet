@@ -197,7 +197,6 @@ class TestUtils {
                 .mutation(mutation)
                 .subscription(subscription)
                 .additionalType(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)
-                .additionalDirective(Directives.DeferDirective)
                 .build()
     }
 

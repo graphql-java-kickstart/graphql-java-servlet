@@ -19,6 +19,7 @@ dependencies {
     // Servlet
     compile 'javax.servlet:javax.servlet-api:3.1.0'
     compile 'javax.websocket:javax.websocket-api:1.1'
+    implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"
 
     // OSGi
     compileOnly 'org.osgi:org.osgi.core:6.0.0'
@@ -35,7 +36,7 @@ dependencies {
     testCompile "org.spockframework:spock-core:1.1-groovy-2.4-rc-3"
     testRuntime "cglib:cglib-nodep:3.2.4"
     testRuntime "org.objenesis:objenesis:2.5.1"
-    testCompile 'org.slf4j:slf4j-simple:1.7.24'
+    testCompile "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
     testCompile 'org.springframework:spring-test:4.3.7.RELEASE'
     testRuntime 'org.springframework:spring-web:4.3.7.RELEASE'
     testCompile 'com.google.guava:guava:24.1.1-jre'
