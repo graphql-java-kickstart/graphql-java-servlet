@@ -46,7 +46,6 @@ sonarqube {
         property "sonar.projectKey", "graphql-java-kickstart_graphql-java-servlet"
         property "sonar.organization", "graphql-java-kickstart"
         property "sonar.host.url", "https://sonarcloud.io"
-        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
     }
 }
 
@@ -92,6 +91,12 @@ subprojects {
             xml.enabled = true
             html.enabled = false
             csv.enabled = false
+        }
+    }
+
+    sonarqube {
+        properties {
+            property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
         }
     }
 
