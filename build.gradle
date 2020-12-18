@@ -37,6 +37,15 @@ plugins {
     id 'io.franzbecker.gradle-lombok' version '3.2.0' apply false
     id "com.jfrog.artifactory" version "4.11.0" apply false
     id "biz.aQute.bnd.builder" version "5.1.2" apply false
+    id "org.sonarqube" version "3.0"
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "graphql-java-kickstart_graphql-java-servlet"
+        property "sonar.organization", "graphql-java-kickstart"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
 }
 
 subprojects {
