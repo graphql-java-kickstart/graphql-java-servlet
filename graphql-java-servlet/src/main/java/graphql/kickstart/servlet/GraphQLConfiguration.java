@@ -135,7 +135,7 @@ public class GraphQLConfiguration {
     private boolean asyncServletModeEnabled = false;
     private Executor asyncExecutor = Executors.newCachedThreadPool(new GraphQLThreadFactory());
     private long subscriptionTimeout = 0;
-    private long asyncTimeout = 30;
+    private long asyncTimeout = 30000;
     private ContextSetting contextSetting = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION;
     private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier = NoOpBatchInputPreProcessor::new;
     private GraphQLResponseCacheManager responseCacheManager;
