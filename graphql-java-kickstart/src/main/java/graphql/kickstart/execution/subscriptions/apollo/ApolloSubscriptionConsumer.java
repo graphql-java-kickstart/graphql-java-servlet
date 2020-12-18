@@ -23,7 +23,7 @@ public class ApolloSubscriptionConsumer implements Consumer<String> {
       SubscriptionCommand command = commandProvider.getByType(message.getType());
       command.apply(session, message);
     } catch (JsonProcessingException e) {
-      log.error("Cannot read subscription command '{}': {}", request, e);
+      log.error("Cannot read subscription command '{}'", request, e);
       session.sendMessage(new OperationMessage(Type.GQL_CONNECTION_ERROR, null, e.getMessage()));
     }
   }
