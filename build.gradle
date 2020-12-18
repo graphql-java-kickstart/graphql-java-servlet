@@ -52,6 +52,7 @@ sonarqube {
 subprojects {
     apply plugin: 'idea'
     apply plugin: 'jacoco'
+    apply plugin: 'org.sonarqube'
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: "com.jfrog.bintray"
