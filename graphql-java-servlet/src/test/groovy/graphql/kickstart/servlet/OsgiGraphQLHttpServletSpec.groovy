@@ -4,13 +4,13 @@ import graphql.AssertException
 import graphql.annotations.annotationTypes.GraphQLField
 import graphql.annotations.annotationTypes.GraphQLName
 import graphql.annotations.processor.GraphQLAnnotations
-import graphql.schema.GraphQLCodeRegistry
-import graphql.schema.GraphQLFieldDefinition
-import graphql.schema.GraphQLInterfaceType
 import graphql.kickstart.servlet.osgi.GraphQLCodeRegistryProvider
 import graphql.kickstart.servlet.osgi.GraphQLMutationProvider
 import graphql.kickstart.servlet.osgi.GraphQLQueryProvider
 import graphql.kickstart.servlet.osgi.GraphQLSubscriptionProvider
+import graphql.schema.GraphQLCodeRegistry
+import graphql.schema.GraphQLFieldDefinition
+import graphql.schema.GraphQLInterfaceType
 import spock.lang.Ignore
 import spock.lang.Specification
 
@@ -44,25 +44,25 @@ class OsgiGraphQLHttpServletSpec extends Specification {
     def "query provider adds query objects"() {
         setup:
         OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
-            TestQueryProvider queryProvider = new TestQueryProvider()
-            servlet.bindQueryProvider(queryProvider)
-            GraphQLFieldDefinition query
+        TestQueryProvider queryProvider = new TestQueryProvider()
+        servlet.bindQueryProvider(queryProvider)
+        GraphQLFieldDefinition query
 
         when:
-            query = servlet.getSchemaProvider().getSchema().getQueryType().getFieldDefinition("query")
+        query = servlet.getSchemaProvider().getSchema().getQueryType().getFieldDefinition("query")
         then:
-            query.getType().getName() == "query"
+        query.getType().getName() == "query"
 
         when:
-            query = servlet.getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinition("query")
+        query = servlet.getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinition("query")
         then:
-            query.getType().getName() == "query"
+        query.getType().getName() == "query"
 
         when:
-            servlet.unbindQueryProvider(queryProvider)
+        servlet.unbindQueryProvider(queryProvider)
         then:
-            servlet.getSchemaProvider().getSchema().getQueryType().getFieldDefinitions().isEmpty()
-            servlet.getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinitions().isEmpty()
+        servlet.getSchemaProvider().getSchema().getQueryType().getFieldDefinitions().isEmpty()
+        servlet.getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinitions().isEmpty()
     }
 
     static class TestMutationProvider implements GraphQLMutationProvider {
@@ -74,19 +74,19 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
     def "mutation provider adds mutation objects"() {
         setup:
-            OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
-            TestMutationProvider mutationProvider = new TestMutationProvider()
+        OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
+        TestMutationProvider mutationProvider = new TestMutationProvider()
 
         when:
-            servlet.bindMutationProvider(mutationProvider)
+        servlet.bindMutationProvider(mutationProvider)
         then:
-            servlet.getSchemaProvider().getSchema().getMutationType().getFieldDefinition("int").getType() == GraphQLInt
-            servlet.getSchemaProvider().getReadOnlySchema(null).getMutationType() == null
+        servlet.getSchemaProvider().getSchema().getMutationType().getFieldDefinition("int").getType() == GraphQLInt
+        servlet.getSchemaProvider().getReadOnlySchema(null).getMutationType() == null
 
         when:
-            servlet.unbindMutationProvider(mutationProvider)
+        servlet.unbindMutationProvider(mutationProvider)
         then:
-            servlet.getSchemaProvider().getSchema().getMutationType() == null
+        servlet.getSchemaProvider().getSchema().getMutationType() == null
     }
 
     static class TestSubscriptionProvider implements GraphQLSubscriptionProvider {
@@ -106,25 +106,25 @@ class OsgiGraphQLHttpServletSpec extends Specification {
     @Ignore
     def "subscription provider adds subscription objects"() {
         setup:
-            OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
-            TestSubscriptionProvider subscriptionProvider = new TestSubscriptionProvider()
-            servlet.bindSubscriptionProvider(subscriptionProvider)
-            GraphQLFieldDefinition subscription
+        OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
+        TestSubscriptionProvider subscriptionProvider = new TestSubscriptionProvider()
+        servlet.bindSubscriptionProvider(subscriptionProvider)
+        GraphQLFieldDefinition subscription
 
         when:
-            subscription = servlet.getSchemaProvider().getSchema().getSubscriptionType().getFieldDefinition("subscription")
+        subscription = servlet.getSchemaProvider().getSchema().getSubscriptionType().getFieldDefinition("subscription")
         then:
-            subscription.getType().getName() == "subscription"
+        subscription.getType().getName() == "subscription"
 
         when:
-            subscription = servlet.getSchemaProvider().getReadOnlySchema(null).getSubscriptionType().getFieldDefinition("subscription")
+        subscription = servlet.getSchemaProvider().getReadOnlySchema(null).getSubscriptionType().getFieldDefinition("subscription")
         then:
-            subscription.getType().getName() == "subscription"
+        subscription.getType().getName() == "subscription"
 
         when:
-            servlet.unbindSubscriptionProvider(subscriptionProvider)
+        servlet.unbindSubscriptionProvider(subscriptionProvider)
         then:
-            servlet.getSchemaProvider().getSchema().getSubscriptionType() == null
+        servlet.getSchemaProvider().getSchema().getSubscriptionType() == null
     }
 
     static class TestCodeRegistryProvider implements GraphQLCodeRegistryProvider {
@@ -136,20 +136,20 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
     def "code registry provider adds type resolver"() {
         setup:
-            OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
-            TestCodeRegistryProvider codeRegistryProvider = new TestCodeRegistryProvider()
+        OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
+        TestCodeRegistryProvider codeRegistryProvider = new TestCodeRegistryProvider()
 
         when:
-            servlet.bindCodeRegistryProvider(codeRegistryProvider)
-            servlet.getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
+        servlet.bindCodeRegistryProvider(codeRegistryProvider)
+        servlet.getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
         then:
-            notThrown AssertException
+        notThrown AssertException
 
         when:
-            servlet.unbindCodeRegistryProvider(codeRegistryProvider)
-            servlet.getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
+        servlet.unbindCodeRegistryProvider(codeRegistryProvider)
+        servlet.getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
         then:
-            thrown AssertException
+        thrown AssertException
 
     }
 }

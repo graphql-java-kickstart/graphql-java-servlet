@@ -21,7 +21,8 @@ public class GraphQLInvoker {
   private final BatchedDataLoaderGraphQLBuilder batchedDataLoaderGraphQLBuilder;
   private GraphQLInvokerProxy proxy = GraphQL::executeAsync;
 
-  public CompletableFuture<ExecutionResult> executeAsync(GraphQLSingleInvocationInput invocationInput) {
+  public CompletableFuture<ExecutionResult> executeAsync(
+      GraphQLSingleInvocationInput invocationInput) {
     GraphQL graphQL = graphQLBuilder.build(invocationInput.getSchema());
     return proxy.executeAsync(graphQL, invocationInput.getExecutionInput());
   }
@@ -39,7 +40,8 @@ public class GraphQLInvoker {
   }
 
   private List<ExecutionResult> query(GraphQLBatchedInvocationInput batchedInvocationInput) {
-    GraphQL graphQL = batchedDataLoaderGraphQLBuilder.newGraphQL(batchedInvocationInput, graphQLBuilder);
+    GraphQL graphQL = batchedDataLoaderGraphQLBuilder
+        .newGraphQL(batchedInvocationInput, graphQLBuilder);
     return batchedInvocationInput.getExecutionInputs().stream()
         .map(executionInput -> proxy.executeAsync(graphQL, executionInput))
         .collect(toList())

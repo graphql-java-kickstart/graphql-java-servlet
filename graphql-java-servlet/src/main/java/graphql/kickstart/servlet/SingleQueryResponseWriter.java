@@ -2,12 +2,11 @@ package graphql.kickstart.servlet;
 
 import graphql.ExecutionResult;
 import graphql.kickstart.execution.GraphQLObjectMapper;
-import lombok.RequiredArgsConstructor;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 class SingleQueryResponseWriter implements QueryResponseWriter {

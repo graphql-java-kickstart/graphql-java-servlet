@@ -53,20 +53,23 @@ public class VariableMapper {
       } else {
         currentLocation = mapper.recurse(currentLocation, segmentName);
         if (null == currentLocation) {
-          throw new RuntimeException("found null intermediate value when trying to map " + objectPath);
+          throw new RuntimeException(
+              "found null intermediate value when trying to map " + objectPath);
         }
       }
     }
   }
 
-  private static Mapper<?> determineMapper(Object currentLocation, String objectPath, String segmentName) {
+  private static Mapper<?> determineMapper(Object currentLocation, String objectPath,
+      String segmentName) {
     if (currentLocation instanceof Map) {
       return MAP_MAPPER;
     } else if (currentLocation instanceof List) {
       return LIST_MAPPER;
     }
 
-    throw new RuntimeException("expected a map or list at " + segmentName + " when trying to map " + objectPath);
+    throw new RuntimeException(
+        "expected a map or list at " + segmentName + " when trying to map " + objectPath);
   }
 
   interface Mapper<T> {

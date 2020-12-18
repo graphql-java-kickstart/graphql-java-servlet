@@ -3,9 +3,9 @@ package graphql.kickstart.servlet;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.kickstart.servlet.config.GraphQLSchemaServletProvider;
-import graphql.schema.GraphQLSchema;
 import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
+import graphql.schema.GraphQLSchema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +25,8 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
    */
   @Deprecated
   public SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory,
-      GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners,
+      GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper,
+      List<GraphQLServletListener> listeners,
       boolean asyncServletMode) {
     super(listeners);
     this.configuration = GraphQLConfiguration.with(invocationInputFactory)
@@ -41,7 +42,8 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
    */
   @Deprecated
   public SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory,
-      GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper, List<GraphQLServletListener> listeners,
+      GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper,
+      List<GraphQLServletListener> listeners,
       boolean asyncServletMode, long subscriptionTimeout) {
     super(listeners);
     this.configuration = GraphQLConfiguration.with(invocationInputFactory)

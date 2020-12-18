@@ -14,7 +14,6 @@ import graphql.kickstart.servlet.context.GraphQLServletContextBuilder;
 import graphql.kickstart.servlet.core.DefaultGraphQLRootObjectBuilder;
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder;
 import graphql.schema.GraphQLSchema;
-
 import java.util.List;
 import java.util.function.Supplier;
 import javax.servlet.http.HttpServletRequest;
@@ -31,7 +30,8 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
   private final Supplier<GraphQLServletContextBuilder> contextBuilderSupplier;
   private final Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier;
 
-  protected GraphQLInvocationInputFactory(Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier,
+  protected GraphQLInvocationInputFactory(
+      Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier,
       Supplier<GraphQLServletContextBuilder> contextBuilderSupplier,
       Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier) {
     this.schemaProviderSupplier = schemaProviderSupplier;
@@ -55,24 +55,28 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
     return schemaProviderSupplier.get();
   }
 
-  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request,
+  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest,
+      HttpServletRequest request,
       HttpServletResponse response) {
     return create(graphQLRequest, request, response, false);
   }
 
-  public GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequests,
+  public GraphQLBatchedInvocationInput create(ContextSetting contextSetting,
+      List<GraphQLRequest> graphQLRequests,
       HttpServletRequest request,
       HttpServletResponse response) {
     return create(contextSetting, graphQLRequests, request, response, false);
   }
 
-  public GraphQLSingleInvocationInput createReadOnly(GraphQLRequest graphQLRequest, HttpServletRequest request,
+  public GraphQLSingleInvocationInput createReadOnly(GraphQLRequest graphQLRequest,
+      HttpServletRequest request,
       HttpServletResponse response) {
     return create(graphQLRequest, request, response, true);
   }
 
   public GraphQLBatchedInvocationInput createReadOnly(ContextSetting contextSetting,
-      List<GraphQLRequest> graphQLRequests, HttpServletRequest request, HttpServletResponse response) {
+      List<GraphQLRequest> graphQLRequests, HttpServletRequest request,
+      HttpServletResponse response) {
     return create(contextSetting, graphQLRequests, request, response, true);
   }
 
@@ -85,7 +89,8 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
     );
   }
 
-  private GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, HttpServletRequest request,
+  private GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest,
+      HttpServletRequest request,
       HttpServletResponse response,
       boolean readOnly) {
     return new GraphQLSingleInvocationInput(
@@ -97,7 +102,8 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
     );
   }
 
-  private GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequests,
+  private GraphQLBatchedInvocationInput create(ContextSetting contextSetting,
+      List<GraphQLRequest> graphQLRequests,
       HttpServletRequest request,
       HttpServletResponse response, boolean readOnly) {
     return contextSetting.getBatch(
@@ -110,8 +116,10 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
   }
 
   @Override
-  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, SubscriptionSession session) {
-    HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());
+  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest,
+      SubscriptionSession session) {
+    HandshakeRequest request = (HandshakeRequest) session.getUserProperties()
+        .get(HandshakeRequest.class.getName());
     return new GraphQLSingleInvocationInput(
         graphQLRequest,
         schemaProviderSupplier.get().getSchema(request),
@@ -120,9 +128,11 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
     );
   }
 
-  public GraphQLBatchedInvocationInput create(ContextSetting contextSetting, List<GraphQLRequest> graphQLRequest,
+  public GraphQLBatchedInvocationInput create(ContextSetting contextSetting,
+      List<GraphQLRequest> graphQLRequest,
       Session session) {
-    HandshakeRequest request = (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());
+    HandshakeRequest request = (HandshakeRequest) session.getUserProperties()
+        .get(HandshakeRequest.class.getName());
     return contextSetting.getBatch(
         graphQLRequest,
         schemaProviderSupplier.get().getSchema(request),
@@ -149,7 +159,8 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
       return withGraphQLContextBuilder(() -> contextBuilder);
     }
 
-    public Builder withGraphQLContextBuilder(Supplier<GraphQLServletContextBuilder> contextBuilderSupplier) {
+    public Builder withGraphQLContextBuilder(
+        Supplier<GraphQLServletContextBuilder> contextBuilderSupplier) {
       this.contextBuilderSupplier = contextBuilderSupplier;
       return this;
     }
@@ -158,7 +169,8 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
       return withGraphQLRootObjectBuilder(() -> rootObjectBuilder);
     }
 
-    public Builder withGraphQLRootObjectBuilder(Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier) {
+    public Builder withGraphQLRootObjectBuilder(
+        Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier) {
       this.rootObjectBuilderSupplier = rootObjectBuilderSupplier;
       return this;
     }

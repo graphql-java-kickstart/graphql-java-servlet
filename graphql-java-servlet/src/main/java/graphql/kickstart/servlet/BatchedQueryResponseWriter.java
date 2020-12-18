@@ -9,7 +9,9 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 class BatchedQueryResponseWriter implements QueryResponseWriter {
 
@@ -25,7 +27,8 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
     StringBuilder responseBuilder = new StringBuilder();
     responseBuilder.append('[');
     while (executionInputIterator.hasNext()) {
-      responseBuilder.append(graphQLObjectMapper.serializeResultAsJson(executionInputIterator.next()));
+      responseBuilder
+          .append(graphQLObjectMapper.serializeResultAsJson(executionInputIterator.next()));
       if (executionInputIterator.hasNext()) {
         responseBuilder.append(',');
       }
@@ -34,6 +37,7 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
 
     String responseContent = responseBuilder.toString();
     byte[] contentBytes = responseContent.getBytes(StandardCharsets.UTF_8);
+
     response.setContentLength(contentBytes.length);
     response.getOutputStream().write(contentBytes);
   }

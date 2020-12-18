@@ -48,11 +48,15 @@ public class GraphQLBuilder {
     return build(schema, instrumentationSupplier);
   }
 
-  public GraphQL build(GraphQLSchema schema, Supplier<Instrumentation> configuredInstrumentationSupplier) {
+  public GraphQL build(GraphQLSchema schema,
+      Supplier<Instrumentation> configuredInstrumentationSupplier) {
     ExecutionStrategyProvider executionStrategyProvider = executionStrategyProviderSupplier.get();
-    ExecutionStrategy queryExecutionStrategy = executionStrategyProvider.getQueryExecutionStrategy();
-    ExecutionStrategy mutationExecutionStrategy = executionStrategyProvider.getMutationExecutionStrategy();
-    ExecutionStrategy subscriptionExecutionStrategy = executionStrategyProvider.getSubscriptionExecutionStrategy();
+    ExecutionStrategy queryExecutionStrategy = executionStrategyProvider
+        .getQueryExecutionStrategy();
+    ExecutionStrategy mutationExecutionStrategy = executionStrategyProvider
+        .getMutationExecutionStrategy();
+    ExecutionStrategy subscriptionExecutionStrategy = executionStrategyProvider
+        .getSubscriptionExecutionStrategy();
 
     GraphQL.Builder builder = GraphQL.newGraphQL(schema)
         .preparsedDocumentProvider(preparsedDocumentProviderSupplier.get());

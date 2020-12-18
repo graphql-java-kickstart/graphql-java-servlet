@@ -4,13 +4,13 @@ import com.google.common.io.ByteStreams
 import graphql.Directives
 import graphql.Scalars
 import graphql.execution.reactive.SingleSubscriberPublisher
+import graphql.kickstart.execution.context.ContextSetting
 import graphql.schema.*
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
 import graphql.schema.idl.errors.SchemaProblem
-import graphql.kickstart.execution.context.ContextSetting
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -61,17 +61,17 @@ class TestUtils {
     private static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                                      DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
                                      DataFetcher subscriptionDataFetcher = { env ->
-                                 AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
-                                 publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
-                                     publisherRef.get().offer(env.arguments.arg)
-                                     publisherRef.get().noMoreData()
-                                 }))
-                                 return publisherRef.get()
-                             }, boolean asyncServletModeEnabled = false,
+                                         AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                         publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
+                                             publisherRef.get().offer(env.arguments.arg)
+                                             publisherRef.get().noMoreData()
+                                         }))
+                                         return publisherRef.get()
+                                     }, boolean asyncServletModeEnabled = false,
                                      graphql.kickstart.servlet.input.BatchInputPreProcessor batchHandler) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(
                 graphQLConfiguration(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher),
-                batchHandler, asyncServletModeEnabled))
+                        batchHandler, asyncServletModeEnabled))
         servlet.init(null)
         return servlet
     }
@@ -102,94 +102,94 @@ class TestUtils {
         GraphQLObjectType query = GraphQLObjectType.newObject()
                 .name("Query")
                 .field { GraphQLFieldDefinition.Builder field ->
-            field.name("echo")
-            field.type(Scalars.GraphQLString)
-            field.argument { argument ->
-                argument.name("arg")
-                argument.type(Scalars.GraphQLString)
-            }
-            field.dataFetcher(queryDataFetcher)
-        }
-        .field { GraphQLFieldDefinition.Builder field ->
-            field.name("object")
-            field.type(
-                GraphQLObjectType.newObject()
-                    .name("NestedObject")
-                    .field { nested ->
-                        nested.name("a")
-                        nested.type(Scalars.GraphQLString)
-                        nested.argument { argument ->
-                            argument.name("arg")
-                            argument.type(Scalars.GraphQLString)
-                        }
-                        nested.dataFetcher(queryDataFetcher)
+                    field.name("echo")
+                    field.type(Scalars.GraphQLString)
+                    field.argument { argument ->
+                        argument.name("arg")
+                        argument.type(Scalars.GraphQLString)
                     }
-                    .field { nested ->
-                        nested.name("b")
-                        nested.type(Scalars.GraphQLString)
-                        nested.argument { argument ->
-                            argument.name("arg")
-                            argument.type(Scalars.GraphQLString)
-                        }
-                        nested.dataFetcher(queryDataFetcher)
-                    }
-            )
-            field.dataFetcher(new StaticDataFetcher([:]))
-        }
-        .field { GraphQLFieldDefinition.Builder field ->
-            field.name("returnsNullIncorrectly")
-            field.type(new GraphQLNonNull(Scalars.GraphQLString))
-            field.dataFetcher({ env -> null })
-        }
-        .build()
+                    field.dataFetcher(queryDataFetcher)
+                }
+                .field { GraphQLFieldDefinition.Builder field ->
+                    field.name("object")
+                    field.type(
+                            GraphQLObjectType.newObject()
+                                    .name("NestedObject")
+                                    .field { nested ->
+                                        nested.name("a")
+                                        nested.type(Scalars.GraphQLString)
+                                        nested.argument { argument ->
+                                            argument.name("arg")
+                                            argument.type(Scalars.GraphQLString)
+                                        }
+                                        nested.dataFetcher(queryDataFetcher)
+                                    }
+                                    .field { nested ->
+                                        nested.name("b")
+                                        nested.type(Scalars.GraphQLString)
+                                        nested.argument { argument ->
+                                            argument.name("arg")
+                                            argument.type(Scalars.GraphQLString)
+                                        }
+                                        nested.dataFetcher(queryDataFetcher)
+                                    }
+                    )
+                    field.dataFetcher(new StaticDataFetcher([:]))
+                }
+                .field { GraphQLFieldDefinition.Builder field ->
+                    field.name("returnsNullIncorrectly")
+                    field.type(new GraphQLNonNull(Scalars.GraphQLString))
+                    field.dataFetcher({ env -> null })
+                }
+                .build()
 
         GraphQLObjectType mutation = GraphQLObjectType.newObject()
                 .name("Mutation")
                 .field { field ->
-            field.name("echo")
-            field.type(Scalars.GraphQLString)
-            field.argument { argument ->
-                argument.name("arg")
-                argument.type(Scalars.GraphQLString)
-            }
-            field.dataFetcher(mutationDataFetcher)
-        }
-        .field { field ->
-            field.name("echoFile")
-            field.type(Scalars.GraphQLString)
-            field.argument { argument ->
-                argument.name("file")
-                argument.type(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)
-            }
-            field.dataFetcher({ env -> new String(ByteStreams.toByteArray(env.arguments.file.getInputStream())) })
-        }
-        .field { field ->
-            field.name("echoFiles")
-            field.type(GraphQLList.list(Scalars.GraphQLString))
-            field.argument { argument ->
-                argument.name("files")
-                argument.type(GraphQLList.list(GraphQLNonNull.nonNull(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)))
-            }
-            field.dataFetcher({ env ->
-                env.arguments.files.collect {
-                    new String(ByteStreams.toByteArray(it.getInputStream()))
+                    field.name("echo")
+                    field.type(Scalars.GraphQLString)
+                    field.argument { argument ->
+                        argument.name("arg")
+                        argument.type(Scalars.GraphQLString)
+                    }
+                    field.dataFetcher(mutationDataFetcher)
                 }
-            })
-        }
-        .build()
+                .field { field ->
+                    field.name("echoFile")
+                    field.type(Scalars.GraphQLString)
+                    field.argument { argument ->
+                        argument.name("file")
+                        argument.type(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)
+                    }
+                    field.dataFetcher({ env -> new String(ByteStreams.toByteArray(env.arguments.file.getInputStream())) })
+                }
+                .field { field ->
+                    field.name("echoFiles")
+                    field.type(GraphQLList.list(Scalars.GraphQLString))
+                    field.argument { argument ->
+                        argument.name("files")
+                        argument.type(GraphQLList.list(GraphQLNonNull.nonNull(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)))
+                    }
+                    field.dataFetcher({ env ->
+                        env.arguments.files.collect {
+                            new String(ByteStreams.toByteArray(it.getInputStream()))
+                        }
+                    })
+                }
+                .build()
 
         GraphQLObjectType subscription = GraphQLObjectType.newObject()
                 .name("Subscription")
                 .field { field ->
-            field.name("echo")
-            field.type(Scalars.GraphQLString)
-            field.argument { argument ->
-                argument.name("arg")
-                argument.type(Scalars.GraphQLString)
-            }
-            field.dataFetcher(subscriptionDataFetcher)
-        }
-        .build()
+                    field.name("echo")
+                    field.type(Scalars.GraphQLString)
+                    field.argument { argument ->
+                        argument.name("arg")
+                        argument.type(Scalars.GraphQLString)
+                    }
+                    field.dataFetcher(subscriptionDataFetcher)
+                }
+                .build()
 
 
         return GraphQLSchema.newSchema()
@@ -201,7 +201,7 @@ class TestUtils {
                 .build()
     }
 
-    static def createGraphQlSchemaWithTwoLevels(DataFetcher queryDataFetcher , DataFetcher fieldDataFetcher, DataFetcher otherQueryFetcher) {
+    static def createGraphQlSchemaWithTwoLevels(DataFetcher queryDataFetcher, DataFetcher fieldDataFetcher, DataFetcher otherQueryFetcher) {
         String sdl = """schema {
                         query: Query
                     }
@@ -225,8 +225,8 @@ class TestUtils {
                     """
 
         def wiring = RuntimeWiring.newRuntimeWiring()
-                .type(TypeRuntimeWiring.newTypeWiring("Query").dataFetcher("query", {env -> env.arguments.arg})
-                    .dataFetcher("queryTwo", {env -> env.arguments.arg}))
+                .type(TypeRuntimeWiring.newTypeWiring("Query").dataFetcher("query", { env -> env.arguments.arg })
+                        .dataFetcher("queryTwo", { env -> env.arguments.arg }))
                 .type(TypeRuntimeWiring.newTypeWiring("QueryEcho").dataFetcher("echo", queryDataFetcher))
                 .type(TypeRuntimeWiring.newTypeWiring("FieldEcho").dataFetcher("echo", fieldDataFetcher))
                 .type(TypeRuntimeWiring.newTypeWiring("OtherQueryEcho").dataFetcher("echo", otherQueryFetcher))
@@ -235,7 +235,7 @@ class TestUtils {
 
         try {
             def registry = new SchemaParser().parse(new StringReader(sdl))
-            def options = SchemaGenerator.Options.defaultOptions().enforceSchemaDirectives(false)
+            def options = SchemaGenerator.Options.defaultOptions()
             return new SchemaGenerator().makeExecutableSchema(options, registry, wiring)
         } catch (SchemaProblem e) {
             assert false: "The schema could not be compiled : ${e}"
