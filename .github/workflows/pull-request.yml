@@ -51,6 +51,7 @@ jobs:
         run: gradlew --info check
   build:
     name: Sonar analysis
+    needs: validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
