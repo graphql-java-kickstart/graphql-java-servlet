@@ -95,12 +95,6 @@ subprojects {
         }
     }
 
-    sonarqube {
-        properties {
-            property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
-        }
-    }
-
     if (!it.name.startsWith('example')) {
 
         jar {
