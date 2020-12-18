@@ -19,8 +19,8 @@ class SubscriptionConnectionInitCommand implements SubscriptionCommand {
       connectionListeners.forEach(it -> it.onConnect(session, message));
       session.sendMessage(new OperationMessage(Type.GQL_CONNECTION_ACK, message.getId(), null));
     } catch (Throwable t) {
-      session.sendMessage(
-          new OperationMessage(Type.GQL_CONNECTION_ERROR, message.getId(), t.getMessage()));
+      log.error("Cannot initialize subscription command '{}'", message, t);
+      session.sendMessage(new OperationMessage(Type.GQL_CONNECTION_ERROR, message.getId(), t.getMessage()));
     }
   }
 

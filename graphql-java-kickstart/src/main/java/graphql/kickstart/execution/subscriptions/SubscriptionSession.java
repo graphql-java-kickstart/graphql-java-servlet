@@ -19,7 +19,7 @@ public interface SubscriptionSession {
 
   void sendDataMessage(String id, Object payload);
 
-  void sendErrorMessage(String id);
+  void sendErrorMessage(String id, Object payload);
 
   void sendCompleteMessage(String id);
 
