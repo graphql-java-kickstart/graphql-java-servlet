@@ -18,7 +18,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.servlet.AsyncContext;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -135,51 +134,30 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     }
   }
 
-  private void doRequestAsync(HttpServletRequest request, HttpServletResponse response,
-      HttpRequestHandler handler) {
-    if (configuration.isAsyncServletModeEnabled()) {
-      AsyncContext asyncContext = request.startAsync(request, response);
-      asyncContext.setTimeout(configuration.getAsyncTimeout());
-      HttpServletRequest asyncRequest = (HttpServletRequest) asyncContext.getRequest();
-      HttpServletResponse asyncResponse = (HttpServletResponse) asyncContext.getResponse();
-      configuration.getAsyncExecutor()
-          .execute(() -> doRequest(asyncRequest, asyncResponse, handler, asyncContext));
-    } else {
-      doRequest(request, response, handler, null);
-    }
-  }
-
-  private void doRequest(HttpServletRequest request, HttpServletResponse response,
-      HttpRequestHandler handler,
-      AsyncContext asyncContext) {
-
-    List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(
-        l -> l.onRequest(request, response));
-
-    try {
-      handler.handle(request, response);
-      runCallbacks(requestCallbacks, c -> c.onSuccess(request, response));
-    } catch (Throwable t) {
-      log.error("Error executing GraphQL request!", t);
-      runCallbacks(requestCallbacks, c -> c.onError(request, response, t));
-    } finally {
-      runCallbacks(requestCallbacks, c -> c.onFinally(request, response));
-      if (asyncContext != null) {
-        asyncContext.complete();
-      }
-    }
-  }
-
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-    init();
-    doRequestAsync(req, resp, requestHandler);
+    doRequest(req, resp);
   }
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+    doRequest(req, resp);
+  }
+
+  private void doRequest(HttpServletRequest request, HttpServletResponse response) {
     init();
-    doRequestAsync(req, resp, requestHandler);
+    List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(
+        l -> l.onRequest(request, response));
+
+    try {
+      requestHandler.handle(request, response);
+      runCallbacks(requestCallbacks, c -> c.onSuccess(request, response));
+    } catch (Exception t) {
+      log.error("Error executing GraphQL request!", t);
+      runCallbacks(requestCallbacks, c -> c.onError(request, response, t));
+    } finally {
+      runCallbacks(requestCallbacks, c -> c.onFinally(request, response));
+    }
   }
 
   private <R> List<R> runListeners(Function<? super GraphQLServletListener, R> action) {
@@ -187,7 +165,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
         .map(listener -> {
           try {
             return action.apply(listener);
-          } catch (Throwable t) {
+          } catch (Exception t) {
             log.error("Error running listener: {}", listener, t);
             return null;
           }
@@ -200,7 +178,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
     callbacks.forEach(callback -> {
       try {
         action.accept(callback);
-      } catch (Throwable t) {
+      } catch (Exception t) {
         log.error("Error running callback: {}", callback, t);
       }
     });

@@ -44,6 +44,7 @@ public class CachingHttpRequestHandlerImpl extends HttpRequestHandlerImpl {
     }
   }
 
+  @Override
   protected QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput,
       GraphQLQueryResult queryResult) {
     return CachingQueryResponseWriter.createCacheWriter(

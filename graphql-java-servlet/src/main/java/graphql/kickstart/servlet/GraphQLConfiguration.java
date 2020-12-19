@@ -30,8 +30,19 @@ public class GraphQLConfiguration {
   private final GraphQLInvoker graphQLInvoker;
   private final GraphQLObjectMapper objectMapper;
   private final List<GraphQLServletListener> listeners;
+  /**
+   * For removal
+   * @since 10.1.0
+   */
+  @Deprecated
   private final boolean asyncServletModeEnabled;
+  /**
+   * For removal
+   * @since 10.1.0
+   */
+  @Deprecated
   private final Executor asyncExecutor;
+
   private final long subscriptionTimeout;
   @Getter
   private final long asyncTimeout;

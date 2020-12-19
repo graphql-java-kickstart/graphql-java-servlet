@@ -5,6 +5,9 @@ import graphql.Directives
 import graphql.Scalars
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.kickstart.execution.context.ContextSetting
+import graphql.kickstart.servlet.apollo.ApolloScalars
+import graphql.kickstart.servlet.context.GraphQLServletContextBuilder
+import graphql.kickstart.servlet.input.BatchInputPreProcessor
 import graphql.schema.*
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
@@ -46,7 +49,7 @@ class TestUtils {
                                         DataFetcher fieldDataFetcher = { env -> env.arguments.arg },
                                         DataFetcher otherDataFetcher,
                                         boolean asyncServletModeEnabled = false, ContextSetting contextSetting,
-                                        graphql.kickstart.servlet.context.GraphQLServletContextBuilder contextBuilder) {
+                                        GraphQLServletContextBuilder contextBuilder) {
         GraphQLSchema schema = createGraphQlSchemaWithTwoLevels(queryDataFetcher, fieldDataFetcher, otherDataFetcher)
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(schema)
@@ -68,7 +71,7 @@ class TestUtils {
                                          }))
                                          return publisherRef.get()
                                      }, boolean asyncServletModeEnabled = false,
-                                     graphql.kickstart.servlet.input.BatchInputPreProcessor batchHandler) {
+                                     BatchInputPreProcessor batchHandler) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(
                 graphQLConfiguration(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher),
                         batchHandler, asyncServletModeEnabled))
@@ -76,7 +79,7 @@ class TestUtils {
         return servlet
     }
 
-    static def graphQLConfiguration(GraphQLSchema schema, graphql.kickstart.servlet.input.BatchInputPreProcessor batchInputPreProcessor,
+    static def graphQLConfiguration(GraphQLSchema schema, BatchInputPreProcessor batchInputPreProcessor,
                                     boolean asyncServletModeEnabled) {
         def configBuilder = GraphQLConfiguration.with(schema).with(asyncServletModeEnabled)
         if (batchInputPreProcessor != null) {
@@ -159,7 +162,7 @@ class TestUtils {
                     field.type(Scalars.GraphQLString)
                     field.argument { argument ->
                         argument.name("file")
-                        argument.type(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)
+                        argument.type(ApolloScalars.Upload)
                     }
                     field.dataFetcher({ env -> new String(ByteStreams.toByteArray(env.arguments.file.getInputStream())) })
                 }
@@ -168,7 +171,7 @@ class TestUtils {
                     field.type(GraphQLList.list(Scalars.GraphQLString))
                     field.argument { argument ->
                         argument.name("files")
-                        argument.type(GraphQLList.list(GraphQLNonNull.nonNull(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)))
+                        argument.type(GraphQLList.list(GraphQLNonNull.nonNull(ApolloScalars.Upload)))
                     }
                     field.dataFetcher({ env ->
                         env.arguments.files.collect {
@@ -196,7 +199,7 @@ class TestUtils {
                 .query(query)
                 .mutation(mutation)
                 .subscription(subscription)
-                .additionalType(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)
+                .additionalType(ApolloScalars.Upload)
                 .additionalDirective(Directives.DeferDirective)
                 .build()
     }
