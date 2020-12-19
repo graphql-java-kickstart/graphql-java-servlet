@@ -17,17 +17,16 @@ public class GraphQLInvokerSubjectProxy implements GraphQLInvokerProxy {
     GraphQLContext context = (GraphQLContext) executionInput.getContext();
     if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject()
         .isPresent()) {
-      return Subject
-          .doAs(context.getSubject().get(),
-              (PrivilegedAction<CompletableFuture<ExecutionResult>>) () -> {
-                try {
-                  return graphQL.executeAsync(executionInput);
-                } catch (Exception e) {
-                  throw new RuntimeException(e);
-                }
-              });
+      return context.getSubject()
+          .map(it -> Subject.doAs(it, doAction(graphQL, executionInput)))
+          .orElseGet(() -> graphQL.executeAsync(executionInput));
     }
     return graphQL.executeAsync(executionInput);
+  }
+
+  private PrivilegedAction<CompletableFuture<ExecutionResult>> doAction(GraphQL graphQL,
+      ExecutionInput executionInput) {
+    return () -> graphQL.executeAsync(executionInput);
   }
 
 }
