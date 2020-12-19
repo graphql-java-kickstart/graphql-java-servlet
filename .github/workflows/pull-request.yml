@@ -61,26 +61,26 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Set up JDK 11
-        if: success()
+        if: env.SONAR_TOKEN != null
         uses: actions/setup-java@v1
         with:
           java-version: 11
       - name: Cache SonarCloud packages
-        if: success()
+        if: env.SONAR_TOKEN != null
         uses: actions/cache@v1
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Cache Gradle packages
-        if: success()
+        if: env.SONAR_TOKEN != null
         uses: actions/cache@v1
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Build and analyze
-        if: success()
+        if: env.SONAR_TOKEN != null
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
