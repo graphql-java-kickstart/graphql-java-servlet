@@ -136,7 +136,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 publisherRef.get().noMoreData()
             }))
             return publisherRef.get()
-        }, true)
+        })
         request.addParameter('query', 'query { echo(arg:"test") }')
         request.setAsyncSupported(false)
 
@@ -452,7 +452,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 publisherRef.get().noMoreData()
             }))
             return publisherRef.get()
-        }, true)
+        })
         request.setContent(mapper.writeValueAsBytes([
                 query: 'query { echo(arg:"test") }'
         ]))

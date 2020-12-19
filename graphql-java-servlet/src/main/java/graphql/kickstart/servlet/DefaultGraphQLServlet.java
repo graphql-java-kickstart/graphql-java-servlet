@@ -21,9 +21,4 @@ public class DefaultGraphQLServlet extends AbstractGraphQLHttpServlet {
     return GraphQLObjectMapper.newBuilder().build();
   }
 
-  @Override
-  protected boolean isAsyncServletMode() {
-    return false;
-  }
-
 }

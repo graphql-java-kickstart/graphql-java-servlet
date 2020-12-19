@@ -103,8 +103,8 @@ class DataLoaderDispatchingSpec extends Specification {
 
     def configureServlet(ContextSetting contextSetting) {
         servlet = TestUtils.createDataLoadingServlet(queryDataFetcher("A", loadCounterA),
-                queryDataFetcher("B", loadCounterB), queryDataFetcher("C", loadCounterC),
-                false, contextSetting,
+                queryDataFetcher("B", loadCounterB), queryDataFetcher("C", loadCounterC)
+                , contextSetting,
                 contextBuilder())
     }
 

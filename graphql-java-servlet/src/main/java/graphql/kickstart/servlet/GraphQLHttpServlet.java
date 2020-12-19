@@ -36,9 +36,4 @@ public abstract class GraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     throw new UnsupportedOperationException();
   }
 
-  @Override
-  protected boolean isAsyncServletMode() {
-    throw new UnsupportedOperationException();
-  }
-
 }

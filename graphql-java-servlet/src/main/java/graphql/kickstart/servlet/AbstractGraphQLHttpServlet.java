@@ -7,7 +7,6 @@ import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLQueryInvoker;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
-import graphql.kickstart.servlet.cache.CachingHttpRequestHandlerImpl;
 import graphql.kickstart.servlet.core.GraphQLMBean;
 import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
@@ -65,17 +64,10 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
   @Deprecated
   protected abstract GraphQLObjectMapper getGraphQLObjectMapper();
 
-  /**
-   * @deprecated override {@link #getConfiguration()} instead
-   */
-  @Deprecated
-  protected abstract boolean isAsyncServletMode();
-
   protected GraphQLConfiguration getConfiguration() {
     return GraphQLConfiguration.with(getInvocationInputFactory())
         .with(getQueryInvoker())
         .with(getGraphQLObjectMapper())
-        .with(isAsyncServletMode())
         .with(listeners)
         .build();
   }
@@ -84,11 +76,7 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
   public void init() {
     if (configuration == null) {
       this.configuration = getConfiguration();
-      if (configuration.getResponseCacheManager() != null) {
-        this.requestHandler = new CachingHttpRequestHandlerImpl(configuration);
-      } else {
-        this.requestHandler = HttpRequestHandlerFactory.create(configuration);
-      }
+      this.requestHandler = configuration.createHttpRequestHandler();
     }
   }
 

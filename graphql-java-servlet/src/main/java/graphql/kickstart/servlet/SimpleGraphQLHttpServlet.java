@@ -26,14 +26,12 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   @Deprecated
   public SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory,
       GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper,
-      List<GraphQLServletListener> listeners,
-      boolean asyncServletMode) {
+      List<GraphQLServletListener> listeners) {
     super(listeners);
     this.configuration = GraphQLConfiguration.with(invocationInputFactory)
         .with(queryInvoker)
         .with(graphQLObjectMapper)
         .with(listeners != null ? listeners : new ArrayList<>())
-        .with(asyncServletMode)
         .build();
   }
 
@@ -44,13 +42,12 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   public SimpleGraphQLHttpServlet(GraphQLInvocationInputFactory invocationInputFactory,
       GraphQLQueryInvoker queryInvoker, GraphQLObjectMapper graphQLObjectMapper,
       List<GraphQLServletListener> listeners,
-      boolean asyncServletMode, long subscriptionTimeout) {
+      long subscriptionTimeout) {
     super(listeners);
     this.configuration = GraphQLConfiguration.with(invocationInputFactory)
         .with(queryInvoker)
         .with(graphQLObjectMapper)
         .with(listeners != null ? listeners : new ArrayList<>())
-        .with(asyncServletMode)
         .with(subscriptionTimeout)
         .build();
   }
@@ -89,11 +86,6 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   @Override
   protected GraphQLObjectMapper getGraphQLObjectMapper() {
     return configuration.getObjectMapper();
-  }
-
-  @Override
-  protected boolean isAsyncServletMode() {
-    return configuration.isAsyncServletModeEnabled();
   }
 
   public static class Builder {
@@ -140,7 +132,6 @@ public class SimpleGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
           .with(queryInvoker)
           .with(graphQLObjectMapper)
           .with(listeners != null ? listeners : new ArrayList<>())
-          .with(asyncServletMode)
           .with(subscriptionTimeout)
           .build();
       return new SimpleGraphQLHttpServlet(configuration);

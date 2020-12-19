@@ -10,6 +10,7 @@ public interface HttpRequestHandler {
 
   int STATUS_OK = 200;
   int STATUS_BAD_REQUEST = 400;
+  int STATUS_INTERNAL_SERVER_ERROR = 500;
 
   void handle(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
