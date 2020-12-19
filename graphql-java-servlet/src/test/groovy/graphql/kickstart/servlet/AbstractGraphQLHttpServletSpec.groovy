@@ -127,7 +127,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getResponseContent().data.echo == "special char á"
     }
 
-    def "async query over HTTP GET starts async request"() {
+    def "disabling async support on request over HTTP GET does not start async request"() {
         setup:
         servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
@@ -138,12 +138,13 @@ class AbstractGraphQLHttpServletSpec extends Specification {
             return publisherRef.get()
         }, true)
         request.addParameter('query', 'query { echo(arg:"test") }')
+        request.setAsyncSupported(false)
 
         when:
         servlet.doGet(request, response)
 
         then:
-        request.asyncStarted == true
+        request.asyncContext == null
     }
 
     def "query over HTTP GET with variables returns data"() {
@@ -442,7 +443,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getResponseContent().data.echo == "test"
     }
 
-    def "async query over HTTP POST starts async request"() {
+    def "disabling async support on request over HTTP POST does not start async request"() {
         setup:
         servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
@@ -455,12 +456,13 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         request.setContent(mapper.writeValueAsBytes([
                 query: 'query { echo(arg:"test") }'
         ]))
+        request.setAsyncSupported(false)
 
         when:
         servlet.doPost(request, response)
 
         then:
-        request.asyncStarted == true
+        request.asyncContext == null
     }
 
     def "query over HTTP POST body with graphql contentType returns data"() {

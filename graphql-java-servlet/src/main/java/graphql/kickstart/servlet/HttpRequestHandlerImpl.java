@@ -44,43 +44,47 @@ public class HttpRequestHandlerImpl implements HttpRequestHandler {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad request: cannot handle http request", e);
       throw e;
-    } catch (Throwable t) {
+    } catch (Exception t) {
       response.setStatus(500);
       log.error("Cannot handle http request", t);
       throw t;
     }
   }
 
-  private void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
-      HttpServletResponse response) {
+  protected void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
+      HttpServletResponse response) throws IOException {
     if (request.isAsyncSupported()) {
       AsyncContext asyncContext = request.isAsyncStarted()
           ? request.getAsyncContext()
           : request.startAsync(request, response);
       asyncContext.setTimeout(configuration.getAsyncTimeout());
       invoke(invocationInput, request, response)
-          .thenAccept(result -> writeResultResponse(result, request, response))
+          .thenAccept(result -> writeResultResponse(invocationInput, result, request, response))
           .exceptionally(t -> writeErrorResponse(t, response))
           .thenAccept(aVoid -> asyncContext.complete());
     } else {
       try {
         GraphQLQueryResult result = invoke(invocationInput, request, response).join();
-        writeResultResponse(result, request, response);
-      } catch (Throwable t) {
+        writeResultResponse(invocationInput, result, request, response);
+      } catch (Exception t) {
         writeErrorResponse(t, response);
       }
     }
   }
 
-  private void writeResultResponse(GraphQLQueryResult queryResult, HttpServletRequest request,
+  private void writeResultResponse(GraphQLInvocationInput invocationInput, GraphQLQueryResult queryResult, HttpServletRequest request,
       HttpServletResponse response) {
-    QueryResponseWriter queryResponseWriter = QueryResponseWriter.createWriter(queryResult, configuration.getObjectMapper(),
-        configuration.getSubscriptionTimeout());
+    QueryResponseWriter queryResponseWriter = createWriter(invocationInput, queryResult);
     try {
       queryResponseWriter.write(request, response);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
+  }
+
+  protected QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput, GraphQLQueryResult queryResult) {
+    return QueryResponseWriter.createWriter(queryResult, configuration.getObjectMapper(),
+        configuration.getSubscriptionTimeout());
   }
 
   private Void writeErrorResponse(Throwable t, HttpServletResponse response) {
