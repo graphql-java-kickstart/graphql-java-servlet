@@ -1159,9 +1159,10 @@ class AbstractGraphQLHttpServletSpec extends Specification {
 
     def "errors before graphql schema execution return internal server error"() {
         setup:
-        servlet = SimpleGraphQLHttpServlet.newBuilder(GraphQLInvocationInputFactory.newBuilder {
+        GraphQLConfiguration configuration = GraphQLConfiguration.with(GraphQLInvocationInputFactory.newBuilder {
             throw new TestException()
         }.build()).build()
+        servlet = GraphQLHttpServlet.with(configuration)
         servlet.init(null)
 
         request.setPathInfo('/schema.json')

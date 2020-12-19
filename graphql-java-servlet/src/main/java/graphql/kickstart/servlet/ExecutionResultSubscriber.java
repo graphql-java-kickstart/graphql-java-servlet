@@ -41,6 +41,7 @@ class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
       writer.flush();
       subscriptionRef.get().request(1);
     } catch (IOException ignored) {
+      // ignore
     }
   }
 

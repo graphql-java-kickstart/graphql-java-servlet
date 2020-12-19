@@ -32,13 +32,14 @@ public class VariableMapper {
     }
   };
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public static void mapVariable(String objectPath, Map<String, Object> variables, Part part) {
     String[] segments = PERIOD.split(objectPath);
 
     if (segments.length < 2) {
-      throw new RuntimeException("object-path in map must have at least two segments");
+      throw new VariableMapException("object-path in map must have at least two segments");
     } else if (!"variables".equals(segments[0])) {
-      throw new RuntimeException("can only map into variables");
+      throw new VariableMapException("can only map into variables");
     }
 
     Object currentLocation = variables;
@@ -48,12 +49,12 @@ public class VariableMapper {
 
       if (i == segments.length - 1) {
         if (null != mapper.set(currentLocation, segmentName, part)) {
-          throw new RuntimeException("expected null value when mapping " + objectPath);
+          throw new VariableMapException("expected null value when mapping " + objectPath);
         }
       } else {
         currentLocation = mapper.recurse(currentLocation, segmentName);
         if (null == currentLocation) {
-          throw new RuntimeException(
+          throw new VariableMapException(
               "found null intermediate value when trying to map " + objectPath);
         }
       }
@@ -68,7 +69,7 @@ public class VariableMapper {
       return LIST_MAPPER;
     }
 
-    throw new RuntimeException(
+    throw new VariableMapException(
         "expected a map or list at " + segmentName + " when trying to map " + objectPath);
   }
 

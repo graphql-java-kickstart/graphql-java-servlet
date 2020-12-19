@@ -28,7 +28,7 @@ public final class CacheReader {
     CachedResponse cachedResponse = null;
     try {
       cachedResponse = cacheManager.get(request, invocationInput);
-    } catch (Throwable t) {
+    } catch (Exception t) {
       log.warn("Ignore read from cache, unexpected error happened", t);
     }
 

@@ -1,5 +1,6 @@
 package graphql.kickstart.servlet;
 
+import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -12,6 +13,6 @@ public interface HttpRequestHandler {
   int STATUS_BAD_REQUEST = 400;
   int STATUS_INTERNAL_SERVER_ERROR = 500;
 
-  void handle(HttpServletRequest request, HttpServletResponse response) throws Exception;
+  void handle(HttpServletRequest request, HttpServletResponse response) throws IOException;
 
 }

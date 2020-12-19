@@ -33,6 +33,7 @@ public class GraphQLConfiguration {
   private final long asyncTimeout;
   private final ContextSetting contextSetting;
   private final GraphQLResponseCacheManager responseCacheManager;
+  private HttpRequestHandler requestHandler;
 
   private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory,
       GraphQLQueryInvoker queryInvoker,
@@ -110,12 +111,15 @@ public class GraphQLConfiguration {
     return responseCacheManager;
   }
 
-  public HttpRequestHandler createHttpRequestHandler() {
-    HttpRequestHandler requestHandler = HttpRequestHandlerFactory.create(this);
-    if (responseCacheManager == null) {
-      return requestHandler;
+  public HttpRequestHandler getHttpRequestHandler() {
+    if (requestHandler == null) {
+      if (responseCacheManager == null) {
+        requestHandler = new HttpRequestHandlerImpl(this);
+      } else {
+        requestHandler = new HttpRequestHandlerImpl(this, new CachingHttpRequestInvoker(this));
+      }
     }
-    return new HttpRequestHandlerImpl(this, new CachingHttpRequestInvoker(this));
+    return requestHandler;
   }
 
   public static class Builder {

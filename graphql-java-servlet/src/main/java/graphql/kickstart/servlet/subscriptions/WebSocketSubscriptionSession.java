@@ -14,14 +14,17 @@ public class WebSocketSubscriptionSession extends DefaultSubscriptionSession {
     this.session = session;
   }
 
+  @Override
   public boolean isOpen() {
     return session.isOpen();
   }
 
+  @Override
   public Map<String, Object> getUserProperties() {
     return session.getUserProperties();
   }
 
+  @Override
   public String getId() {
     return session.getId();
   }

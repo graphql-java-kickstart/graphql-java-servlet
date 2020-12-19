@@ -77,7 +77,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
         configuration.getGraphQLInvoker(),
         configuration.getInvocationInputFactory(),
         configuration.getObjectMapper(),
-        null
+        connectionListeners
     );
   }
 
@@ -124,7 +124,6 @@ public class GraphQLWebsocketServlet extends Endpoint {
         (WebSocketSubscriptionProtocolFactory) endpointConfig.getUserProperties()
             .get(PROTOCOL_FACTORY_REQUEST_KEY);
 
-    // todo: create apollo version of it through SubscriptionProtocolFactory
     SubscriptionSession subscriptionSession = subscriptionProtocolFactory.createSession(session);
     synchronized (cacheLock) {
       if (isShuttingDown.get()) {
@@ -145,7 +144,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
       public void onMessage(String text) {
         try {
           consumer.accept(text);
-        } catch (Throwable t) {
+        } catch (Exception t) {
           log.error("Error executing websocket query for session: {}", session.getId(), t);
           closeUnexpectedly(session, t);
         }

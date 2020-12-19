@@ -1,8 +1,5 @@
 package graphql.kickstart.servlet;
 
-import graphql.kickstart.execution.GraphQLObjectMapper;
-import graphql.kickstart.execution.GraphQLQueryInvoker;
-import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import graphql.schema.GraphQLSchema;
 
 /**
@@ -20,20 +17,5 @@ public abstract class GraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
   @Override
   protected abstract GraphQLConfiguration getConfiguration();
-
-  @Override
-  protected GraphQLQueryInvoker getQueryInvoker() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  protected GraphQLInvocationInputFactory getInvocationInputFactory() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  protected GraphQLObjectMapper getGraphQLObjectMapper() {
-    throw new UnsupportedOperationException();
-  }
 
 }
