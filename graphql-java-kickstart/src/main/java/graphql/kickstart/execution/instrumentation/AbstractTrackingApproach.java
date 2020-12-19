@@ -27,7 +27,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
 
   private final RequestStack stack = new RequestStack();
 
-  public AbstractTrackingApproach(DataLoaderRegistry dataLoaderRegistry) {
+  protected AbstractTrackingApproach(DataLoaderRegistry dataLoaderRegistry) {
     this.dataLoaderRegistry = dataLoaderRegistry;
   }
 
@@ -54,12 +54,12 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     return new ExecutionStrategyInstrumentationContext() {
       @Override
       public void onDispatched(CompletableFuture<ExecutionResult> result) {
-
+        // default empty implementation
       }
 
       @Override
       public void onCompleted(ExecutionResult result, Throwable t) {
-
+        // default empty implementation
       }
 
       @Override
@@ -130,11 +130,12 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     return new DeferredFieldInstrumentationContext() {
       @Override
       public void onDispatched(CompletableFuture<ExecutionResult> result) {
-
+        // default empty implementation
       }
 
       @Override
       public void onCompleted(ExecutionResult result, Throwable t) {
+        // default empty implementation
       }
 
       @Override
@@ -173,6 +174,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
 
       @Override
       public void onCompleted(Object result, Throwable t) {
+        // default empty implementation
       }
     };
   }

@@ -59,7 +59,7 @@ public class DefaultSubscriptionSession implements SubscriptionSession {
 
   @Override
   public void sendCompleteMessage(String id) {
-
+    // default empty implementation
   }
 
   @Override

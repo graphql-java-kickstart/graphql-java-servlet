@@ -11,10 +11,8 @@ import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
 @RequiredArgsConstructor
 public class GraphQLInvoker {
 
@@ -34,14 +32,17 @@ public class GraphQLInvoker {
 
   public CompletableFuture<GraphQLQueryResult> queryAsync(GraphQLInvocationInput invocationInput) {
     if (invocationInput instanceof GraphQLSingleInvocationInput) {
-      return executeAsync((GraphQLSingleInvocationInput)invocationInput).thenApply(GraphQLQueryResult::create);
+      return executeAsync((GraphQLSingleInvocationInput) invocationInput)
+          .thenApply(GraphQLQueryResult::create);
     }
     GraphQLBatchedInvocationInput batchedInvocationInput = (GraphQLBatchedInvocationInput) invocationInput;
     return executeAsync(batchedInvocationInput).thenApply(GraphQLQueryResult::create);
   }
 
-  private CompletableFuture<List<ExecutionResult>> executeAsync(GraphQLBatchedInvocationInput batchedInvocationInput) {
-    GraphQL graphQL = batchedDataLoaderGraphQLBuilder.newGraphQL(batchedInvocationInput, graphQLBuilder);
+  private CompletableFuture<List<ExecutionResult>> executeAsync(
+      GraphQLBatchedInvocationInput batchedInvocationInput) {
+    GraphQL graphQL = batchedDataLoaderGraphQLBuilder
+        .newGraphQL(batchedInvocationInput, graphQLBuilder);
     return sequence(
         batchedInvocationInput.getExecutionInputs().stream()
             .map(executionInput -> proxy.executeAsync(graphQL, executionInput))
@@ -52,7 +53,7 @@ public class GraphQLInvoker {
   private <T> CompletableFuture<List<T>> sequence(List<CompletableFuture<T>> futures) {
     CompletableFuture[] futuresArray = futures.toArray(new CompletableFuture[0]);
     return CompletableFuture.allOf(futuresArray).thenApply(aVoid -> {
-      List<T> result =  new ArrayList<>(futures.size());
+      List<T> result = new ArrayList<>(futures.size());
       for (CompletableFuture future : futuresArray) {
         assert future.isDone(); // per the API contract of allOf()
         result.add((T) future.join());
