@@ -20,7 +20,8 @@ public class GraphQLSingleInvocationInput implements GraphQLInvocationInput {
 
   private final Subject subject;
 
-  public GraphQLSingleInvocationInput(GraphQLRequest request, GraphQLSchema schema, GraphQLContext context,
+  public GraphQLSingleInvocationInput(GraphQLRequest request, GraphQLSchema schema,
+      GraphQLContext context,
       Object root) {
     this.schema = schema;
     this.executionInput = createExecutionInput(request, context, root);
@@ -41,7 +42,8 @@ public class GraphQLSingleInvocationInput implements GraphQLInvocationInput {
     return Optional.ofNullable(subject);
   }
 
-  private ExecutionInput createExecutionInput(GraphQLRequest graphQLRequest, GraphQLContext context, Object root) {
+  private ExecutionInput createExecutionInput(GraphQLRequest graphQLRequest, GraphQLContext context,
+      Object root) {
     return ExecutionInput.newExecutionInput()
         .query(graphQLRequest.getQuery())
         .operationName(graphQLRequest.getOperationName())

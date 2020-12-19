@@ -36,11 +36,23 @@ plugins {
     id 'net.researchgate.release' version '2.7.0'
     id 'io.franzbecker.gradle-lombok' version '3.2.0' apply false
     id "com.jfrog.artifactory" version "4.11.0" apply false
-    id "biz.aQute.bnd.builder" version "5.0.0" apply false
+    id "biz.aQute.bnd.builder" version "5.1.2" apply false
+    id "org.sonarqube" version "3.0"
+    id "jacoco"
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "graphql-java-kickstart_graphql-java-servlet"
+        property "sonar.organization", "graphql-java-kickstart"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
 }
 
 subprojects {
     apply plugin: 'idea'
+    apply plugin: 'jacoco'
+    apply plugin: 'org.sonarqube'
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: "com.jfrog.bintray"
@@ -75,6 +87,13 @@ subprojects {
         sha256 = ""
     }
 
+    jacocoTestReport {
+        reports {
+            xml.enabled = true
+            html.enabled = false
+            csv.enabled = false
+        }
+    }
 
     if (!it.name.startsWith('example')) {
 
@@ -151,7 +170,7 @@ subprojects {
                             it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
                                 dep.name == it.artifactId.text()
                             }
-                        }.each { it.scope*.value = 'compile'}
+                        }.each { it.scope*.value = 'compile' }
                     }
                 }
             }
@@ -171,8 +190,12 @@ subprojects {
                 userOrg = 'graphql-java-kickstart'
                 version {
                     name = project.version
+                    gpg {
+                        sign = true
+                    }
                     mavenCentralSync {
-                        close = '1'
+                        user = System.env.OSS_USER_TOKEN_KEY ?: project.findProperty('OSS_USER_TOKEN_KEY') ?: ''
+                        password = System.env.OSS_USER_TOKEN_PASS ?: project.findProperty('OSS_USER_TOKEN_PASS') ?: ''
                     }
                 }
             }

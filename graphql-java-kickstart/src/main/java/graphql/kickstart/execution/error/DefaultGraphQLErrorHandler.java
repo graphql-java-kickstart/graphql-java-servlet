@@ -33,9 +33,11 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
     if (error instanceof Throwable) {
       log.error("Error executing query!", (Throwable) error);
     } else if (error instanceof ExceptionWhileDataFetching) {
-      log.error("Error executing query {}", error.getMessage(), ((ExceptionWhileDataFetching) error).getException());
+      log.error("Error executing query {}", error.getMessage(),
+          ((ExceptionWhileDataFetching) error).getException());
     } else {
-      log.error("Error executing query ({}): {}", error.getClass().getSimpleName(), error.getMessage());
+      log.error("Error executing query ({}): {}", error.getClass().getSimpleName(),
+          error.getMessage());
     }
   }
 

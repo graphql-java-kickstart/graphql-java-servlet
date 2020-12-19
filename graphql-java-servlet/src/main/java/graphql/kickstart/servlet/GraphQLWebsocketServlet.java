@@ -17,11 +17,9 @@ import graphql.kickstart.servlet.apollo.ApolloWebSocketSubscriptionProtocolFacto
 import graphql.kickstart.servlet.subscriptions.FallbackSubscriptionProtocolFactory;
 import graphql.kickstart.servlet.subscriptions.WebSocketSendSubscriber;
 import graphql.kickstart.servlet.subscriptions.WebSocketSubscriptionProtocolFactory;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,7 +40,8 @@ import javax.websocket.server.ServerEndpointConfig;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Must be used with {@link #modifyHandshake(ServerEndpointConfig, HandshakeRequest, HandshakeResponse)}
+ * Must be used with {@link #modifyHandshake(ServerEndpointConfig, HandshakeRequest,
+ * HandshakeResponse)}
  *
  * @author Andrew Potter
  */
@@ -50,10 +49,13 @@ import lombok.extern.slf4j.Slf4j;
 public class GraphQLWebsocketServlet extends Endpoint {
 
   private static final String HANDSHAKE_REQUEST_KEY = HandshakeRequest.class.getName();
-  private static final String PROTOCOL_FACTORY_REQUEST_KEY = SubscriptionProtocolFactory.class.getName();
-  private static final CloseReason ERROR_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION,
+  private static final String PROTOCOL_FACTORY_REQUEST_KEY = SubscriptionProtocolFactory.class
+      .getName();
+  private static final CloseReason ERROR_CLOSE_REASON = new CloseReason(
+      CloseReason.CloseCodes.UNEXPECTED_CONDITION,
       "Internal Server Error");
-  private static final CloseReason SHUTDOWN_CLOSE_REASON = new CloseReason(CloseReason.CloseCodes.UNEXPECTED_CONDITION,
+  private static final CloseReason SHUTDOWN_CLOSE_REASON = new CloseReason(
+      CloseReason.CloseCodes.UNEXPECTED_CONDITION,
       "Server Shut Down");
 
   private final List<SubscriptionProtocolFactory> subscriptionProtocolFactories;
@@ -69,7 +71,8 @@ public class GraphQLWebsocketServlet extends Endpoint {
     this(configuration, null);
   }
 
-  public GraphQLWebsocketServlet(GraphQLConfiguration configuration, Collection<SubscriptionConnectionListener> connectionListeners) {
+  public GraphQLWebsocketServlet(GraphQLConfiguration configuration,
+      Collection<SubscriptionConnectionListener> connectionListeners) {
     this(
         configuration.getGraphQLInvoker(),
         configuration.getInvocationInputFactory(),
@@ -109,7 +112,8 @@ public class GraphQLWebsocketServlet extends Endpoint {
         graphQLInvoker
     );
     allSubscriptionProtocols = Stream
-        .concat(subscriptionProtocolFactories.stream(), Stream.of(fallbackSubscriptionProtocolFactory))
+        .concat(subscriptionProtocolFactories.stream(),
+            Stream.of(fallbackSubscriptionProtocolFactory))
         .map(SubscriptionProtocolFactory::getProtocol)
         .collect(toList());
   }
@@ -117,7 +121,8 @@ public class GraphQLWebsocketServlet extends Endpoint {
   @Override
   public void onOpen(Session session, EndpointConfig endpointConfig) {
     final WebSocketSubscriptionProtocolFactory subscriptionProtocolFactory =
-        (WebSocketSubscriptionProtocolFactory) endpointConfig.getUserProperties().get(PROTOCOL_FACTORY_REQUEST_KEY);
+        (WebSocketSubscriptionProtocolFactory) endpointConfig.getUserProperties()
+            .get(PROTOCOL_FACTORY_REQUEST_KEY);
 
     // todo: create apollo version of it through SubscriptionProtocolFactory
     SubscriptionSession subscriptionSession = subscriptionProtocolFactory.createSession(session);
@@ -163,7 +168,8 @@ public class GraphQLWebsocketServlet extends Endpoint {
   @Override
   public void onError(Session session, Throwable thr) {
     if (thr instanceof EOFException) {
-      log.warn("Session {} was killed abruptly without calling onClose. Cleaning up session", session.getId());
+      log.warn("Session {} was killed abruptly without calling onClose. Cleaning up session",
+          session.getId());
       onClose(session, ERROR_CLOSE_REASON);
     } else {
       log.error("Error in websocket session: {}", session.getId(), thr);
@@ -179,7 +185,8 @@ public class GraphQLWebsocketServlet extends Endpoint {
     }
   }
 
-  public void modifyHandshake(ServerEndpointConfig sec, HandshakeRequest request, HandshakeResponse response) {
+  public void modifyHandshake(ServerEndpointConfig sec, HandshakeRequest request,
+      HandshakeResponse response) {
     sec.getUserProperties().put(HANDSHAKE_REQUEST_KEY, request);
 
     List<String> protocol = request.getHeaders().get(HandshakeRequest.SEC_WEBSOCKET_PROTOCOL);
@@ -187,7 +194,8 @@ public class GraphQLWebsocketServlet extends Endpoint {
       protocol = Collections.emptyList();
     }
 
-    SubscriptionProtocolFactory subscriptionProtocolFactory = getSubscriptionProtocolFactory(protocol);
+    SubscriptionProtocolFactory subscriptionProtocolFactory = getSubscriptionProtocolFactory(
+        protocol);
     sec.getUserProperties().put(PROTOCOL_FACTORY_REQUEST_KEY, subscriptionProtocolFactory);
 
     if (request.getHeaders().get(HandshakeResponse.SEC_WEBSOCKET_ACCEPT) != null) {

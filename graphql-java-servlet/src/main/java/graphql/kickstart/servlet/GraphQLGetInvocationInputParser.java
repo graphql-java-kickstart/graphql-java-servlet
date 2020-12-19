@@ -1,9 +1,9 @@
 package graphql.kickstart.servlet;
 
 import graphql.GraphQLException;
-import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLRequest;
+import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import java.io.IOException;
@@ -23,7 +23,8 @@ class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputPars
     super(invocationInputFactory, graphQLObjectMapper, contextSetting);
   }
 
-  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request, HttpServletResponse response)
+  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request,
+      HttpServletResponse response)
       throws IOException {
     if (isIntrospectionQuery(request)) {
       GraphQLRequest graphqlRequest = GraphQLRequest.createIntrospectionRequest();
@@ -43,11 +44,13 @@ class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputPars
     }
 
     List<GraphQLRequest> graphqlRequests = graphQLObjectMapper.readBatchedGraphQLRequest(query);
-    return invocationInputFactory.createReadOnly(contextSetting, graphqlRequests, request, response);
+    return invocationInputFactory
+        .createReadOnly(contextSetting, graphqlRequests, request, response);
   }
 
   private boolean isIntrospectionQuery(HttpServletRequest request) {
-    String path = Optional.ofNullable(request.getPathInfo()).orElseGet(request::getServletPath).toLowerCase();
+    String path = Optional.ofNullable(request.getPathInfo()).orElseGet(request::getServletPath)
+        .toLowerCase();
     return path.contentEquals("/schema.json");
   }
 

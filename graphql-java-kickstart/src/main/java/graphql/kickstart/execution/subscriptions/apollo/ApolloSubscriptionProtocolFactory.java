@@ -28,7 +28,8 @@ public class ApolloSubscriptionProtocolFactory extends SubscriptionProtocolFacto
       GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
       GraphQLInvoker graphQLInvoker
   ) {
-    this(objectMapper, invocationInputFactory, graphQLInvoker, Duration.ofSeconds(KEEP_ALIVE_INTERVAL));
+    this(objectMapper, invocationInputFactory, graphQLInvoker,
+        Duration.ofSeconds(KEEP_ALIVE_INTERVAL));
   }
 
   public ApolloSubscriptionProtocolFactory(

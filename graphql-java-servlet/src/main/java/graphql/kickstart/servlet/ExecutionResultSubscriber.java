@@ -17,7 +17,8 @@ class ExecutionResultSubscriber implements Subscriber<ExecutionResult> {
   private final GraphQLObjectMapper graphQLObjectMapper;
   private final CountDownLatch completedLatch = new CountDownLatch(1);
 
-  ExecutionResultSubscriber(AtomicReference<Subscription> subscriptionRef, AsyncContext asyncContext,
+  ExecutionResultSubscriber(AtomicReference<Subscription> subscriptionRef,
+      AsyncContext asyncContext,
       GraphQLObjectMapper graphQLObjectMapper) {
     this.subscriptionRef = subscriptionRef;
     this.asyncContext = asyncContext;

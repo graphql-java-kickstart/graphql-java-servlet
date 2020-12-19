@@ -4,11 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import graphql.GraphQLException;
 import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
-import graphql.kickstart.servlet.input.BatchInputPreProcessResult;
-import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
+import graphql.kickstart.servlet.input.BatchInputPreProcessResult;
+import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.concurrent.CompletableFuture;
@@ -18,12 +18,12 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class HttpRequestHandlerImpl implements HttpRequestHandler {
+public class HttpRequestHandlerImpl implements HttpRequestHandler {
 
   private final GraphQLConfiguration configuration;
   private final GraphQLInvoker graphQLInvoker;
 
-  HttpRequestHandlerImpl(GraphQLConfiguration configuration) {
+  public HttpRequestHandlerImpl(GraphQLConfiguration configuration) {
     this.configuration = configuration;
     graphQLInvoker = configuration.getGraphQLInvoker();
   }
@@ -37,15 +37,16 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
           configuration.getObjectMapper(),
           configuration.getContextSetting()
       );
-      GraphQLInvocationInput invocationInput = invocationInputParser.getGraphQLInvocationInput(request, response);
+      GraphQLInvocationInput invocationInput = invocationInputParser
+          .getGraphQLInvocationInput(request, response);
       execute(invocationInput, request, response);
     } catch (GraphQLException| JsonProcessingException e) {
       response.setStatus(STATUS_BAD_REQUEST);
-      log.info("Bad request: cannot create invocation input parser", e);
+      log.info("Bad request: cannot handle http request", e);
       throw e;
     } catch (Throwable t) {
       response.setStatus(500);
-      log.info("Bad request: cannot create invocation input parser", t);
+      log.error("Cannot handle http request", t);
       throw t;
     }
   }
@@ -100,7 +101,8 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
       HttpServletRequest request,
       HttpServletResponse response) {
     BatchInputPreProcessor preprocessor = configuration.getBatchInputPreProcessor();
-    BatchInputPreProcessResult result = preprocessor.preProcessBatch(batchedInvocationInput, request, response);
+    BatchInputPreProcessResult result = preprocessor
+        .preProcessBatch(batchedInvocationInput, request, response);
     if (result.isExecutable()) {
       return graphQLInvoker.queryAsync(result.getBatchedInvocationInput());
     }

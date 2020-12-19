@@ -91,7 +91,8 @@ public class GraphQLQueryInvoker {
       return this;
     }
 
-    public Builder withDataLoaderDispatcherInstrumentationOptions(DataLoaderDispatcherInstrumentationOptions options) {
+    public Builder withDataLoaderDispatcherInstrumentationOptions(
+        DataLoaderDispatcherInstrumentationOptions options) {
       return withDataLoaderDispatcherInstrumentationOptions(() -> options);
     }
 
@@ -102,7 +103,8 @@ public class GraphQLQueryInvoker {
     }
 
     public GraphQLQueryInvoker build() {
-      return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation, getPreparsedDocumentProvider,
+      return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation,
+          getPreparsedDocumentProvider,
           dataLoaderDispatcherInstrumentationOptionsSupplier);
     }
   }

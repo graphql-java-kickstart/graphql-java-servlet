@@ -3,11 +3,11 @@ package graphql.kickstart.servlet;
 import static java.util.stream.Collectors.joining;
 
 import graphql.GraphQLException;
-import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLRequest;
-import graphql.kickstart.servlet.core.internal.VariableMapper;
+import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
+import graphql.kickstart.servlet.core.internal.VariableMapper;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -35,7 +35,8 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
   }
 
   @Override
-  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request, HttpServletResponse response)
+  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request,
+      HttpServletResponse response)
       throws IOException {
     try {
       final Map<String, List<Part>> parts = request.getParts()
@@ -77,22 +78,27 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
             variablesMap.ifPresent(m -> mapMultipartVariables(graphqlRequest, m, parts));
             return invocationInputFactory.create(graphqlRequest, request, response);
           } else {
-            List<GraphQLRequest> graphqlRequests = graphQLObjectMapper.readBatchedGraphQLRequest(query);
-            variablesMap.ifPresent(map -> graphqlRequests.forEach(r -> mapMultipartVariables(r, map, parts)));
-            return invocationInputFactory.create(contextSetting, graphqlRequests, request, response);
+            List<GraphQLRequest> graphqlRequests = graphQLObjectMapper
+                .readBatchedGraphQLRequest(query);
+            variablesMap.ifPresent(
+                map -> graphqlRequests.forEach(r -> mapMultipartVariables(r, map, parts)));
+            return invocationInputFactory
+                .create(contextSetting, graphqlRequests, request, response);
           }
         }
       }
 
       log.info("Bad POST multipart request: no part named {}", Arrays.toString(MULTIPART_KEYS));
-      throw new GraphQLException("Bad POST multipart request: no part named " + Arrays.toString(MULTIPART_KEYS));
+      throw new GraphQLException(
+          "Bad POST multipart request: no part named " + Arrays.toString(MULTIPART_KEYS));
     } catch (ServletException e) {
       throw new IOException("Cannot get parts from request", e);
     }
   }
 
   private Optional<Part> getPart(Map<String, List<Part>> parts, String name) {
-    return Optional.ofNullable(parts.get(name)).filter(list -> !list.isEmpty()).map(list -> list.get(0));
+    return Optional.ofNullable(parts.get(name)).filter(list -> !list.isEmpty())
+        .map(list -> list.get(0));
   }
 
   private void mapMultipartVariables(GraphQLRequest request,

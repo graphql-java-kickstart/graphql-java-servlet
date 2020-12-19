@@ -9,37 +9,39 @@ import org.dataloader.DataLoaderRegistry;
  */
 public class DataLoaderDispatcherInstrumentationState implements InstrumentationState {
 
-    private final TrackingApproach approach;
-    private final DataLoaderRegistry dataLoaderRegistry;
-    private final boolean hasNoDataLoaders;
-    private boolean aggressivelyBatching = true;
+  private final TrackingApproach approach;
+  private final DataLoaderRegistry dataLoaderRegistry;
+  private final boolean hasNoDataLoaders;
+  private boolean aggressivelyBatching = true;
 
-    public DataLoaderDispatcherInstrumentationState(DataLoaderRegistry dataLoaderRegistry, TrackingApproach approach, ExecutionId executionId) {
+  public DataLoaderDispatcherInstrumentationState(DataLoaderRegistry dataLoaderRegistry,
+      TrackingApproach approach,
+      ExecutionId executionId) {
 
-        this.dataLoaderRegistry = dataLoaderRegistry;
-        this.approach = approach;
-        approach.createState(executionId);
-        hasNoDataLoaders = dataLoaderRegistry.getKeys().isEmpty();
+    this.dataLoaderRegistry = dataLoaderRegistry;
+    this.approach = approach;
+    approach.createState(executionId);
+    hasNoDataLoaders = dataLoaderRegistry.getKeys().isEmpty();
 
-    }
+  }
 
-    boolean isAggressivelyBatching() {
-        return aggressivelyBatching;
-    }
+  boolean isAggressivelyBatching() {
+    return aggressivelyBatching;
+  }
 
-    void setAggressivelyBatching(boolean aggressivelyBatching) {
-        this.aggressivelyBatching = aggressivelyBatching;
-    }
+  void setAggressivelyBatching(boolean aggressivelyBatching) {
+    this.aggressivelyBatching = aggressivelyBatching;
+  }
 
-    TrackingApproach getApproach() {
-        return approach;
-    }
+  TrackingApproach getApproach() {
+    return approach;
+  }
 
-    DataLoaderRegistry getDataLoaderRegistry() {
-        return dataLoaderRegistry;
-    }
+  DataLoaderRegistry getDataLoaderRegistry() {
+    return dataLoaderRegistry;
+  }
 
-    boolean hasNoDataLoaders() {
-        return hasNoDataLoaders;
-    }
+  boolean hasNoDataLoaders() {
+    return hasNoDataLoaders;
+  }
 }
