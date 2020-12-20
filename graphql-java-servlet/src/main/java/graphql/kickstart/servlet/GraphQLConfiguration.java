@@ -24,7 +24,6 @@ public class GraphQLConfiguration {
 
   private final GraphQLInvocationInputFactory invocationInputFactory;
   private final Supplier<BatchInputPreProcessor> batchInputPreProcessor;
-  private final GraphQLQueryInvoker queryInvoker;
   private final GraphQLInvoker graphQLInvoker;
   private final GraphQLObjectMapper objectMapper;
   private final List<GraphQLServletListener> listeners;
@@ -43,7 +42,6 @@ public class GraphQLConfiguration {
       Supplier<BatchInputPreProcessor> batchInputPreProcessor,
       GraphQLResponseCacheManager responseCacheManager) {
     this.invocationInputFactory = invocationInputFactory;
-    this.queryInvoker = queryInvoker;
     this.graphQLInvoker = queryInvoker.toGraphQLInvoker();
     this.objectMapper = objectMapper;
     this.listeners = listeners;
@@ -69,10 +67,6 @@ public class GraphQLConfiguration {
 
   public GraphQLInvocationInputFactory getInvocationInputFactory() {
     return invocationInputFactory;
-  }
-
-  public GraphQLQueryInvoker getQueryInvoker() {
-    return queryInvoker;
   }
 
   public GraphQLInvoker getGraphQLInvoker() {
@@ -113,13 +107,17 @@ public class GraphQLConfiguration {
 
   public HttpRequestHandler getHttpRequestHandler() {
     if (requestHandler == null) {
-      if (responseCacheManager == null) {
-        requestHandler = new HttpRequestHandlerImpl(this);
-      } else {
-        requestHandler = new HttpRequestHandlerImpl(this, new CachingHttpRequestInvoker(this));
-      }
+      requestHandler = createHttpRequestHandler();
     }
     return requestHandler;
+  }
+
+  private HttpRequestHandler createHttpRequestHandler() {
+    if (responseCacheManager == null) {
+      return new HttpRequestHandlerImpl(this);
+    } else {
+      return new HttpRequestHandlerImpl(this, new CachingHttpRequestInvoker(this));
+    }
   }
 
   public static class Builder {

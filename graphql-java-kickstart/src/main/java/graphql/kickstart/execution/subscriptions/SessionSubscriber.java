@@ -1,13 +1,13 @@
 package graphql.kickstart.execution.subscriptions;
 
-import graphql.ExecutionResult;
+import static java.util.Collections.singletonList;
 
-import java.util.Collections;
+import graphql.ExecutionResult;
+import graphql.GraphqlErrorBuilder;
+import graphql.execution.NonNullableFieldWasNullException;
+import graphql.kickstart.execution.error.GenericGraphQLError;
 import java.util.HashMap;
 import java.util.Map;
-
-import graphql.GraphQLError;
-import graphql.kickstart.execution.error.GenericGraphQLError;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscriber;
@@ -42,9 +42,17 @@ class SessionSubscriber implements Subscriber<ExecutionResult> {
   @Override
   public void onError(Throwable throwable) {
     log.error("Subscription error", throwable);
-
     Map<String, Object> payload = new HashMap<>();
-    payload.put("errors", Collections.singletonList(new GenericGraphQLError(throwable.getMessage())));
+    if (throwable.getCause() instanceof NonNullableFieldWasNullException) {
+      NonNullableFieldWasNullException e = (NonNullableFieldWasNullException) throwable.getCause();
+      payload.put("errors", singletonList(GraphqlErrorBuilder.newError()
+          .message(e.getMessage())
+          .path(e.getPath())
+          .build()));
+    } else {
+      payload
+          .put("errors", singletonList(new GenericGraphQLError(throwable.getMessage())));
+    }
 
     session.unsubscribe(id);
     session.sendErrorMessage(id, payload);
