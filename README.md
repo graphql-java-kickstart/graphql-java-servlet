@@ -1,7 +1,7 @@
 # GraphQL Java Servlet
 [![Build Status](https://github.com/graphql-java-kickstart/graphql-java-servlet/workflows/Publish%20snapshot/badge.svg)](https://github.com/graphql-java-kickstart/graphql-java-servlet/actions?query=workflow%3A%22Publish+snapshot%22)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet/badge.svg?service=github)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet)
-[![Chat on Spectrum](https://img.shields.io/badge/spectrum-join%20the%20community-%23800080)](https://spectrum.chat/graphql-java-kick)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=graphql-java-kickstart_graphql-java-servlet&metric=alert_status)](https://sonarcloud.io/dashboard?id=graphql-java-kickstart_graphql-java-servlet)
 
 ## We are looking for contributors!
 Are you interested in improving our documentation, working on the codebase, reviewing PRs?
