@@ -2,6 +2,7 @@ package graphql.kickstart.execution.context;
 
 import java.util.Optional;
 import javax.security.auth.Subject;
+import lombok.NonNull;
 import org.dataloader.DataLoaderRegistry;
 
 /**
@@ -15,7 +16,8 @@ public interface GraphQLContext {
   Optional<Subject> getSubject();
 
   /**
-   * @return the Dataloader registry to use for the execution.
+   * @return the Dataloader registry to use for the execution. Must not return <code>null</code>
    */
-  Optional<DataLoaderRegistry> getDataLoaderRegistry();
+  @NonNull DataLoaderRegistry getDataLoaderRegistry();
+
 }

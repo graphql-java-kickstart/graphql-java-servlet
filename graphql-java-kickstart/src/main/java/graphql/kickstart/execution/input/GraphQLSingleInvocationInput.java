@@ -7,7 +7,6 @@ import graphql.kickstart.execution.context.GraphQLContext;
 import graphql.schema.GraphQLSchema;
 import java.util.Optional;
 import javax.security.auth.Subject;
-import org.dataloader.DataLoaderRegistry;
 
 /**
  * Represents a single GraphQL execution.
@@ -50,7 +49,7 @@ public class GraphQLSingleInvocationInput implements GraphQLInvocationInput {
         .context(context)
         .root(root)
         .variables(graphQLRequest.getVariables())
-        .dataLoaderRegistry(context.getDataLoaderRegistry().orElse(new DataLoaderRegistry()))
+        .dataLoaderRegistry(context.getDataLoaderRegistry())
         .executionId(ExecutionId.generate())
         .build();
   }
