@@ -6,7 +6,7 @@
 ## We are looking for contributors!
 Are you interested in improving our documentation, working on the codebase, reviewing PRs?
 
-[Reach out to us on Spectrum](https://spectrum.chat/graphql-java-kick) and join the team!
+[Reach out to us on Discussions](https://github.com/graphql-java-kickstart/graphql-java-servlet/discussions) and join the team!
 
 We hope you'll get involved! Read our [Contributors' Guide](CONTRIBUTING.md) for more details.
 
