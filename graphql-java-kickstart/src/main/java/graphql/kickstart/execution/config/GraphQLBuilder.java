@@ -18,6 +18,7 @@ public class GraphQLBuilder {
   private Supplier<PreparsedDocumentProvider> preparsedDocumentProviderSupplier = () -> NoOpPreparsedDocumentProvider.INSTANCE;
   @Getter
   private Supplier<Instrumentation> instrumentationSupplier = () -> SimpleInstrumentation.INSTANCE;
+  private Supplier<GraphQLBuilderConfigurer> graphQLBuilderConfigurerSupplier = () -> builder -> {};
 
   public GraphQLBuilder executionStrategyProvider(Supplier<ExecutionStrategyProvider> supplier) {
     if (supplier != null) {
@@ -36,6 +37,13 @@ public class GraphQLBuilder {
   public GraphQLBuilder instrumentation(Supplier<Instrumentation> supplier) {
     if (supplier != null) {
       instrumentationSupplier = supplier;
+    }
+    return this;
+  }
+
+  public GraphQLBuilder graphQLBuilderConfigurer(Supplier<GraphQLBuilderConfigurer> supplier) {
+    if (supplier != null) {
+      graphQLBuilderConfigurerSupplier = supplier;
     }
     return this;
   }
@@ -78,6 +86,7 @@ public class GraphQLBuilder {
     if (containsDispatchInstrumentation(instrumentation)) {
       builder.doNotAddDefaultInstrumentations();
     }
+    graphQLBuilderConfigurerSupplier.get().configure(builder);
     return builder.build();
   }
 
