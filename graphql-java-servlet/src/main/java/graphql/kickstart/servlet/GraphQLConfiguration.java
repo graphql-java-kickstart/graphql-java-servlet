@@ -35,6 +35,7 @@ public class GraphQLConfiguration {
   private HttpRequestHandler requestHandler;
 
   private GraphQLConfiguration(GraphQLInvocationInputFactory invocationInputFactory,
+      GraphQLInvoker graphQLInvoker,
       GraphQLQueryInvoker queryInvoker,
       GraphQLObjectMapper objectMapper, List<GraphQLServletListener> listeners,
       long subscriptionTimeout, long asyncTimeout,
@@ -42,7 +43,7 @@ public class GraphQLConfiguration {
       Supplier<BatchInputPreProcessor> batchInputPreProcessor,
       GraphQLResponseCacheManager responseCacheManager) {
     this.invocationInputFactory = invocationInputFactory;
-    this.graphQLInvoker = queryInvoker.toGraphQLInvoker();
+    this.graphQLInvoker = graphQLInvoker != null ? graphQLInvoker : queryInvoker.toGraphQLInvoker();
     this.objectMapper = objectMapper;
     this.listeners = listeners;
     this.subscriptionTimeout = subscriptionTimeout;
@@ -124,6 +125,7 @@ public class GraphQLConfiguration {
 
     private GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder;
     private GraphQLInvocationInputFactory invocationInputFactory;
+    private GraphQLInvoker graphQLInvoker;
     private GraphQLQueryInvoker queryInvoker = GraphQLQueryInvoker.newBuilder().build();
     private GraphQLObjectMapper objectMapper = GraphQLObjectMapper.newBuilder().build();
     private List<GraphQLServletListener> listeners = new ArrayList<>();
@@ -139,6 +141,11 @@ public class GraphQLConfiguration {
 
     private Builder(GraphQLInvocationInputFactory invocationInputFactory) {
       this.invocationInputFactory = invocationInputFactory;
+    }
+
+    public Builder with(GraphQLInvoker graphQLInvoker) {
+      this.graphQLInvoker = graphQLInvoker;
+      return this;
     }
 
     public Builder with(GraphQLQueryInvoker queryInvoker) {
@@ -212,6 +219,7 @@ public class GraphQLConfiguration {
       return new GraphQLConfiguration(
           this.invocationInputFactory != null ? this.invocationInputFactory
               : invocationInputFactoryBuilder.build(),
+          graphQLInvoker,
           queryInvoker,
           objectMapper,
           listeners,
