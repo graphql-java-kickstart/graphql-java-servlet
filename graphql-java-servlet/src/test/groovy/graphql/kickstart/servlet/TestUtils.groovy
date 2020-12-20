@@ -5,6 +5,9 @@ import graphql.Directives
 import graphql.Scalars
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.kickstart.execution.context.ContextSetting
+import graphql.kickstart.servlet.apollo.ApolloScalars
+import graphql.kickstart.servlet.context.GraphQLServletContextBuilder
+import graphql.kickstart.servlet.input.BatchInputPreProcessor
 import graphql.schema.*
 import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
@@ -19,40 +22,38 @@ class TestUtils {
     static def createDefaultServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                                     DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
                                     DataFetcher subscriptionDataFetcher = { env ->
-                                        AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                        AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>()
                                         publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                                             publisherRef.get().offer(env.arguments.arg)
                                             publisherRef.get().noMoreData()
                                         }))
                                         return publisherRef.get()
-                                    }, boolean asyncServletModeEnabled = false) {
-        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, null)
+                                    }) {
+        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, null)
     }
 
     static def createBatchCustomizedServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                                             DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
                                             DataFetcher subscriptionDataFetcher = { env ->
-                                                AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                                AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>()
                                                 publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                                                     publisherRef.get().offer(env.arguments.arg)
                                                     publisherRef.get().noMoreData()
                                                 }))
                                                 return publisherRef.get()
-                                            }, boolean asyncServletModeEnabled = false) {
-        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, asyncServletModeEnabled, createBatchExecutionHandler())
+                                            }) {
+        createServlet(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher, createBatchExecutionHandler())
     }
 
     static def createDataLoadingServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                                         DataFetcher fieldDataFetcher = { env -> env.arguments.arg },
                                         DataFetcher otherDataFetcher,
-                                        boolean asyncServletModeEnabled = false, ContextSetting contextSetting,
-                                        graphql.kickstart.servlet.context.GraphQLServletContextBuilder contextBuilder) {
+                                        ContextSetting contextSetting, GraphQLServletContextBuilder contextBuilder) {
         GraphQLSchema schema = createGraphQlSchemaWithTwoLevels(queryDataFetcher, fieldDataFetcher, otherDataFetcher)
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(GraphQLConfiguration
                 .with(schema)
                 .with(contextSetting)
                 .with(contextBuilder)
-                .with(asyncServletModeEnabled)
                 .build())
         servlet.init(null)
         return servlet
@@ -61,24 +62,22 @@ class TestUtils {
     private static def createServlet(DataFetcher queryDataFetcher = { env -> env.arguments.arg },
                                      DataFetcher mutationDataFetcher = { env -> env.arguments.arg },
                                      DataFetcher subscriptionDataFetcher = { env ->
-                                         AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
+                                         AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>()
                                          publisherRef.set(new SingleSubscriberPublisher<>({ subscription ->
                                              publisherRef.get().offer(env.arguments.arg)
                                              publisherRef.get().noMoreData()
                                          }))
                                          return publisherRef.get()
-                                     }, boolean asyncServletModeEnabled = false,
-                                     graphql.kickstart.servlet.input.BatchInputPreProcessor batchHandler) {
+                                     }, BatchInputPreProcessor batchHandler) {
         GraphQLHttpServlet servlet = GraphQLHttpServlet.with(
                 graphQLConfiguration(createGraphQlSchema(queryDataFetcher, mutationDataFetcher, subscriptionDataFetcher),
-                        batchHandler, asyncServletModeEnabled))
+                        batchHandler))
         servlet.init(null)
         return servlet
     }
 
-    static def graphQLConfiguration(GraphQLSchema schema, graphql.kickstart.servlet.input.BatchInputPreProcessor batchInputPreProcessor,
-                                    boolean asyncServletModeEnabled) {
-        def configBuilder = GraphQLConfiguration.with(schema).with(asyncServletModeEnabled)
+    static def graphQLConfiguration(GraphQLSchema schema, BatchInputPreProcessor batchInputPreProcessor) {
+        def configBuilder = GraphQLConfiguration.with(schema)
         if (batchInputPreProcessor != null) {
             configBuilder.with(batchInputPreProcessor)
         }
@@ -159,7 +158,7 @@ class TestUtils {
                     field.type(Scalars.GraphQLString)
                     field.argument { argument ->
                         argument.name("file")
-                        argument.type(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)
+                        argument.type(ApolloScalars.Upload)
                     }
                     field.dataFetcher({ env -> new String(ByteStreams.toByteArray(env.arguments.file.getInputStream())) })
                 }
@@ -168,7 +167,7 @@ class TestUtils {
                     field.type(GraphQLList.list(Scalars.GraphQLString))
                     field.argument { argument ->
                         argument.name("files")
-                        argument.type(GraphQLList.list(GraphQLNonNull.nonNull(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)))
+                        argument.type(GraphQLList.list(GraphQLNonNull.nonNull(ApolloScalars.Upload)))
                     }
                     field.dataFetcher({ env ->
                         env.arguments.files.collect {
@@ -196,7 +195,7 @@ class TestUtils {
                 .query(query)
                 .mutation(mutation)
                 .subscription(subscription)
-                .additionalType(graphql.kickstart.servlet.apollo.ApolloScalars.Upload)
+                .additionalType(ApolloScalars.Upload)
                 .build()
     }
 

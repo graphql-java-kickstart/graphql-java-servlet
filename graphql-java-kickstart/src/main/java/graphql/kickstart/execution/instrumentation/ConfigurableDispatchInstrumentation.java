@@ -23,16 +23,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import lombok.extern.slf4j.Slf4j;
 import org.dataloader.DataLoader;
 import org.dataloader.DataLoaderRegistry;
 import org.dataloader.stats.Statistics;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherInstrumentation {
-
-  private static final Logger log = LoggerFactory
-      .getLogger(ConfigurableDispatchInstrumentation.class);
 
   private final DataLoaderDispatcherInstrumentationOptions options;
 
@@ -78,26 +75,26 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
     // which allows them to work if used.
     return (DataFetcher<Object>) environment -> {
       Object obj = dataFetcher.get(environment);
-      immediatelyDispatch(state);
+      doImmediatelyDispatch(state);
       return obj;
     };
   }
 
-  private void immediatelyDispatch(DataLoaderDispatcherInstrumentationState state) {
+  private void doImmediatelyDispatch(DataLoaderDispatcherInstrumentationState state) {
     state.getApproach().dispatch();
   }
 
   @Override
   public InstrumentationContext<ExecutionResult> beginExecuteOperation(
       InstrumentationExecuteOperationParameters parameters) {
-    if (!isDataLoaderCompatibleExecution(parameters.getExecutionContext())) {
+    if (!isDataLoaderCompatible(parameters.getExecutionContext())) {
       DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
       state.setAggressivelyBatching(false);
     }
     return new SimpleInstrumentationContext<>();
   }
 
-  private boolean isDataLoaderCompatibleExecution(ExecutionContext executionContext) {
+  private boolean isDataLoaderCompatible(ExecutionContext executionContext) {
     //
     // currently we only support Query operations and ONLY with AsyncExecutionStrategy as the query ES
     // This may change in the future but this is the fix for now
@@ -121,10 +118,12 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
       return new ExecutionStrategyInstrumentationContext() {
         @Override
         public void onDispatched(CompletableFuture<ExecutionResult> result) {
+          // default empty implementation
         }
 
         @Override
         public void onCompleted(ExecutionResult result, Throwable t) {
+          // default empty implementation
         }
       };
 
@@ -157,7 +156,7 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
       Map<Object, Object> currentExt = executionResult.getExtensions();
       Map<Object, Object> statsMap = new LinkedHashMap<>(
           currentExt == null ? Collections.emptyMap() : currentExt);
-      Map<Object, Object> dataLoaderStats = buildStatsMap(state);
+      Map<Object, Object> dataLoaderStats = buildStatisticsMap(state);
       statsMap.put("dataloader", dataLoaderStats);
 
       log.debug("Data loader stats : {}", dataLoaderStats);
@@ -169,7 +168,7 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
     }
   }
 
-  private Map<Object, Object> buildStatsMap(DataLoaderDispatcherInstrumentationState state) {
+  private Map<Object, Object> buildStatisticsMap(DataLoaderDispatcherInstrumentationState state) {
     DataLoaderRegistry dataLoaderRegistry = state.getDataLoaderRegistry();
     Statistics allStats = dataLoaderRegistry.getStatistics();
     Map<Object, Object> statsMap = new LinkedHashMap<>();

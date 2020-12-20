@@ -49,43 +49,14 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
           continue;
         }
 
-        final Optional<Part> queryItem = getPart(parts, key);
+        final Optional<Part> queryItem = findPart(parts);
         if (!queryItem.isPresent()) {
-          // If there is a part, but we don't see an item, then break and return BAD_REQUEST
-          break;
+          log.info("Bad POST multipart request: no part named {}", Arrays.toString(MULTIPART_KEYS));
+          throw new GraphQLException(
+              "Bad POST multipart request: no part named " + Arrays.toString(MULTIPART_KEYS));
         }
 
-        InputStream inputStream = queryItem.get().getInputStream();
-
-        final Optional<Map<String, List<String>>> variablesMap =
-            getPart(parts, "map")
-                .map(part -> {
-                  try (InputStream is = part.getInputStream()) {
-                    return graphQLObjectMapper.deserializeMultipartMap(is);
-                  } catch (IOException e) {
-                    throw new RuntimeException("Unable to read input stream from part", e);
-                  }
-                });
-
-        String query = read(inputStream);
-        if ("query".equals(key) && isSingleQuery(query)) {
-          GraphQLRequest graphqlRequest = buildRequestFromQuery(query, graphQLObjectMapper, parts);
-          variablesMap.ifPresent(m -> mapMultipartVariables(graphqlRequest, m, parts));
-          return invocationInputFactory.create(graphqlRequest, request, response);
-        } else {
-          if (isSingleQuery(query)) {
-            GraphQLRequest graphqlRequest = graphQLObjectMapper.readGraphQLRequest(query);
-            variablesMap.ifPresent(m -> mapMultipartVariables(graphqlRequest, m, parts));
-            return invocationInputFactory.create(graphqlRequest, request, response);
-          } else {
-            List<GraphQLRequest> graphqlRequests = graphQLObjectMapper
-                .readBatchedGraphQLRequest(query);
-            variablesMap.ifPresent(
-                map -> graphqlRequests.forEach(r -> mapMultipartVariables(r, map, parts)));
-            return invocationInputFactory
-                .create(contextSetting, graphqlRequests, request, response);
-          }
-        }
+        return getGraphQLInvocationInput(request, response, parts, key, queryItem.get());
       }
 
       log.info("Bad POST multipart request: no part named {}", Arrays.toString(MULTIPART_KEYS));
@@ -96,8 +67,50 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
     }
   }
 
+  private GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request,
+      HttpServletResponse response, Map<String, List<Part>> parts, String key,
+      Part queryItem) throws IOException {
+    InputStream inputStream = queryItem.getInputStream();
+
+    final Optional<Map<String, List<String>>> variablesMap =
+        getPart(parts, "map")
+            .map(part -> {
+              try (InputStream is = part.getInputStream()) {
+                return graphQLObjectMapper.deserializeMultipartMap(is);
+              } catch (IOException e) {
+                throw new PartIOException("Unable to read input stream from part", e);
+              }
+            });
+
+    String query = read(inputStream);
+    if ("query".equals(key) && isSingleQuery(query)) {
+      GraphQLRequest graphqlRequest = buildRequestFromQuery(query, graphQLObjectMapper, parts);
+      variablesMap.ifPresent(m -> mapMultipartVariables(graphqlRequest, m, parts));
+      return invocationInputFactory.create(graphqlRequest, request, response);
+    } else if (isSingleQuery(query)) {
+      GraphQLRequest graphqlRequest = graphQLObjectMapper.readGraphQLRequest(query);
+      variablesMap.ifPresent(m -> mapMultipartVariables(graphqlRequest, m, parts));
+      return invocationInputFactory.create(graphqlRequest, request, response);
+    } else {
+      List<GraphQLRequest> graphqlRequests = graphQLObjectMapper.readBatchedGraphQLRequest(query);
+      variablesMap.ifPresent(
+          map -> graphqlRequests.forEach(r -> mapMultipartVariables(r, map, parts)));
+      return invocationInputFactory
+          .create(contextSetting, graphqlRequests, request, response);
+    }
+  }
+
+  private Optional<Part> findPart(Map<String, List<Part>> parts) {
+    return Arrays.stream(MULTIPART_KEYS)
+        .filter(parts::containsKey)
+        .map(key -> getPart(parts, key))
+        .findFirst()
+        .map(Optional::get);
+  }
+
   private Optional<Part> getPart(Map<String, List<Part>> parts, String name) {
-    return Optional.ofNullable(parts.get(name)).filter(list -> !list.isEmpty())
+    return Optional.ofNullable(parts.get(name))
+        .filter(list -> !list.isEmpty())
         .map(list -> list.get(0));
   }
 

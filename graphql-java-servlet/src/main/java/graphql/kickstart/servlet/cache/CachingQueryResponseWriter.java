@@ -1,7 +1,5 @@
 package graphql.kickstart.servlet.cache;
 
-import graphql.kickstart.execution.GraphQLObjectMapper;
-import graphql.kickstart.execution.GraphQLQueryResult;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.QueryResponseWriter;
 import java.io.IOException;
@@ -16,6 +14,7 @@ public class CachingQueryResponseWriter implements QueryResponseWriter {
   private final GraphQLResponseCacheManager responseCache;
   private final GraphQLInvocationInput invocationInput;
   private final boolean error;
+
   public CachingQueryResponseWriter(QueryResponseWriter delegate,
       GraphQLResponseCacheManager responseCache,
       GraphQLInvocationInput invocationInput, boolean error) {
@@ -23,22 +22,6 @@ public class CachingQueryResponseWriter implements QueryResponseWriter {
     this.responseCache = responseCache;
     this.invocationInput = invocationInput;
     this.error = error;
-  }
-
-  static QueryResponseWriter createCacheWriter(
-      GraphQLQueryResult result,
-      GraphQLObjectMapper graphQLObjectMapper,
-      long subscriptionTimeout,
-      GraphQLInvocationInput invocationInput,
-      GraphQLResponseCacheManager responseCache
-  ) {
-    QueryResponseWriter writer = QueryResponseWriter
-        .createWriter(result, graphQLObjectMapper, subscriptionTimeout);
-    if (responseCache != null) {
-      return new CachingQueryResponseWriter(writer, responseCache, invocationInput,
-          result.isError());
-    }
-    return writer;
   }
 
   @Override
@@ -61,7 +44,7 @@ public class CachingQueryResponseWriter implements QueryResponseWriter {
 
           responseCache.put(request, invocationInput, CachedResponse.ofContent(contentBytes));
         }
-      } catch (Throwable t) {
+      } catch (Exception t) {
         log.warn("Ignore read from cache, unexpected error happened", t);
       }
 

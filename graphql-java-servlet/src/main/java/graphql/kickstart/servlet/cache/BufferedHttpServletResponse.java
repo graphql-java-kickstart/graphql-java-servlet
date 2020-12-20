@@ -18,6 +18,7 @@ public class BufferedHttpServletResponse extends HttpServletResponseWrapper {
   private ServletOutputStream outputStream;
   private PrintWriter writer;
   private String errorMessage;
+
   public BufferedHttpServletResponse(HttpServletResponse response) {
     super(response);
   }
@@ -130,6 +131,7 @@ public class BufferedHttpServletResponse extends HttpServletResponseWrapper {
 
     @Override
     public void setWriteListener(WriteListener writeListener) {
+      // write listener not supported
     }
 
     public byte[] toByteArray() {

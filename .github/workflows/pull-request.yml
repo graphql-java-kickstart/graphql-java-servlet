@@ -4,7 +4,7 @@ on:
     branches-ignore:
       - master
   pull_request:
-
+    types: [opened, synchronize, reopened]
 jobs:
   validation:
     name: Gradle Wrapper Validation
@@ -49,3 +49,39 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: cmd
         run: gradlew --info check
+  build:
+    name: Sonar analysis
+    needs: validation
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+        if: env.SONAR_TOKEN != null
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up JDK 11
+        if: env.SONAR_TOKEN != null
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Cache SonarCloud packages
+        if: env.SONAR_TOKEN != null
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Gradle packages
+        if: env.SONAR_TOKEN != null
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+      - name: Build and analyze
+        if: env.SONAR_TOKEN != null
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew build jacocoTestReport sonarqube --info

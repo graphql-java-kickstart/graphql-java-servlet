@@ -8,6 +8,7 @@ import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
+import lombok.SneakyThrows;
 import org.dataloader.DataLoaderRegistry;
 
 public class DefaultGraphQLServletContext extends DefaultGraphQLContext implements
@@ -43,25 +44,19 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext implemen
   }
 
   @Override
+  @SneakyThrows
   public List<Part> getFileParts() {
-    try {
-      return httpServletRequest.getParts().stream()
-          .filter(part -> part.getContentType() != null)
-          .collect(Collectors.toList());
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return httpServletRequest.getParts().stream()
+        .filter(part -> part.getContentType() != null)
+        .collect(Collectors.toList());
   }
 
   @Override
+  @SneakyThrows
   public Map<String, List<Part>> getParts() {
-    try {
-      return httpServletRequest.getParts()
-          .stream()
-          .collect(Collectors.groupingBy(Part::getName));
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    return httpServletRequest.getParts()
+        .stream()
+        .collect(Collectors.groupingBy(Part::getName));
   }
 
   public static class Builder {

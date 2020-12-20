@@ -1,27 +1,28 @@
 package graphql.kickstart.servlet;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import graphql.GraphQLException;
-import graphql.kickstart.execution.GraphQLInvoker;
-import graphql.kickstart.execution.GraphQLQueryResult;
-import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
-import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
-import graphql.kickstart.servlet.input.BatchInputPreProcessResult;
-import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class HttpRequestHandlerImpl implements HttpRequestHandler {
+class HttpRequestHandlerImpl implements HttpRequestHandler {
 
   private final GraphQLConfiguration configuration;
-  private final GraphQLInvoker graphQLInvoker;
+  private final HttpRequestInvoker requestInvoker;
 
   public HttpRequestHandlerImpl(GraphQLConfiguration configuration) {
+    this(configuration, new HttpRequestInvokerImpl(configuration, configuration.getGraphQLInvoker(),
+        new QueryResponseWriterFactoryImpl()));
+  }
+
+  public HttpRequestHandlerImpl(GraphQLConfiguration configuration,
+      HttpRequestInvoker requestInvoker) {
     this.configuration = configuration;
-    graphQLInvoker = configuration.getGraphQLInvoker();
+    this.requestInvoker = requestInvoker;
   }
 
   @Override
@@ -35,52 +36,16 @@ public class HttpRequestHandlerImpl implements HttpRequestHandler {
       );
       GraphQLInvocationInput invocationInput = invocationInputParser
           .getGraphQLInvocationInput(request, response);
-      execute(invocationInput, request, response);
-    } catch (GraphQLException e) {
+      requestInvoker.execute(invocationInput, request, response);
+    } catch (GraphQLException | JsonProcessingException e) {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad request: cannot handle http request", e);
       throw e;
-    } catch (Throwable t) {
-      response.setStatus(500);
+    } catch (Exception t) {
+      response.setStatus(STATUS_INTERNAL_SERVER_ERROR);
       log.error("Cannot handle http request", t);
       throw t;
     }
-  }
-
-  protected void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
-      HttpServletResponse response) throws IOException {
-    GraphQLQueryResult queryResult = invoke(invocationInput, request, response);
-
-    QueryResponseWriter queryResponseWriter = createWriter(invocationInput, queryResult);
-    queryResponseWriter.write(request, response);
-  }
-
-  protected QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput,
-      GraphQLQueryResult queryResult) {
-    return QueryResponseWriter.createWriter(queryResult, configuration.getObjectMapper(),
-        configuration.getSubscriptionTimeout());
-  }
-
-  private GraphQLQueryResult invoke(GraphQLInvocationInput invocationInput,
-      HttpServletRequest request,
-      HttpServletResponse response) {
-    if (invocationInput instanceof GraphQLSingleInvocationInput) {
-      return graphQLInvoker.query(invocationInput);
-    }
-    return invokeBatched((GraphQLBatchedInvocationInput) invocationInput, request, response);
-  }
-
-  private GraphQLQueryResult invokeBatched(GraphQLBatchedInvocationInput batchedInvocationInput,
-      HttpServletRequest request,
-      HttpServletResponse response) {
-    BatchInputPreProcessor preprocessor = configuration.getBatchInputPreProcessor();
-    BatchInputPreProcessResult result = preprocessor
-        .preProcessBatch(batchedInvocationInput, request, response);
-    if (result.isExecutable()) {
-      return graphQLInvoker.query(result.getBatchedInvocationInput());
-    }
-
-    return GraphQLQueryResult.createError(result.getStatusCode(), result.getStatusMessage());
   }
 
 }

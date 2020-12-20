@@ -37,10 +37,22 @@ plugins {
     id 'io.franzbecker.gradle-lombok' version '3.2.0' apply false
     id "com.jfrog.artifactory" version "4.11.0" apply false
     id "biz.aQute.bnd.builder" version "5.1.2" apply false
+    id "org.sonarqube" version "3.0"
+    id "jacoco"
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "graphql-java-kickstart_graphql-java-servlet"
+        property "sonar.organization", "graphql-java-kickstart"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
 }
 
 subprojects {
     apply plugin: 'idea'
+    apply plugin: 'jacoco'
+    apply plugin: 'org.sonarqube'
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: "com.jfrog.bintray"
@@ -75,6 +87,13 @@ subprojects {
         sha256 = ""
     }
 
+    jacocoTestReport {
+        reports {
+            xml.enabled = true
+            html.enabled = false
+            csv.enabled = false
+        }
+    }
 
     if (!it.name.startsWith('example')) {
 

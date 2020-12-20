@@ -115,23 +115,12 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   }
 
   @Override
-  protected GraphQLQueryInvoker getQueryInvoker() {
-    return queryInvoker;
-  }
-
-  @Override
-  protected GraphQLInvocationInputFactory getInvocationInputFactory() {
-    return invocationInputFactory;
-  }
-
-  @Override
-  protected GraphQLObjectMapper getGraphQLObjectMapper() {
-    return graphQLObjectMapper;
-  }
-
-  @Override
-  protected boolean isAsyncServletMode() {
-    return false;
+  protected GraphQLConfiguration getConfiguration() {
+    return GraphQLConfiguration
+        .with(invocationInputFactory)
+        .with(queryInvoker)
+        .with(graphQLObjectMapper)
+        .build();
   }
 
   protected void updateSchema() {
