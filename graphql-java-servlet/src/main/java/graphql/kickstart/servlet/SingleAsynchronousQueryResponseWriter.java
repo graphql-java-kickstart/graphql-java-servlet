@@ -43,10 +43,6 @@ class SingleAsynchronousQueryResponseWriter implements QueryResponseWriter {
       publishers.add(result.getData());
     } else {
       publishers.add(new StaticDataPublisher<>(result));
-      final Publisher<ExecutionResult> deferredResultsPublisher = (Publisher<ExecutionResult>) result
-          .getExtensions()
-          .get(GraphQL.DEFERRED_RESULTS);
-      publishers.add(deferredResultsPublisher);
     }
     publishers.forEach(it -> it.subscribe(subscriber));
 

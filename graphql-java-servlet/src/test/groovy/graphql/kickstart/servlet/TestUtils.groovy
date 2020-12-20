@@ -196,7 +196,6 @@ class TestUtils {
                 .mutation(mutation)
                 .subscription(subscription)
                 .additionalType(ApolloScalars.Upload)
-                .additionalDirective(Directives.DeferDirective)
                 .build()
     }
 
