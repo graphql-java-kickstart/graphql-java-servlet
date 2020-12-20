@@ -20,7 +20,7 @@ public class FieldLevelTrackingApproach extends AbstractTrackingApproach {
   public InstrumentationState createState(ExecutionId executionId) {
     synchronized (getStack()) {
       if (getStack().contains(executionId)) {
-        throw new RuntimeException(
+        throw new TrackingApproachException(
             String.format("Execution id %s already in active execution", executionId));
       }
       getStack().addExecution(executionId);

@@ -5,12 +5,11 @@ import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionInvocationIn
 import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionMapper;
 import graphql.kickstart.execution.subscriptions.apollo.OperationMessage.Type;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.EnumMap;
 
 public class ApolloCommandProvider {
 
-  private final Map<Type, SubscriptionCommand> commands = new HashMap<>();
+  private final EnumMap<Type, SubscriptionCommand> commands = new EnumMap<>(Type.class);
 
   public ApolloCommandProvider(
       GraphQLSubscriptionMapper mapper,

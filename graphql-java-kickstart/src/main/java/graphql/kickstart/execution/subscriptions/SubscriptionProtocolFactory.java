@@ -9,7 +9,7 @@ public abstract class SubscriptionProtocolFactory {
 
   private final String protocol;
 
-  public SubscriptionProtocolFactory(String protocol) {
+  protected SubscriptionProtocolFactory(String protocol) {
     this.protocol = protocol;
   }
 

@@ -1,7 +1,6 @@
 package graphql.kickstart.servlet;
 
 import graphql.ExecutionResult;
-import graphql.GraphQL;
 import graphql.kickstart.execution.GraphQLObjectMapper;
 import java.util.ArrayList;
 import java.util.List;

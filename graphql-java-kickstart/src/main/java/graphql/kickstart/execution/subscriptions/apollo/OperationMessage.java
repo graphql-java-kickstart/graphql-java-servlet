@@ -53,24 +53,24 @@ public class OperationMessage {
 
     static {
       for (Type type : Type.values()) {
-        reverseLookup.put(type.getType(), type);
+        reverseLookup.put(type.getValue(), type);
       }
     }
 
-    private final String type;
+    private final String value;
 
-    Type(String type) {
-      this.type = type;
+    Type(String value) {
+      this.value = value;
     }
 
     @JsonCreator
-    public static Type findType(String type) {
-      return reverseLookup.get(type);
+    public static Type findType(String value) {
+      return reverseLookup.get(value);
     }
 
     @JsonValue
-    public String getType() {
-      return type;
+    public String getValue() {
+      return value;
     }
 
   }

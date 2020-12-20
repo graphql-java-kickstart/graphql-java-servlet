@@ -26,10 +26,11 @@ public class VariablesDeserializer extends JsonDeserializer<Map<String, Object>>
                 new TypeReference<Map<String, Object>>() {
                 });
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new VariablesDeserializationException("Cannot deserialize variables", e);
       }
     } else {
-      throw new RuntimeException("variables should be either an object or a string");
+      throw new VariablesDeserializationException(
+          "Variables should be either an object or a string");
     }
   }
 

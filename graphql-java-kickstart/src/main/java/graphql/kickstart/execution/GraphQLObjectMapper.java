@@ -2,7 +2,6 @@ package graphql.kickstart.execution;
 
 import static java.util.stream.Collectors.toList;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import graphql.GraphQLError;
-import graphql.execution.ResultPath;
 import graphql.kickstart.execution.config.ConfiguringObjectMapperProvider;
 import graphql.kickstart.execution.config.GraphQLServletObjectMapperConfigurer;
 import graphql.kickstart.execution.config.ObjectMapperProvider;
@@ -24,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import lombok.SneakyThrows;
 
 /**
  * @author Andrew Potter
@@ -36,7 +35,7 @@ public class GraphQLObjectMapper {
   private final ObjectMapperProvider objectMapperProvider;
   private final Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier;
 
-  private volatile ObjectMapper mapper;
+  private ObjectMapper mapper;
 
   protected GraphQLObjectMapper(ObjectMapperProvider objectMapperProvider,
       Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier) {
@@ -101,13 +100,10 @@ public class GraphQLObjectMapper {
     return requests;
   }
 
+  @SneakyThrows
   public String serializeResultAsJson(ExecutionResult executionResult) {
-    try {
-      return getJacksonMapper()
-          .writeValueAsString(createResultFromExecutionResult(executionResult));
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    return getJacksonMapper()
+        .writeValueAsString(createResultFromExecutionResult(executionResult));
   }
 
   public void serializeResultAsJson(Writer writer, ExecutionResult executionResult)
@@ -162,22 +158,16 @@ public class GraphQLObjectMapper {
     return result;
   }
 
+  @SneakyThrows
   public Map<String, Object> deserializeVariables(String variables) {
-    try {
-      return VariablesDeserializer
-          .deserializeVariablesObject(getJacksonMapper().readValue(variables, Object.class),
-              getJacksonMapper());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return VariablesDeserializer
+        .deserializeVariablesObject(getJacksonMapper().readValue(variables, Object.class),
+            getJacksonMapper());
   }
 
+  @SneakyThrows
   public Map<String, List<String>> deserializeMultipartMap(InputStream inputStream) {
-    try {
-      return getJacksonMapper().readValue(inputStream, MULTIPART_MAP_TYPE_REFERENCE);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return getJacksonMapper().readValue(inputStream, MULTIPART_MAP_TYPE_REFERENCE);
   }
 
   public static class Builder {

@@ -3,13 +3,11 @@ package graphql.kickstart.execution.instrumentation;
 import graphql.ExecutionResult;
 import graphql.execution.ExecutionId;
 import graphql.execution.FieldValueInfo;
-import graphql.execution.MergedField;
-import graphql.execution.ResultPath;
+import graphql.execution.ExecutionPath;
 import graphql.execution.instrumentation.ExecutionStrategyInstrumentationContext;
 import graphql.execution.instrumentation.InstrumentationContext;
 import graphql.execution.instrumentation.parameters.InstrumentationExecutionStrategyParameters;
 import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +38,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
   public ExecutionStrategyInstrumentationContext beginExecutionStrategy(
       InstrumentationExecutionStrategyParameters parameters) {
     ExecutionId executionId = parameters.getExecutionContext().getExecutionId();
-    ResultPath path = parameters.getExecutionStrategyParameters().getPath();
+    ExecutionPath path = parameters.getExecutionStrategyParameters().getPath();
     int parentLevel = path.getLevel();
     int curLevel = parentLevel + 1;
     int fieldCount = parameters.getExecutionStrategyParameters().getFields().size();
@@ -108,7 +106,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
   public InstrumentationContext<Object> beginFieldFetch(
       InstrumentationFieldFetchParameters parameters) {
     ExecutionId executionId = parameters.getExecutionContext().getExecutionId();
-    ResultPath path = parameters.getEnvironment().getExecutionStepInfo().getPath();
+    ExecutionPath path = parameters.getEnvironment().getExecutionStepInfo().getPath();
     int level = path.getLevel();
     return new InstrumentationContext<Object>() {
 

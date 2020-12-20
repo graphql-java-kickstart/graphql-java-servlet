@@ -16,7 +16,7 @@ class SubscriptionConnectionTerminateCommand implements SubscriptionCommand {
   @Override
   public void apply(SubscriptionSession session, OperationMessage message) {
     connectionListeners.forEach(it -> it.onTerminate(session, message));
-    session.close("client requested " + GQL_CONNECTION_TERMINATE.getType());
+    session.close("client requested " + GQL_CONNECTION_TERMINATE.getValue());
   }
 
 }

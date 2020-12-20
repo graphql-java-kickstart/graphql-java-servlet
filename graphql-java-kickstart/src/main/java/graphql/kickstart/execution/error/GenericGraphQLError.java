@@ -1,5 +1,7 @@
 package graphql.kickstart.execution.error;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import graphql.ErrorType;
 import graphql.GraphQLError;
@@ -25,7 +27,7 @@ public class GenericGraphQLError implements GraphQLError {
   @Override
   @JsonIgnore
   public List<SourceLocation> getLocations() {
-    return null;
+    return emptyList();
   }
 
   @Override

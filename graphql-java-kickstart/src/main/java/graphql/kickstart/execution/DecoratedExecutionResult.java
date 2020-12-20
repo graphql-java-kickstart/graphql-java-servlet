@@ -1,7 +1,6 @@
 package graphql.kickstart.execution;
 
 import graphql.ExecutionResult;
-import graphql.GraphQL;
 import graphql.GraphQLError;
 import java.util.List;
 import java.util.Map;

@@ -58,7 +58,7 @@ public enum ContextSetting {
       case PER_REQUEST_WITH_INSTRUMENTATION:
         return new PerRequestBatchedInvocationInput(requests, schema, contextSupplier, root, this);
       default:
-        throw new RuntimeException("Unconfigured context setting type");
+        throw new ContextSettingNotConfiguredException();
     }
   }
 
@@ -98,7 +98,7 @@ public enum ContextSetting {
       case PER_QUERY_WITHOUT_INSTRUMENTATION:
         return instrumentation;
       default:
-        throw new RuntimeException("Unconfigured context setting type");
+        throw new ContextSettingNotConfiguredException();
     }
     return () -> new ChainedInstrumentation(
         Arrays.asList(dispatchInstrumentation, instrumentation.get()));
