@@ -52,7 +52,8 @@ import org.osgi.service.metatype.annotations.Designate;
 
 @Component(
     service = {javax.servlet.http.HttpServlet.class, javax.servlet.Servlet.class},
-    property = {"service.description=GraphQL HTTP Servlet"}
+    property = {"alias=/graphql", "service.description=GraphQL HTTP Servlet"},
+    immediate = true
 )
 @Designate(ocd = OsgiGraphQLHttpServletConfiguration.class, factory = true)
 public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
