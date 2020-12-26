@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         java: [ 8, 11, 15 ]
-    needs: validationAbstractGraphQLHttpServletSpec
+    needs: validation
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
