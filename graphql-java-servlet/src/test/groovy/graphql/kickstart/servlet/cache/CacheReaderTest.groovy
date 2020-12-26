@@ -64,7 +64,7 @@ class CacheReaderTest extends Specification {
 
         then:
         result
-        1 * response.setContentType("application/json")
+        1 * response.setContentType("application/json;charset=UTF-8")
         1 * response.setStatus(200)
         1 * response.setCharacterEncoding("UTF-8")
         1 * response.setContentLength(3)

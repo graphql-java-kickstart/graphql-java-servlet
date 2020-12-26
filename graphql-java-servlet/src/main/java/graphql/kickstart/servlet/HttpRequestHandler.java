@@ -6,8 +6,8 @@ import javax.servlet.http.HttpServletResponse;
 
 public interface HttpRequestHandler {
 
-  String APPLICATION_JSON_UTF8 = "application/json";
-  String APPLICATION_EVENT_STREAM_UTF8 = "text/event-stream";
+  String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
+  String APPLICATION_EVENT_STREAM_UTF8 = "text/event-stream;charset=UTF-8";
 
   int STATUS_OK = 200;
   int STATUS_BAD_REQUEST = 400;
