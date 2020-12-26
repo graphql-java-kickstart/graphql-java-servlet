@@ -11,3 +11,4 @@ target/
 .settings
 bin
 .DS_Store
+/**/out/
