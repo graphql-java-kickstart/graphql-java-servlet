@@ -26,8 +26,8 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     public static final int STATUS_OK = 200
     public static final int STATUS_BAD_REQUEST = 400
     public static final int STATUS_ERROR = 500
-    public static final String CONTENT_TYPE_JSON_UTF8 = 'application/json;charset=UTF-8'
-    public static final String CONTENT_TYPE_SERVER_SENT_EVENTS = 'text/event-stream;charset=UTF-8'
+    public static final String CONTENT_TYPE_JSON_UTF8 = 'application/json'
+    public static final String CONTENT_TYPE_SERVER_SENT_EVENTS = 'text/event-stream'
 
     @Shared
     ObjectMapper mapper = new ObjectMapper()
