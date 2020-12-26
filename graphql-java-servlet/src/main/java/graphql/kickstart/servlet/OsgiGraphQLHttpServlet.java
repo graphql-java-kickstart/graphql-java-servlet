@@ -131,8 +131,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         updateFuture.cancel(true);
       }
 
-      updateFuture = executor
-          .schedule(this::doUpdateSchema, schemaUpdateDelay, TimeUnit.MILLISECONDS);
+      updateFuture = executor.schedule(this::doUpdateSchema, schemaUpdateDelay, TimeUnit.MILLISECONDS);
     }
   }
 

@@ -70,4 +70,15 @@ class CacheReaderTest extends Specification {
         1 * response.setContentLength(3)
         1 * outputStream.write([ 00, 01, 02 ])
     }
+
+    def "should return false if exception is thrown"() {
+        given:
+        cacheManager.get(request, invocationInput) >> {throw new RuntimeException()}
+
+        when:
+        def result = cacheReader.responseFromCache(invocationInput, request, response, cacheManager)
+
+        then:
+        !result
+    }
 }
