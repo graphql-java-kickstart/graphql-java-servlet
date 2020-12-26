@@ -22,16 +22,14 @@ public class CacheReader {
       HttpServletRequest request,
       HttpServletResponse response,
       GraphQLResponseCacheManager cacheManager) throws IOException {
-    CachedResponse cachedResponse = null;
     try {
-      cachedResponse = cacheManager.get(request, invocationInput);
+      CachedResponse cachedResponse = cacheManager.get(request, invocationInput);
+      if (cachedResponse != null) {
+        write(response, cachedResponse);
+        return true;
+      }
     } catch (Exception t) {
       log.warn("Ignore read from cache, unexpected error happened", t);
-    }
-
-    if (cachedResponse != null) {
-      write(response, cachedResponse);
-      return true;
     }
 
     return false;

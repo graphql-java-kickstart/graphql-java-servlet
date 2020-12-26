@@ -17,6 +17,7 @@ class CachingHttpRequestInvokerTest extends Specification {
     def responseMock
     def responseCacheManagerMock
     def httpRequestInvokerMock
+    def configuration
 
     def setup() {
         cacheReaderMock = Mock(CacheReader)
@@ -24,7 +25,7 @@ class CachingHttpRequestInvokerTest extends Specification {
         requestMock = Mock(HttpServletRequest)
         responseMock = Mock(HttpServletResponse)
         responseCacheManagerMock = Mock(GraphQLResponseCacheManager)
-        def configuration = Mock(GraphQLConfiguration)
+        configuration = Mock(GraphQLConfiguration)
         httpRequestInvokerMock = Mock(HttpRequestInvoker)
         cachingInvoker = new CachingHttpRequestInvoker(configuration, httpRequestInvokerMock, cacheReaderMock)
 
@@ -51,6 +52,28 @@ class CachingHttpRequestInvokerTest extends Specification {
 
         then:
         0 * httpRequestInvokerMock.execute(invocationInputMock, requestMock, responseMock)
+    }
+
+    def "should return bad request response when ioexception"() {
+        given:
+        cacheReaderMock.responseFromCache(invocationInputMock, requestMock, responseMock, responseCacheManagerMock) >> {throw new IOException()}
+
+        when:
+        cachingInvoker.execute(invocationInputMock, requestMock, responseMock)
+
+        then:
+        1 * responseMock.setStatus(400)
+    }
+
+    def "should initialize completely when using single param constructor"() {
+        given:
+        def invoker = new CachingHttpRequestInvoker(configuration)
+
+        when:
+        invoker.execute(invocationInputMock, requestMock, responseMock)
+
+        then:
+        noExceptionThrown()
     }
 
 }
