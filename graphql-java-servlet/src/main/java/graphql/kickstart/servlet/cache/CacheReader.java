@@ -9,10 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public final class CacheReader {
-
-  private CacheReader() {
-  }
+public class CacheReader {
 
   /**
    * Response from cache if possible, if nothing in cache will not produce any response
@@ -21,7 +18,7 @@ public final class CacheReader {
    * found or an error occurred while reading value from cache
    * @throws IOException if can not read value from the cache
    */
-  public static boolean responseFromCache(GraphQLInvocationInput invocationInput,
+  public boolean responseFromCache(GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
       HttpServletResponse response,
       GraphQLResponseCacheManager cacheManager) throws IOException {
@@ -40,7 +37,7 @@ public final class CacheReader {
     return false;
   }
 
-  private static void write(HttpServletResponse response, CachedResponse cachedResponse)
+  private void write(HttpServletResponse response, CachedResponse cachedResponse)
       throws IOException {
     if (cachedResponse.isError()) {
       response.sendError(cachedResponse.getErrorStatusCode(), cachedResponse.getErrorMessage());
