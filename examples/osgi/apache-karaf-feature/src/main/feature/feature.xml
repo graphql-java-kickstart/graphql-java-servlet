@@ -5,5 +5,6 @@
     name="graphql-java-servlet-osgi-examples-karaf-feature">
     <feature dependency="false" prerequisite="true">scr</feature>
     <feature dependency="false" prerequisite="true">war</feature>
+    <feature dependency="false" prerequisite="true">http</feature>
   </feature>
 </features>

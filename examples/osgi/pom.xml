@@ -14,11 +14,13 @@
   <packaging>pom</packaging>
 
   <properties>
-    <graphql.java.servlet.version>7.3.4-SNAPSHOT</graphql.java.servlet.version>
-    <graphql.java.version>11.0</graphql.java.version>
-    <karaf.version>4.2.4</karaf.version>
+    <graphql.java.servlet.version>11.0.0-SNAPSHOT</graphql.java.servlet.version>
+    <graphql.java.version>16.1</graphql.java.version>
+    <karaf.version>4.2.10</karaf.version>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 
-  <version>7.3.4-SNAPSHOT</version>
+  <version>10.1.0</version>
 
 </project>

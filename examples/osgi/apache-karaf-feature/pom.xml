@@ -14,7 +14,7 @@
         </configuration>
         <extensions>true</extensions>
         <groupId>org.apache.karaf.tooling</groupId>
-        <version>4.0.8</version>
+        <version>4.2.10</version>
       </plugin>
 
       <plugin>
@@ -108,7 +108,7 @@
   <parent>
     <artifactId>graphql-java-servlet-osgi-examples</artifactId>
     <groupId>com.graphql-java-kickstart</groupId>
-    <version>7.3.4-SNAPSHOT</version>
+    <version>10.1.0</version>
   </parent>
 
   <properties>

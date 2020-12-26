@@ -8,8 +8,6 @@
       <plugin>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
-          <instructions>
-          </instructions>
         </configuration>
         <extensions>true</extensions>
         <groupId>org.apache.felix</groupId>
@@ -51,7 +49,7 @@
   <parent>
     <artifactId>graphql-java-servlet-osgi-examples</artifactId>
     <groupId>com.graphql-java-kickstart</groupId>
-    <version>7.3.4-SNAPSHOT</version>
+    <version>10.1.0</version>
   </parent>
 
 </project>

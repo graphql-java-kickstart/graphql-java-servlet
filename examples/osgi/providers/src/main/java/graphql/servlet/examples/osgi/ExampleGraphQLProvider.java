@@ -1,10 +1,10 @@
-package graphql.kickstart.servlet.examples.osgi;
+package graphql.servlet.examples.osgi;
 
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLType;
-import graphql.servlet.GraphQLMutationProvider;
-import graphql.servlet.GraphQLQueryProvider;
-import graphql.servlet.GraphQLTypesProvider;
+import graphql.kickstart.servlet.osgi.GraphQLMutationProvider;
+import graphql.kickstart.servlet.osgi.GraphQLQueryProvider;
+import graphql.kickstart.servlet.osgi.GraphQLTypesProvider;
 import org.osgi.service.component.annotations.Component;
 
 import java.util.ArrayList;
@@ -38,8 +38,6 @@ public class ExampleGraphQLProvider implements GraphQLQueryProvider, GraphQLMuta
   }
 
   public Collection<GraphQLType> getTypes() {
-
-    List<GraphQLType> types = new ArrayList<GraphQLType>();
-    return types;
+    return new ArrayList<GraphQLType>();
   }
 }

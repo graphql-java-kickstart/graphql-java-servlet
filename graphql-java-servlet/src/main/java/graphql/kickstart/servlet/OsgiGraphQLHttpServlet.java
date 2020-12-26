@@ -131,12 +131,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
         updateFuture.cancel(true);
       }
 
-      updateFuture = executor.schedule(new Runnable() {
-        @Override
-        public void run() {
-          doUpdateSchema();
-        }
-      }, schemaUpdateDelay, TimeUnit.MILLISECONDS);
+      updateFuture = executor.schedule(this::doUpdateSchema, schemaUpdateDelay, TimeUnit.MILLISECONDS);
     }
   }
 
@@ -147,17 +142,17 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     if (!queryProviders.isEmpty()) {
       for (GraphQLQueryProvider provider : queryProviders) {
         if (provider.getQueries() != null && !provider.getQueries().isEmpty()) {
-            provider.getQueries().forEach(queryTypeBuilder::field);
+          provider.getQueries().forEach(queryTypeBuilder::field);
         }
       }
     } else {
       // graphql-java enforces Query type to be there with at least some field.
       queryTypeBuilder.field(
-        GraphQLFieldDefinition
-          .newFieldDefinition()
-          .name("_empty")
-          .type(Scalars.GraphQLBoolean)
-          .build());
+          GraphQLFieldDefinition
+              .newFieldDefinition()
+              .name("_empty")
+              .type(Scalars.GraphQLBoolean)
+              .build());
     }
 
     final Set<GraphQLType> types = new HashSet<>();

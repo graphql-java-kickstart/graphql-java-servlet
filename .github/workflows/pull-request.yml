@@ -1,8 +1,5 @@
 name: "Pull request"
 on:
-  push:
-    branches-ignore:
-      - master
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:

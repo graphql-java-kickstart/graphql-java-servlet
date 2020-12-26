@@ -3,7 +3,7 @@ build/
 *.iml
 *.ipr
 *.iws
-.idea/
+**/.idea/
 target/
 /out/
 .classpath
@@ -11,3 +11,4 @@ target/
 .settings
 bin
 .DS_Store
+/**/out/
