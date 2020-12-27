@@ -4,13 +4,19 @@ import graphql.AssertException
 import graphql.annotations.annotationTypes.GraphQLField
 import graphql.annotations.annotationTypes.GraphQLName
 import graphql.annotations.processor.GraphQLAnnotations
+import graphql.execution.instrumentation.Instrumentation
+import graphql.execution.instrumentation.InstrumentationState
+import graphql.execution.instrumentation.SimpleInstrumentation
+import graphql.execution.instrumentation.parameters.InstrumentationCreateStateParameters
 import graphql.kickstart.execution.GraphQLRequest
 import graphql.kickstart.execution.config.ExecutionStrategyProvider
+import graphql.kickstart.execution.config.InstrumentationProvider
 import graphql.kickstart.execution.context.DefaultGraphQLContext
 import graphql.kickstart.execution.context.GraphQLContext
 import graphql.kickstart.servlet.context.GraphQLServletContextBuilder
 import graphql.kickstart.servlet.core.GraphQLServletListener
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder
+import graphql.kickstart.servlet.input.NoOpBatchInputPreProcessor
 import graphql.kickstart.servlet.osgi.*
 import graphql.schema.*
 import org.dataloader.DataLoaderRegistry
@@ -25,19 +31,19 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
         @Override
         Collection<GraphQLFieldDefinition> getQueries() {
-            List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<>();
+            List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<>()
             fieldDefinitions.add(newFieldDefinition()
                     .name("query")
                     .type(new GraphQLAnnotations().object(Query.class))
                     .staticValue(new Query())
-                    .build());
-            return fieldDefinitions;
+                    .build())
+            return fieldDefinitions
         }
 
         @GraphQLName("query")
         static class Query {
             @GraphQLField
-            public String field;
+            public String field
         }
 
     }
@@ -55,7 +61,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         query.getType().name == "query"
 
         when:
-        query = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinition("query")
+        query = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema().getQueryType().getFieldDefinition("query")
         then:
         query.getType().name == "query"
 
@@ -63,7 +69,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         servlet.unbindQueryProvider(queryProvider)
         then:
         servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getQueryType().getFieldDefinitions().get(0).name == "_empty"
-        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinitions().get(0).name == "_empty"
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema().getQueryType().getFieldDefinitions().get(0).name == "_empty"
     }
 
     static class TestMutationProvider implements GraphQLMutationProvider {
@@ -110,7 +116,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         @GraphQLName("subscription")
         static class Subscription {
             @GraphQLField
-            public String field;
+            public String field
         }
     }
 
@@ -127,7 +133,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         subscription.getType().getName() == "subscription"
 
         when:
-        subscription = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema(null).getSubscriptionType().getFieldDefinition("subscription")
+        subscription = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema().getSubscriptionType().getFieldDefinition("subscription")
         then:
         subscription.getType().getName() == "subscription"
 
@@ -151,7 +157,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
     static class TestCodeRegistryProvider implements GraphQLCodeRegistryProvider {
         @Override
         GraphQLCodeRegistry getCodeRegistry() {
-            return GraphQLCodeRegistry.newCodeRegistry().typeResolver("Type", { env -> null }).build();
+            return GraphQLCodeRegistry.newCodeRegistry().typeResolver("Type", { env -> null }).build()
         }
     }
 
@@ -340,5 +346,28 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
         then:
         0 * executionStrategy.getQueryExecutionStrategy()
+    }
+
+    def "instrumentation provider is bound and unbound"() {
+        setup:
+        def servlet = new OsgiGraphQLHttpServlet()
+        def instrumentation = new SimpleInstrumentation()
+        def instrumentationProvider = Mock(InstrumentationProvider)
+        instrumentationProvider.getInstrumentation() >> instrumentation
+        def request = GraphQLRequest.createIntrospectionRequest()
+        instrumentation.createState(_ as InstrumentationCreateStateParameters) >> Mock(InstrumentationState)
+
+        when:
+        servlet.setInstrumentationProvider(instrumentationProvider)
+        def invocationInput = servlet.configuration.invocationInputFactory.create(request)
+        servlet.configuration.graphQLInvoker.query(invocationInput)
+
+        then:
+        noExceptionThrown()
+
+        when:
+        servlet.unsetInstrumentationProvider(instrumentationProvider)
+        then:
+        noExceptionThrown()
     }
 }
