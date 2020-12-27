@@ -1,6 +1,7 @@
 package graphql.kickstart.servlet
 
 import graphql.AssertException
+import graphql.Scalars
 import graphql.annotations.annotationTypes.GraphQLField
 import graphql.annotations.annotationTypes.GraphQLName
 import graphql.annotations.processor.GraphQLAnnotations
@@ -11,8 +12,9 @@ import graphql.kickstart.servlet.osgi.GraphQLSubscriptionProvider
 import graphql.schema.GraphQLCodeRegistry
 import graphql.schema.GraphQLFieldDefinition
 import graphql.schema.GraphQLInterfaceType
-import spock.lang.Ignore
 import spock.lang.Specification
+
+import java.lang.annotation.Annotation
 
 import static graphql.Scalars.GraphQLInt
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition
@@ -26,7 +28,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
             List<GraphQLFieldDefinition> fieldDefinitions = new ArrayList<>();
             fieldDefinitions.add(newFieldDefinition()
                     .name("query")
-                    .type(GraphQLAnnotations.object(Query.class))
+                    .type(new GraphQLAnnotations().object(Query.class))
                     .staticValue(new Query())
                     .build());
             return fieldDefinitions;
@@ -40,7 +42,6 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
     }
 
-    @Ignore
     def "query provider adds query objects"() {
         setup:
         OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
@@ -49,20 +50,20 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         GraphQLFieldDefinition query
 
         when:
-        query = servlet.getSchemaProvider().getSchema().getQueryType().getFieldDefinition("query")
+        query = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getQueryType().getFieldDefinition("query")
         then:
-        query.getType().getName() == "query"
+        query.getType().name == "query"
 
         when:
-        query = servlet.getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinition("query")
+        query = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinition("query")
         then:
-        query.getType().getName() == "query"
+        query.getType().name == "query"
 
         when:
         servlet.unbindQueryProvider(queryProvider)
         then:
-        servlet.getSchemaProvider().getSchema().getQueryType().getFieldDefinitions().isEmpty()
-        servlet.getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinitions().isEmpty()
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getQueryType().getFieldDefinitions().get(0).name == "_empty"
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinitions().get(0).name == "_empty"
     }
 
     static class TestMutationProvider implements GraphQLMutationProvider {
@@ -80,21 +81,20 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         when:
         servlet.bindMutationProvider(mutationProvider)
         then:
-        servlet.getSchemaProvider().getSchema().getMutationType().getFieldDefinition("int").getType() == GraphQLInt
-        servlet.getSchemaProvider().getReadOnlySchema(null).getMutationType() == null
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getMutationType().getFieldDefinition("int").getType() == GraphQLInt
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema(null).getMutationType() == null
 
         when:
         servlet.unbindMutationProvider(mutationProvider)
         then:
-        servlet.getSchemaProvider().getSchema().getMutationType() == null
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getMutationType() == null
     }
 
     static class TestSubscriptionProvider implements GraphQLSubscriptionProvider {
         @Override
         Collection<GraphQLFieldDefinition> getSubscriptions() {
-            return Collections.singletonList(newFieldDefinition().name("subscription").type(GraphQLAnnotations.object(Subscription.class)).build())
+            return Collections.singletonList(newFieldDefinition().name("subscription").type(new GraphQLAnnotations().object(Subscription.class)).build())
         }
-
 
         @GraphQLName("subscription")
         static class Subscription {
@@ -103,7 +103,6 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         }
     }
 
-    @Ignore
     def "subscription provider adds subscription objects"() {
         setup:
         OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
@@ -112,19 +111,19 @@ class OsgiGraphQLHttpServletSpec extends Specification {
         GraphQLFieldDefinition subscription
 
         when:
-        subscription = servlet.getSchemaProvider().getSchema().getSubscriptionType().getFieldDefinition("subscription")
+        subscription = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getSubscriptionType().getFieldDefinition("subscription")
         then:
         subscription.getType().getName() == "subscription"
 
         when:
-        subscription = servlet.getSchemaProvider().getReadOnlySchema(null).getSubscriptionType().getFieldDefinition("subscription")
+        subscription = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema(null).getSubscriptionType().getFieldDefinition("subscription")
         then:
         subscription.getType().getName() == "subscription"
 
         when:
         servlet.unbindSubscriptionProvider(subscriptionProvider)
         then:
-        servlet.getSchemaProvider().getSchema().getSubscriptionType() == null
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getSubscriptionType() == null
     }
 
     static class TestCodeRegistryProvider implements GraphQLCodeRegistryProvider {
@@ -141,15 +140,50 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
         when:
         servlet.bindCodeRegistryProvider(codeRegistryProvider)
-        servlet.getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
         then:
         notThrown AssertException
 
         when:
         servlet.unbindCodeRegistryProvider(codeRegistryProvider)
-        servlet.getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
+        servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getCodeRegistry().getTypeResolver(GraphQLInterfaceType.newInterface().name("Type").build())
         then:
         thrown AssertException
+    }
 
+    def "schema update delay throws no exception"() {
+        setup:
+        OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
+        def config = Mock(OsgiGraphQLHttpServlet.Config)
+
+        when:
+        config.schema_update_delay() >> 1
+        servlet.activate(config)
+        servlet.updateSchema()
+        servlet.updateSchema()
+        servlet.deactivate()
+
+        then:
+        noExceptionThrown()
+    }
+
+    def "bind query provider adds query objects"() {
+        setup:
+        def servlet = new OsgiGraphQLHttpServlet()
+        def queryProvider = new TestQueryProvider()
+        def query
+
+        when:
+        servlet.bindProvider(queryProvider)
+        query = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getQueryType().getFieldDefinition("query")
+
+        then:
+        query.getType().name == "query"
+
+        when:
+        query = servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema(null).getQueryType().getFieldDefinition("query")
+
+        then:
+        query.getType().name == "query"
     }
 }

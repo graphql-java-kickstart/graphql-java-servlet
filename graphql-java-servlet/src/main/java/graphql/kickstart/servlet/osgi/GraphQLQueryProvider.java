@@ -13,4 +13,8 @@ public interface GraphQLQueryProvider extends GraphQLProvider {
    */
   Collection<GraphQLFieldDefinition> getQueries();
 
+  default Collection<GraphQLFieldDefinition> getFields() {
+    return getQueries();
+  }
+
 }
