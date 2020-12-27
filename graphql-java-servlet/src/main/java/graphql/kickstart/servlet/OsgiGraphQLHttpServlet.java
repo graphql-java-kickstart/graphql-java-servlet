@@ -147,36 +147,61 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   public void bindServletListener(GraphQLServletListener listener) {
-    this.addListener(listener);
+    schemaBuilder.add(listener);
   }
 
   public void unbindServletListener(GraphQLServletListener listener) {
-    this.removeListener(listener);
+    schemaBuilder.remove(listener);
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-  public void setContextProvider(GraphQLServletContextBuilder contextBuilder) {
+  public void setContextBuilder(GraphQLServletContextBuilder contextBuilder) {
     schemaBuilder.setContextBuilder(contextBuilder);
   }
 
-  public void unsetContextProvider(GraphQLServletContextBuilder contextBuilder) {
+  public void unsetContextBuilder(GraphQLServletContextBuilder contextBuilder) {
     schemaBuilder.setContextBuilder(new DefaultGraphQLServletContextBuilder());
+  }
+
+  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
+  public void setRootObjectBuilder(GraphQLServletRootObjectBuilder rootObjectBuilder) {
+    schemaBuilder.setRootObjectBuilder(rootObjectBuilder);
   }
 
   public void unsetRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
     schemaBuilder.setRootObjectBuilder(new DefaultGraphQLRootObjectBuilder());
   }
 
+  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
+    schemaBuilder.setExecutionStrategyProvider(provider);
+  }
+
   public void unsetExecutionStrategyProvider(ExecutionStrategyProvider provider) {
     schemaBuilder.setExecutionStrategyProvider(new DefaultExecutionStrategyProvider());
+  }
+
+  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  public void setInstrumentationProvider(InstrumentationProvider provider) {
+    schemaBuilder.setInstrumentationProvider(provider);
   }
 
   public void unsetInstrumentationProvider(InstrumentationProvider provider) {
     schemaBuilder.setInstrumentationProvider(new NoOpInstrumentationProvider());
   }
 
+  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  public void setErrorHandler(GraphQLErrorHandler errorHandler) {
+    schemaBuilder.setErrorHandler(errorHandler);
+  }
+
   public void unsetErrorHandler(GraphQLErrorHandler errorHandler) {
     schemaBuilder.setErrorHandler(new DefaultGraphQLErrorHandler());
+  }
+
+  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  public void setPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
+    schemaBuilder.setPreparsedDocumentProvider(preparsedDocumentProvider);
   }
 
   public void unsetPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
@@ -192,31 +217,6 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   public void unbindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
     schemaBuilder.setCodeRegistryProvider(() -> GraphQLCodeRegistry.newCodeRegistry().build());
     updateSchema();
-  }
-
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-  public void setRootObjectBuilder(GraphQLServletRootObjectBuilder rootObjectBuilder) {
-    schemaBuilder.setRootObjectBuilder(rootObjectBuilder);
-  }
-
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
-  public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
-    schemaBuilder.setExecutionStrategyProvider(provider);
-  }
-
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
-  public void setInstrumentationProvider(InstrumentationProvider provider) {
-    schemaBuilder.setInstrumentationProvider(provider);
-  }
-
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
-  public void setErrorHandler(GraphQLErrorHandler errorHandler) {
-    schemaBuilder.setErrorHandler(errorHandler);
-  }
-
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
-  public void setPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
-    schemaBuilder.setPreparsedDocumentProvider(preparsedDocumentProvider);
   }
 
   @interface Config {

@@ -20,6 +20,7 @@ import graphql.kickstart.servlet.config.GraphQLSchemaServletProvider;
 import graphql.kickstart.servlet.context.DefaultGraphQLServletContextBuilder;
 import graphql.kickstart.servlet.context.GraphQLServletContextBuilder;
 import graphql.kickstart.servlet.core.DefaultGraphQLRootObjectBuilder;
+import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import graphql.kickstart.servlet.osgi.GraphQLCodeRegistryProvider;
@@ -49,6 +50,7 @@ class OsgiSchemaBuilder {
   private final List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
   private final List<GraphQLSubscriptionProvider> subscriptionProviders = new ArrayList<>();
   private final List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
+  private final List<GraphQLServletListener> listeners = new ArrayList<>();
 
   private GraphQLServletContextBuilder contextBuilder = new DefaultGraphQLServletContextBuilder();
   private GraphQLServletRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
@@ -195,6 +197,7 @@ class OsgiSchemaBuilder {
         .with(buildInvocationInputFactory())
         .with(buildQueryInvoker())
         .with(buildObjectMapper())
+        .with(listeners)
         .build();
   }
 
@@ -216,5 +219,13 @@ class OsgiSchemaBuilder {
     return GraphQLObjectMapper.newBuilder()
         .withGraphQLErrorHandler(errorHandler)
         .build();
+  }
+
+  void add(GraphQLServletListener listener) {
+    listeners.add(listener);
+  }
+
+  void remove(GraphQLServletListener listener) {
+    listeners.remove(listener);
   }
 }
