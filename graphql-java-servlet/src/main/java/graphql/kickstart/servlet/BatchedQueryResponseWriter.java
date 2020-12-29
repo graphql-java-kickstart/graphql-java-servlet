@@ -23,8 +23,8 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
     response.setContentType(HttpRequestHandler.APPLICATION_JSON_UTF8);
     response.setStatus(HttpRequestHandler.STATUS_OK);
 
-    // Use direct serialization to byte arrays and avoid any string concatenation to avoid save
-    // multiple GiB of memory allocation during large response processing.
+    // Use direct serialization to byte arrays and avoid any string concatenation to save multiple
+    // GiB of memory allocation during large response processing.
     List<byte[]> serializedResults = new ArrayList<>(2 * results.size() + 1);
 
     if (results.size() > 0) {
