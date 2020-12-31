@@ -43,7 +43,7 @@ class BatchedQueryResponseWriterTest extends Specification {
         writer.write(requestMock, responseMock)
 
         then:
-        byteArrayOutputStream.toString(StandardCharsets.UTF_8) == expectedResponseContent
+        byteArrayOutputStream.toString(StandardCharsets.UTF_8.name()) == expectedResponseContent
 
         where:
         result                      || expectedContentLengh | expectedResponseContent
