@@ -111,6 +111,19 @@ public class GraphQLObjectMapper {
     getJacksonMapper().writeValue(writer, createResultFromExecutionResult(executionResult));
   }
 
+  /**
+   * Serializes result as bytes in UTF-8 encoding instead of string.
+   *
+   * @param executionResult query execution result to serialize.
+   * @return result serialized into Json representation in UTF-8 encoding, converted into {@code
+   *     byte[]}.
+   */
+  @SneakyThrows
+  public byte[] serializeResultAsBytes(ExecutionResult executionResult) {
+    return getJacksonMapper()
+        .writeValueAsBytes(createResultFromExecutionResult(executionResult));
+  }
+
   public boolean areErrorsPresent(ExecutionResult executionResult) {
     return graphQLErrorHandlerSupplier.get().errorsPresent(executionResult.getErrors());
   }

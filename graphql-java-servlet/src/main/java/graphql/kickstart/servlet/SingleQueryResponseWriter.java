@@ -19,10 +19,9 @@ class SingleQueryResponseWriter implements QueryResponseWriter {
     response.setContentType(HttpRequestHandler.APPLICATION_JSON_UTF8);
     response.setStatus(HttpRequestHandler.STATUS_OK);
     response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-    String responseContent = graphQLObjectMapper.serializeResultAsJson(result);
-    byte[] contentBytes = responseContent.getBytes(StandardCharsets.UTF_8);
+
+    byte[] contentBytes = graphQLObjectMapper.serializeResultAsBytes(result);
     response.setContentLength(contentBytes.length);
     response.getOutputStream().write(contentBytes);
   }
-
 }
