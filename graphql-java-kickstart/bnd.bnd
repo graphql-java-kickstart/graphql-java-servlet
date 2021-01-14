@@ -1,1 +1,2 @@
 Export-Package: graphql.kickstart.*
+Import-Package: !lombok,*
