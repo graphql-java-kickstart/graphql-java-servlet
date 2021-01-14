@@ -1,11 +1,13 @@
 package graphql.kickstart.execution.context;
 
+import java.util.Objects;
 import java.util.Optional;
 import javax.security.auth.Subject;
 import org.dataloader.DataLoaderRegistry;
 
 /**
- * An object for the DefaultGraphQLContextBuilder to return. Can be extended to include more context.
+ * An object for the DefaultGraphQLContextBuilder to return. Can be extended to include more
+ * context.
  */
 public class DefaultGraphQLContext implements GraphQLContext {
 
@@ -14,7 +16,7 @@ public class DefaultGraphQLContext implements GraphQLContext {
   private final DataLoaderRegistry dataLoaderRegistry;
 
   public DefaultGraphQLContext(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
-    this.dataLoaderRegistry = dataLoaderRegistry;
+    this.dataLoaderRegistry = Objects.requireNonNull(dataLoaderRegistry, "dataLoaderRegistry is required");
     this.subject = subject;
   }
 
@@ -28,8 +30,8 @@ public class DefaultGraphQLContext implements GraphQLContext {
   }
 
   @Override
-  public Optional<DataLoaderRegistry> getDataLoaderRegistry() {
-    return Optional.ofNullable(dataLoaderRegistry);
+  public DataLoaderRegistry getDataLoaderRegistry() {
+    return dataLoaderRegistry;
   }
 
 }

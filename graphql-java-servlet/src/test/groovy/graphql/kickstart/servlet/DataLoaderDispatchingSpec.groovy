@@ -6,12 +6,12 @@ import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.Instrumentation
 import graphql.execution.instrumentation.SimpleInstrumentation
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions
-import graphql.schema.DataFetcher
-import graphql.schema.DataFetchingEnvironment
 import graphql.kickstart.execution.context.ContextSetting
 import graphql.kickstart.execution.context.DefaultGraphQLContext
 import graphql.kickstart.execution.context.GraphQLContext
 import graphql.kickstart.execution.instrumentation.ConfigurableDispatchInstrumentation
+import graphql.schema.DataFetcher
+import graphql.schema.DataFetchingEnvironment
 import org.dataloader.BatchLoader
 import org.dataloader.DataLoader
 import org.dataloader.DataLoaderRegistry
@@ -103,8 +103,8 @@ class DataLoaderDispatchingSpec extends Specification {
 
     def configureServlet(ContextSetting contextSetting) {
         servlet = TestUtils.createDataLoadingServlet(queryDataFetcher("A", loadCounterA),
-                queryDataFetcher("B", loadCounterB), queryDataFetcher("C", loadCounterC),
-                false, contextSetting,
+                queryDataFetcher("B", loadCounterB), queryDataFetcher("C", loadCounterC)
+                , contextSetting,
                 contextBuilder())
     }
 
@@ -233,7 +233,7 @@ class DataLoaderDispatchingSpec extends Specification {
 
     def "PER_REQUEST_WITH_INSTRUMENTATION adds instrumentation"() {
         setup:
-        ExecutionInput mockInput = ExecutionInput.newExecutionInput().dataLoaderRegistry(new DataLoaderRegistry()).build()
+        ExecutionInput mockInput = ExecutionInput.newExecutionInput().query("query { query(arg:\"test\")").dataLoaderRegistry(new DataLoaderRegistry()).build()
         when:
         def chainedFromContext = ContextSetting.PER_REQUEST_WITH_INSTRUMENTATION
                 .configureInstrumentationForContext(chainedSupplier, Collections.singletonList(mockInput), DataLoaderDispatcherInstrumentationOptions.newOptions())

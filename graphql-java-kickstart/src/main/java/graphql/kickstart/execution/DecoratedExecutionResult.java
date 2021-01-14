@@ -1,7 +1,6 @@
 package graphql.kickstart.execution;
 
 import graphql.ExecutionResult;
-import graphql.GraphQL;
 import graphql.GraphQLError;
 import java.util.List;
 import java.util.Map;
@@ -14,11 +13,7 @@ class DecoratedExecutionResult implements ExecutionResult {
   private final ExecutionResult result;
 
   boolean isAsynchronous() {
-    return result.getData() instanceof Publisher || isDeferred();
-  }
-
-  private boolean isDeferred() {
-    return result.getExtensions() != null && result.getExtensions().containsKey(GraphQL.DEFERRED_RESULTS);
+    return result.getData() instanceof Publisher;
   }
 
   @Override

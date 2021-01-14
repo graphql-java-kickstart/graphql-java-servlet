@@ -41,8 +41,9 @@ class ApolloSubscriptionKeepAliveRunner {
           log.debug("Session {} appears to be closed. Aborting keep alive", session.getId());
           abort(session);
         }
-      } catch (Throwable t) {
-        log.error("Cannot send keep alive message to session {}. Aborting keep alive", session.getId(), t);
+      } catch (Exception t) {
+        log.error("Cannot send keep alive message to session {}. Aborting keep alive",
+            session.getId(), t);
         abort(session);
       }
     }, 0, keepAliveIntervalSeconds, TimeUnit.SECONDS);

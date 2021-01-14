@@ -1,24 +1,18 @@
 package graphql.kickstart.servlet;
 
-import static graphql.schema.GraphQLObjectType.newObject;
-import static graphql.schema.GraphQLSchema.newSchema;
-
-import aQute.bnd.component.annotations.Activate;
-import aQute.bnd.component.annotations.Component;
-import aQute.bnd.component.annotations.Deactivate;
-import aQute.bnd.component.annotations.Reference;
-import aQute.bnd.component.annotations.ReferenceCardinality;
-import aQute.bnd.component.annotations.ReferencePolicy;
-import aQute.bnd.component.annotations.ReferencePolicyOption;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
-import graphql.kickstart.servlet.config.DefaultGraphQLSchemaServletProvider;
-import graphql.schema.GraphQLCodeRegistry;
-import graphql.schema.GraphQLObjectType;
-import graphql.schema.GraphQLType;
+import graphql.kickstart.execution.GraphQLRootObjectBuilder;
 import graphql.kickstart.execution.config.DefaultExecutionStrategyProvider;
 import graphql.kickstart.execution.config.ExecutionStrategyProvider;
-import graphql.kickstart.servlet.config.GraphQLSchemaServletProvider;
+import graphql.kickstart.execution.config.InstrumentationProvider;
+import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
+import graphql.kickstart.execution.error.GraphQLErrorHandler;
+import graphql.kickstart.execution.instrumentation.NoOpInstrumentationProvider;
+import graphql.kickstart.servlet.context.DefaultGraphQLServletContextBuilder;
+import graphql.kickstart.servlet.context.GraphQLServletContextBuilder;
+import graphql.kickstart.servlet.core.DefaultGraphQLRootObjectBuilder;
+import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder;
 import graphql.kickstart.servlet.osgi.GraphQLCodeRegistryProvider;
 import graphql.kickstart.servlet.osgi.GraphQLMutationProvider;
@@ -26,361 +20,203 @@ import graphql.kickstart.servlet.osgi.GraphQLProvider;
 import graphql.kickstart.servlet.osgi.GraphQLQueryProvider;
 import graphql.kickstart.servlet.osgi.GraphQLSubscriptionProvider;
 import graphql.kickstart.servlet.osgi.GraphQLTypesProvider;
-import graphql.kickstart.execution.config.InstrumentationProvider;
-import graphql.kickstart.servlet.context.DefaultGraphQLServletContextBuilder;
-import graphql.kickstart.servlet.context.GraphQLServletContextBuilder;
-import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
-import graphql.kickstart.servlet.core.DefaultGraphQLRootObjectBuilder;
-import graphql.kickstart.execution.error.GraphQLErrorHandler;
-import graphql.kickstart.execution.GraphQLObjectMapper;
-import graphql.kickstart.execution.GraphQLQueryInvoker;
-import graphql.kickstart.execution.GraphQLRootObjectBuilder;
-import graphql.kickstart.servlet.core.GraphQLServletListener;
-import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
-import graphql.kickstart.execution.instrumentation.NoOpInstrumentationProvider;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import graphql.schema.GraphQLCodeRegistry;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.metatype.annotations.Designate;
 
 @Component(
     service = {javax.servlet.http.HttpServlet.class, javax.servlet.Servlet.class},
-    property = {"alias=/graphql", "jmx.objectname=graphql.servlet:type=graphql"}
+    property = {"service.description=GraphQL HTTP Servlet"}
 )
+@Designate(ocd = OsgiGraphQLHttpServletConfiguration.class, factory = true)
 public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
-  private final List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
-  private final List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
-  private final List<GraphQLSubscriptionProvider> subscriptionProviders = new ArrayList<>();
-  private final List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
-
-  private final GraphQLQueryInvoker queryInvoker;
-  private final GraphQLInvocationInputFactory invocationInputFactory;
-  private final GraphQLObjectMapper graphQLObjectMapper;
-
-  private GraphQLServletContextBuilder contextBuilder = new DefaultGraphQLServletContextBuilder();
-  private GraphQLServletRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
-  private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
-  private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
-  private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
-  private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
-  private GraphQLCodeRegistryProvider codeRegistryProvider = () -> GraphQLCodeRegistry.newCodeRegistry().build();
-
-  private GraphQLSchemaServletProvider schemaProvider;
-
-  private ScheduledExecutorService executor;
-  private ScheduledFuture<?> updateFuture;
-  private int schemaUpdateDelay;
+  private final OsgiSchemaBuilder schemaBuilder = new OsgiSchemaBuilder();
 
   public OsgiGraphQLHttpServlet() {
-    updateSchema();
-
-    this.queryInvoker = GraphQLQueryInvoker.newBuilder()
-        .withPreparsedDocumentProvider(this::getPreparsedDocumentProvider)
-        .withInstrumentation(() -> this.getInstrumentationProvider().getInstrumentation())
-        .withExecutionStrategyProvider(this::getExecutionStrategyProvider).build();
-
-    this.invocationInputFactory = GraphQLInvocationInputFactory.newBuilder(this::getSchemaProvider)
-        .withGraphQLContextBuilder(this::getContextBuilder)
-        .withGraphQLRootObjectBuilder(this::getRootObjectBuilder)
-        .build();
-
-    this.graphQLObjectMapper = GraphQLObjectMapper.newBuilder()
-        .withGraphQLErrorHandler(this::getErrorHandler)
-        .build();
+    schemaBuilder.updateSchema();
   }
 
   @Activate
   public void activate(Config config) {
-    this.schemaUpdateDelay = config.schema_update_delay();
-      if (schemaUpdateDelay != 0) {
-          executor = Executors.newSingleThreadScheduledExecutor();
-      }
+    schemaBuilder.activate(config.schema_update_delay());
   }
 
   @Deactivate
   public void deactivate() {
-      if (executor != null) {
-          executor.shutdown();
-      }
+    schemaBuilder.deactivate();
   }
 
   @Override
-  protected GraphQLQueryInvoker getQueryInvoker() {
-    return queryInvoker;
-  }
-
-  @Override
-  protected GraphQLInvocationInputFactory getInvocationInputFactory() {
-    return invocationInputFactory;
-  }
-
-  @Override
-  protected GraphQLObjectMapper getGraphQLObjectMapper() {
-    return graphQLObjectMapper;
-  }
-
-  @Override
-  protected boolean isAsyncServletMode() {
-    return false;
+  protected GraphQLConfiguration getConfiguration() {
+    return schemaBuilder.buildConfiguration();
   }
 
   protected void updateSchema() {
-    if (schemaUpdateDelay == 0) {
-      doUpdateSchema();
-    } else {
-        if (updateFuture != null) {
-            updateFuture.cancel(true);
-        }
-
-      updateFuture = executor.schedule(new Runnable() {
-        @Override
-        public void run() {
-          doUpdateSchema();
-        }
-      }, schemaUpdateDelay, TimeUnit.MILLISECONDS);
-    }
-  }
-
-  private void doUpdateSchema() {
-    final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query").description("Root query type");
-
-    for (GraphQLQueryProvider provider : queryProviders) {
-      if (provider.getQueries() != null && !provider.getQueries().isEmpty()) {
-        provider.getQueries().forEach(queryTypeBuilder::field);
-      }
-    }
-
-    final Set<GraphQLType> types = new HashSet<>();
-    for (GraphQLTypesProvider typesProvider : typesProviders) {
-      types.addAll(typesProvider.getTypes());
-    }
-
-    GraphQLObjectType mutationType = null;
-
-    if (!mutationProviders.isEmpty()) {
-      final GraphQLObjectType.Builder mutationTypeBuilder = newObject().name("Mutation")
-          .description("Root mutation type");
-
-      for (GraphQLMutationProvider provider : mutationProviders) {
-        provider.getMutations().forEach(mutationTypeBuilder::field);
-      }
-
-      if (!mutationTypeBuilder.build().getFieldDefinitions().isEmpty()) {
-        mutationType = mutationTypeBuilder.build();
-      }
-    }
-
-    GraphQLObjectType subscriptionType = null;
-
-    if (!subscriptionProviders.isEmpty()) {
-      final GraphQLObjectType.Builder subscriptionTypeBuilder = newObject().name("Subscription")
-          .description("Root subscription type");
-
-      for (GraphQLSubscriptionProvider provider : subscriptionProviders) {
-        provider.getSubscriptions().forEach(subscriptionTypeBuilder::field);
-      }
-
-      if (!subscriptionTypeBuilder.build().getFieldDefinitions().isEmpty()) {
-        subscriptionType = subscriptionTypeBuilder.build();
-      }
-    }
-
-    this.schemaProvider = new DefaultGraphQLSchemaServletProvider(newSchema().query(queryTypeBuilder.build())
-        .mutation(mutationType)
-        .subscription(subscriptionType)
-        .additionalTypes(types)
-        .codeRegistry(codeRegistryProvider.getCodeRegistry())
-        .build());
+    schemaBuilder.updateSchema();
   }
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   public void bindProvider(GraphQLProvider provider) {
     if (provider instanceof GraphQLQueryProvider) {
-      queryProviders.add((GraphQLQueryProvider) provider);
+      schemaBuilder.add((GraphQLQueryProvider) provider);
     }
     if (provider instanceof GraphQLMutationProvider) {
-      mutationProviders.add((GraphQLMutationProvider) provider);
+      schemaBuilder.add((GraphQLMutationProvider) provider);
     }
     if (provider instanceof GraphQLSubscriptionProvider) {
-      subscriptionProviders.add((GraphQLSubscriptionProvider) provider);
+      schemaBuilder.add((GraphQLSubscriptionProvider) provider);
     }
     if (provider instanceof GraphQLTypesProvider) {
-      typesProviders.add((GraphQLTypesProvider) provider);
+      schemaBuilder.add((GraphQLTypesProvider) provider);
     }
     if (provider instanceof GraphQLCodeRegistryProvider) {
-      codeRegistryProvider = (GraphQLCodeRegistryProvider) provider;
+      schemaBuilder.setCodeRegistryProvider((GraphQLCodeRegistryProvider) provider);
     }
     updateSchema();
   }
 
   public void unbindProvider(GraphQLProvider provider) {
     if (provider instanceof GraphQLQueryProvider) {
-      queryProviders.remove(provider);
+      schemaBuilder.remove((GraphQLQueryProvider) provider);
     }
     if (provider instanceof GraphQLMutationProvider) {
-      mutationProviders.remove(provider);
+      schemaBuilder.remove((GraphQLMutationProvider) provider);
     }
     if (provider instanceof GraphQLSubscriptionProvider) {
-      subscriptionProviders.remove(provider);
+      schemaBuilder.remove((GraphQLSubscriptionProvider) provider);
     }
     if (provider instanceof GraphQLTypesProvider) {
-      typesProviders.remove(provider);
+      schemaBuilder.remove((GraphQLTypesProvider) provider);
     }
     if (provider instanceof GraphQLCodeRegistryProvider) {
-      codeRegistryProvider = () -> GraphQLCodeRegistry.newCodeRegistry().build();
+      schemaBuilder.setCodeRegistryProvider(() -> GraphQLCodeRegistry.newCodeRegistry().build());
     }
     updateSchema();
   }
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   public void bindQueryProvider(GraphQLQueryProvider queryProvider) {
-    queryProviders.add(queryProvider);
+    schemaBuilder.add(queryProvider);
     updateSchema();
   }
 
   public void unbindQueryProvider(GraphQLQueryProvider queryProvider) {
-    queryProviders.remove(queryProvider);
+    schemaBuilder.remove(queryProvider);
     updateSchema();
   }
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   public void bindMutationProvider(GraphQLMutationProvider mutationProvider) {
-    mutationProviders.add(mutationProvider);
+    schemaBuilder.add(mutationProvider);
     updateSchema();
   }
 
   public void unbindMutationProvider(GraphQLMutationProvider mutationProvider) {
-    mutationProviders.remove(mutationProvider);
+    schemaBuilder.remove(mutationProvider);
     updateSchema();
   }
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   public void bindSubscriptionProvider(GraphQLSubscriptionProvider subscriptionProvider) {
-    subscriptionProviders.add(subscriptionProvider);
+    schemaBuilder.add(subscriptionProvider);
     updateSchema();
   }
 
   public void unbindSubscriptionProvider(GraphQLSubscriptionProvider subscriptionProvider) {
-    subscriptionProviders.remove(subscriptionProvider);
+    schemaBuilder.remove(subscriptionProvider);
     updateSchema();
   }
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   public void bindTypesProvider(GraphQLTypesProvider typesProvider) {
-    typesProviders.add(typesProvider);
+    schemaBuilder.add(typesProvider);
     updateSchema();
   }
 
   public void unbindTypesProvider(GraphQLTypesProvider typesProvider) {
-    typesProviders.remove(typesProvider);
+    schemaBuilder.remove(typesProvider);
     updateSchema();
   }
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   public void bindServletListener(GraphQLServletListener listener) {
-    this.addListener(listener);
+    schemaBuilder.add(listener);
   }
 
   public void unbindServletListener(GraphQLServletListener listener) {
-    this.removeListener(listener);
+    schemaBuilder.remove(listener);
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
-  public void setContextProvider(GraphQLServletContextBuilder contextBuilder) {
-    this.contextBuilder = contextBuilder;
+  public void setContextBuilder(GraphQLServletContextBuilder contextBuilder) {
+    schemaBuilder.setContextBuilder(contextBuilder);
   }
 
-  public void unsetContextProvider(GraphQLServletContextBuilder contextBuilder) {
-    this.contextBuilder = new DefaultGraphQLServletContextBuilder();
-  }
-
-  public void unsetRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
-    this.rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
-  }
-
-  public void unsetExecutionStrategyProvider(ExecutionStrategyProvider provider) {
-    executionStrategyProvider = new DefaultExecutionStrategyProvider();
-  }
-
-  public void unsetInstrumentationProvider(InstrumentationProvider provider) {
-    instrumentationProvider = new NoOpInstrumentationProvider();
-  }
-
-  public void unsetErrorHandler(GraphQLErrorHandler errorHandler) {
-    this.errorHandler = new DefaultGraphQLErrorHandler();
-  }
-
-  public void unsetPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
-    this.preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
-  }
-
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
-  public void bindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
-    this.codeRegistryProvider = graphQLCodeRegistryProvider;
-    updateSchema();
-  }
-
-  public void unbindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
-    this.codeRegistryProvider = () -> GraphQLCodeRegistry.newCodeRegistry().build();
-    updateSchema();
-  }
-
-  public GraphQLServletContextBuilder getContextBuilder() {
-    return contextBuilder;
-  }
-
-  public GraphQLServletRootObjectBuilder getRootObjectBuilder() {
-    return rootObjectBuilder;
+  public void unsetContextBuilder(GraphQLServletContextBuilder contextBuilder) {
+    schemaBuilder.setContextBuilder(new DefaultGraphQLServletContextBuilder());
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
   public void setRootObjectBuilder(GraphQLServletRootObjectBuilder rootObjectBuilder) {
-    this.rootObjectBuilder = rootObjectBuilder;
+    schemaBuilder.setRootObjectBuilder(rootObjectBuilder);
   }
 
-  public ExecutionStrategyProvider getExecutionStrategyProvider() {
-    return executionStrategyProvider;
+  public void unsetRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
+    schemaBuilder.setRootObjectBuilder(new DefaultGraphQLRootObjectBuilder());
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
   public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
-    executionStrategyProvider = provider;
+    schemaBuilder.setExecutionStrategyProvider(provider);
   }
 
-  public InstrumentationProvider getInstrumentationProvider() {
-    return instrumentationProvider;
+  public void unsetExecutionStrategyProvider(ExecutionStrategyProvider provider) {
+    schemaBuilder.setExecutionStrategyProvider(new DefaultExecutionStrategyProvider());
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
   public void setInstrumentationProvider(InstrumentationProvider provider) {
-    instrumentationProvider = provider;
+    schemaBuilder.setInstrumentationProvider(provider);
   }
 
-  public GraphQLErrorHandler getErrorHandler() {
-    return errorHandler;
+  public void unsetInstrumentationProvider(InstrumentationProvider provider) {
+    schemaBuilder.setInstrumentationProvider(new NoOpInstrumentationProvider());
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
   public void setErrorHandler(GraphQLErrorHandler errorHandler) {
-    this.errorHandler = errorHandler;
+    schemaBuilder.setErrorHandler(errorHandler);
   }
 
-  public PreparsedDocumentProvider getPreparsedDocumentProvider() {
-    return preparsedDocumentProvider;
+  public void unsetErrorHandler(GraphQLErrorHandler errorHandler) {
+    schemaBuilder.setErrorHandler(new DefaultGraphQLErrorHandler());
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
   public void setPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
-    this.preparsedDocumentProvider = preparsedDocumentProvider;
+    schemaBuilder.setPreparsedDocumentProvider(preparsedDocumentProvider);
   }
 
-  public GraphQLSchemaServletProvider getSchemaProvider() {
-    return schemaProvider;
+  public void unsetPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
+    schemaBuilder.setPreparsedDocumentProvider(NoOpPreparsedDocumentProvider.INSTANCE);
+  }
+
+  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  public void bindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
+    schemaBuilder.setCodeRegistryProvider(graphQLCodeRegistryProvider);
+    updateSchema();
+  }
+
+  public void unbindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
+    schemaBuilder.setCodeRegistryProvider(() -> GraphQLCodeRegistry.newCodeRegistry().build());
+    updateSchema();
   }
 
   @interface Config {

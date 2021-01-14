@@ -8,44 +8,58 @@ import graphql.kickstart.execution.config.GraphQLBuilder;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor
 @RequiredArgsConstructor
 public class GraphQLInvoker {
 
   private final GraphQLBuilder graphQLBuilder;
   private final BatchedDataLoaderGraphQLBuilder batchedDataLoaderGraphQLBuilder;
-  private GraphQLInvokerProxy proxy = GraphQL::executeAsync;
+  private final GraphQLInvokerProxy proxy = GraphQL::executeAsync;
 
-  public CompletableFuture<ExecutionResult> executeAsync(GraphQLSingleInvocationInput invocationInput) {
+  public CompletableFuture<ExecutionResult> executeAsync(
+      GraphQLSingleInvocationInput invocationInput) {
     GraphQL graphQL = graphQLBuilder.build(invocationInput.getSchema());
     return proxy.executeAsync(graphQL, invocationInput.getExecutionInput());
   }
 
   public GraphQLQueryResult query(GraphQLInvocationInput invocationInput) {
+    return queryAsync(invocationInput).join();
+  }
+
+  public CompletableFuture<GraphQLQueryResult> queryAsync(GraphQLInvocationInput invocationInput) {
     if (invocationInput instanceof GraphQLSingleInvocationInput) {
-      return GraphQLQueryResult.create(query((GraphQLSingleInvocationInput) invocationInput));
+      return executeAsync((GraphQLSingleInvocationInput) invocationInput)
+          .thenApply(GraphQLQueryResult::create);
     }
     GraphQLBatchedInvocationInput batchedInvocationInput = (GraphQLBatchedInvocationInput) invocationInput;
-    return GraphQLQueryResult.create(query(batchedInvocationInput));
+    return executeAsync(batchedInvocationInput).thenApply(GraphQLQueryResult::create);
   }
 
-  private ExecutionResult query(GraphQLSingleInvocationInput singleInvocationInput) {
-    return executeAsync(singleInvocationInput).join();
+  private CompletableFuture<List<ExecutionResult>> executeAsync(
+      GraphQLBatchedInvocationInput batchedInvocationInput) {
+    GraphQL graphQL = batchedDataLoaderGraphQLBuilder
+        .newGraphQL(batchedInvocationInput, graphQLBuilder);
+    return sequence(
+        batchedInvocationInput.getExecutionInputs().stream()
+            .map(executionInput -> proxy.executeAsync(graphQL, executionInput))
+            .collect(toList()));
   }
 
-  private List<ExecutionResult> query(GraphQLBatchedInvocationInput batchedInvocationInput) {
-    GraphQL graphQL = batchedDataLoaderGraphQLBuilder.newGraphQL(batchedInvocationInput, graphQLBuilder);
-    return batchedInvocationInput.getExecutionInputs().stream()
-        .map(executionInput -> proxy.executeAsync(graphQL, executionInput))
-        .collect(toList())
-        .stream()
-        .map(CompletableFuture::join)
-        .collect(toList());
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private <T> CompletableFuture<List<T>> sequence(List<CompletableFuture<T>> futures) {
+    CompletableFuture[] futuresArray = futures.toArray(new CompletableFuture[0]);
+    return CompletableFuture.allOf(futuresArray).thenApply(aVoid -> {
+      List<T> result = new ArrayList<>(futures.size());
+      for (CompletableFuture future : futuresArray) {
+        assert future.isDone(); // per the API contract of allOf()
+        result.add((T) future.join());
+      }
+      return result;
+    });
   }
 }
 

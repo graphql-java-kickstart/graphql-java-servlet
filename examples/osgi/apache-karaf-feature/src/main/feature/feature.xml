@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="graphql-java-servlet-osgi-examples-karaf-feature">
-    <feature name="graphql-java-servlet-osgi-examples-karaf-feature" description="graphql-java-servlet-osgi-examples-karaf-feature">
-        <feature prerequisite="true" dependency="false">scr</feature>
-        <feature prerequisite="true" dependency="false">war</feature>
-    </feature>
+<features name="graphql-java-servlet-osgi-examples-karaf-feature"
+  xmlns="http://karaf.apache.org/xmlns/features/v1.4.0">
+  <feature description="graphql-java-servlet-osgi-examples-karaf-feature"
+    name="graphql-java-servlet-osgi-examples-karaf-feature">
+    <feature dependency="false" prerequisite="true">scr</feature>
+    <feature dependency="false" prerequisite="true">war</feature>
+    <feature dependency="false" prerequisite="true">http</feature>
+  </feature>
 </features>

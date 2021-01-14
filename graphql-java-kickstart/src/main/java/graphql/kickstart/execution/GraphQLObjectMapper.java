@@ -2,19 +2,15 @@ package graphql.kickstart.execution;
 
 import static java.util.stream.Collectors.toList;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
-import graphql.DeferredExecutionResult;
-import graphql.DeferredExecutionResultImpl;
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import graphql.GraphQLError;
-import graphql.execution.ExecutionPath;
 import graphql.kickstart.execution.config.ConfiguringObjectMapperProvider;
-import graphql.kickstart.execution.config.ObjectMapperConfigurer;
+import graphql.kickstart.execution.config.GraphQLServletObjectMapperConfigurer;
 import graphql.kickstart.execution.config.ObjectMapperProvider;
 import graphql.kickstart.execution.error.DefaultGraphQLErrorHandler;
 import graphql.kickstart.execution.error.GraphQLErrorHandler;
@@ -26,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import lombok.SneakyThrows;
 
 /**
  * @author Andrew Potter
@@ -38,7 +35,7 @@ public class GraphQLObjectMapper {
   private final ObjectMapperProvider objectMapperProvider;
   private final Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier;
 
-  private volatile ObjectMapper mapper;
+  private ObjectMapper mapper;
 
   protected GraphQLObjectMapper(ObjectMapperProvider objectMapperProvider,
       Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier) {
@@ -80,7 +77,8 @@ public class GraphQLObjectMapper {
     return getGraphQLRequestMapper().readValue(text);
   }
 
-  public List<GraphQLRequest> readBatchedGraphQLRequest(InputStream inputStream) throws IOException {
+  public List<GraphQLRequest> readBatchedGraphQLRequest(InputStream inputStream)
+      throws IOException {
     MappingIterator<GraphQLRequest> iterator = getGraphQLRequestMapper().readValues(inputStream);
     List<GraphQLRequest> requests = new ArrayList<>();
 
@@ -102,16 +100,28 @@ public class GraphQLObjectMapper {
     return requests;
   }
 
+  @SneakyThrows
   public String serializeResultAsJson(ExecutionResult executionResult) {
-    try {
-      return getJacksonMapper().writeValueAsString(createResultFromExecutionResult(executionResult));
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    return getJacksonMapper()
+        .writeValueAsString(createResultFromExecutionResult(executionResult));
   }
 
-  public void serializeResultAsJson(Writer writer, ExecutionResult executionResult) throws IOException {
+  public void serializeResultAsJson(Writer writer, ExecutionResult executionResult)
+      throws IOException {
     getJacksonMapper().writeValue(writer, createResultFromExecutionResult(executionResult));
+  }
+
+  /**
+   * Serializes result as bytes in UTF-8 encoding instead of string.
+   *
+   * @param executionResult query execution result to serialize.
+   * @return result serialized into Json representation in UTF-8 encoding, converted into {@code
+   *     byte[]}.
+   */
+  @SneakyThrows
+  public byte[] serializeResultAsBytes(ExecutionResult executionResult) {
+    return getJacksonMapper()
+        .writeValueAsBytes(createResultFromExecutionResult(executionResult));
   }
 
   public boolean areErrorsPresent(ExecutionResult executionResult) {
@@ -134,13 +144,6 @@ public class GraphQLObjectMapper {
 
   public Map<String, Object> createResultFromExecutionResult(ExecutionResult executionResult) {
     ExecutionResult sanitizedExecutionResult = sanitizeErrors(executionResult);
-    if (executionResult instanceof DeferredExecutionResult) {
-      sanitizedExecutionResult = DeferredExecutionResultImpl
-          .newDeferredExecutionResult()
-          .from(executionResult)
-          .path(ExecutionPath.fromList(((DeferredExecutionResult) executionResult).getPath()))
-          .build();
-    }
     return convertSanitizedExecutionResult(sanitizedExecutionResult);
   }
 
@@ -148,11 +151,13 @@ public class GraphQLObjectMapper {
     return convertSanitizedExecutionResult(executionResult, true);
   }
 
-  public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult, boolean includeData) {
+  public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult,
+      boolean includeData) {
     final Map<String, Object> result = new LinkedHashMap<>();
 
     if (areErrorsPresent(executionResult)) {
-      result.put("errors", executionResult.getErrors().stream().map(GraphQLError::toSpecification).collect(toList()));
+      result.put("errors", executionResult.getErrors().stream().map(GraphQLError::toSpecification)
+          .collect(toList()));
     }
 
     if (executionResult.getExtensions() != null && !executionResult.getExtensions().isEmpty()) {
@@ -163,28 +168,19 @@ public class GraphQLObjectMapper {
       result.put("data", executionResult.getData());
     }
 
-    if (executionResult instanceof DeferredExecutionResult) {
-      result.put("path", ((DeferredExecutionResult) executionResult).getPath());
-    }
-
     return result;
   }
 
+  @SneakyThrows
   public Map<String, Object> deserializeVariables(String variables) {
-    try {
-      return VariablesDeserializer
-          .deserializeVariablesObject(getJacksonMapper().readValue(variables, Object.class), getJacksonMapper());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return VariablesDeserializer
+        .deserializeVariablesObject(getJacksonMapper().readValue(variables, Object.class),
+            getJacksonMapper());
   }
 
+  @SneakyThrows
   public Map<String, List<String>> deserializeMultipartMap(InputStream inputStream) {
-    try {
-      return getJacksonMapper().readValue(inputStream, MULTIPART_MAP_TYPE_REFERENCE);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return getJacksonMapper().readValue(inputStream, MULTIPART_MAP_TYPE_REFERENCE);
   }
 
   public static class Builder {
@@ -192,11 +188,13 @@ public class GraphQLObjectMapper {
     private ObjectMapperProvider objectMapperProvider = new ConfiguringObjectMapperProvider();
     private Supplier<GraphQLErrorHandler> graphQLErrorHandler = DefaultGraphQLErrorHandler::new;
 
-    public Builder withObjectMapperConfigurer(ObjectMapperConfigurer objectMapperConfigurer) {
+    public Builder withObjectMapperConfigurer(
+        GraphQLServletObjectMapperConfigurer objectMapperConfigurer) {
       return withObjectMapperConfigurer(() -> objectMapperConfigurer);
     }
 
-    public Builder withObjectMapperConfigurer(Supplier<ObjectMapperConfigurer> objectMapperConfigurer) {
+    public Builder withObjectMapperConfigurer(
+        Supplier<GraphQLServletObjectMapperConfigurer> objectMapperConfigurer) {
       this.objectMapperProvider = new ConfiguringObjectMapperProvider(objectMapperConfigurer.get());
       return this;
     }

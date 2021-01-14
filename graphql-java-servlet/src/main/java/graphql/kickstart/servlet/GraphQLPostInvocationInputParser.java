@@ -3,10 +3,10 @@ package graphql.kickstart.servlet;
 import static java.util.stream.Collectors.joining;
 
 import graphql.GraphQLException;
+import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
-import graphql.kickstart.execution.GraphQLObjectMapper;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import java.io.IOException;
 import java.util.List;
@@ -22,7 +22,8 @@ class GraphQLPostInvocationInputParser extends AbstractGraphQLInvocationInputPar
     super(invocationInputFactory, graphQLObjectMapper, contextSetting);
   }
 
-  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request, HttpServletResponse response)
+  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request,
+      HttpServletResponse response)
       throws IOException {
     if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
       String query = request.getReader().lines().collect(joining());

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 mvn clean install
-pushd apache-karaf-package/target
-tar zxvf graphql-java-servlet-osgi-examples-apache-karaf-package-7.3.4-SNAPSHOT.tar.gz
-cd graphql-java-servlet-osgi-examples-apache-karaf-package-7.3.4-SNAPSHOT/bin
+pushd apache-karaf-package/target || exit 1
+tar zxvf graphql-java-servlet-osgi-examples-apache-karaf-package-10.1.0.tar.gz
+cd graphql-java-servlet-osgi-examples-apache-karaf-package-10.1.0/bin || exit 1
 ./karaf debug
-popd
+popd || exit 1

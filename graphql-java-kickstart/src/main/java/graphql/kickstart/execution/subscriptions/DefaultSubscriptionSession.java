@@ -53,13 +53,13 @@ public class DefaultSubscriptionSession implements SubscriptionSession {
   }
 
   @Override
-  public void sendErrorMessage(String id) {
-
+  public void sendErrorMessage(String id, Object payload) {
+    send(mapper.serialize(payload));
   }
 
   @Override
   public void sendCompleteMessage(String id) {
-
+    // default empty implementation
   }
 
   @Override

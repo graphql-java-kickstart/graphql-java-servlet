@@ -1,6 +1,13 @@
+apply plugin: 'biz.aQute.bnd.builder'
+
+jar {
+    bndfile = 'bnd.bnd'
+}
+
 dependencies {
     // GraphQL
     compile "com.graphql-java:graphql-java:$LIB_GRAPHQL_JAVA_VER"
+    implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"
 
     // JSON
     compile "com.fasterxml.jackson.core:jackson-core:$LIB_JACKSON_VER"

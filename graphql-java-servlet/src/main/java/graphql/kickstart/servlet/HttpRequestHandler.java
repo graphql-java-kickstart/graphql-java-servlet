@@ -1,16 +1,18 @@
 package graphql.kickstart.servlet;
 
+import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-interface HttpRequestHandler {
+public interface HttpRequestHandler {
 
   String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
   String APPLICATION_EVENT_STREAM_UTF8 = "text/event-stream;charset=UTF-8";
 
   int STATUS_OK = 200;
   int STATUS_BAD_REQUEST = 400;
+  int STATUS_INTERNAL_SERVER_ERROR = 500;
 
-  void handle(HttpServletRequest request, HttpServletResponse response) throws Exception;
+  void handle(HttpServletRequest request, HttpServletResponse response) throws IOException;
 
 }

@@ -1,6 +1,7 @@
 package graphql.kickstart.execution.config;
 
 import graphql.GraphQL;
+import graphql.execution.ExecutionStrategy;
 import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.SimpleInstrumentation;
@@ -17,6 +18,7 @@ public class GraphQLBuilder {
   private Supplier<PreparsedDocumentProvider> preparsedDocumentProviderSupplier = () -> NoOpPreparsedDocumentProvider.INSTANCE;
   @Getter
   private Supplier<Instrumentation> instrumentationSupplier = () -> SimpleInstrumentation.INSTANCE;
+  private Supplier<GraphQLBuilderConfigurer> graphQLBuilderConfigurerSupplier = () -> builder -> {};
 
   public GraphQLBuilder executionStrategyProvider(Supplier<ExecutionStrategyProvider> supplier) {
     if (supplier != null) {
@@ -39,6 +41,13 @@ public class GraphQLBuilder {
     return this;
   }
 
+  public GraphQLBuilder graphQLBuilderConfigurer(Supplier<GraphQLBuilderConfigurer> supplier) {
+    if (supplier != null) {
+      graphQLBuilderConfigurerSupplier = supplier;
+    }
+    return this;
+  }
+
   public GraphQL build(GraphQLSchemaProvider schemaProvider) {
     return build(schemaProvider.getSchema());
   }
@@ -47,18 +56,37 @@ public class GraphQLBuilder {
     return build(schema, instrumentationSupplier);
   }
 
-  public GraphQL build(GraphQLSchema schema, Supplier<Instrumentation> configuredInstrumentationSupplier) {
+  public GraphQL build(GraphQLSchema schema,
+      Supplier<Instrumentation> configuredInstrumentationSupplier) {
     ExecutionStrategyProvider executionStrategyProvider = executionStrategyProviderSupplier.get();
+    ExecutionStrategy queryExecutionStrategy = executionStrategyProvider
+        .getQueryExecutionStrategy();
+    ExecutionStrategy mutationExecutionStrategy = executionStrategyProvider
+        .getMutationExecutionStrategy();
+    ExecutionStrategy subscriptionExecutionStrategy = executionStrategyProvider
+        .getSubscriptionExecutionStrategy();
+
     GraphQL.Builder builder = GraphQL.newGraphQL(schema)
-        .queryExecutionStrategy(executionStrategyProvider.getQueryExecutionStrategy())
-        .mutationExecutionStrategy(executionStrategyProvider.getMutationExecutionStrategy())
-        .subscriptionExecutionStrategy(executionStrategyProvider.getSubscriptionExecutionStrategy())
         .preparsedDocumentProvider(preparsedDocumentProviderSupplier.get());
+
+    if (queryExecutionStrategy != null) {
+      builder.queryExecutionStrategy(queryExecutionStrategy);
+    }
+
+    if (mutationExecutionStrategy != null) {
+      builder.mutationExecutionStrategy(mutationExecutionStrategy);
+    }
+
+    if (subscriptionExecutionStrategy != null) {
+      builder.subscriptionExecutionStrategy(subscriptionExecutionStrategy);
+    }
+
     Instrumentation instrumentation = configuredInstrumentationSupplier.get();
     builder.instrumentation(instrumentation);
     if (containsDispatchInstrumentation(instrumentation)) {
       builder.doNotAddDefaultInstrumentations();
     }
+    graphQLBuilderConfigurerSupplier.get().configure(builder);
     return builder.build();
   }
 

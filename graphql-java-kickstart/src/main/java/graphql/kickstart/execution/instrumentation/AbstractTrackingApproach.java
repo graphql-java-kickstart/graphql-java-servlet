@@ -2,16 +2,12 @@ package graphql.kickstart.execution.instrumentation;
 
 import graphql.ExecutionResult;
 import graphql.execution.ExecutionId;
-import graphql.execution.ExecutionPath;
 import graphql.execution.FieldValueInfo;
-import graphql.execution.MergedField;
-import graphql.execution.instrumentation.DeferredFieldInstrumentationContext;
+import graphql.execution.ResultPath;
 import graphql.execution.instrumentation.ExecutionStrategyInstrumentationContext;
 import graphql.execution.instrumentation.InstrumentationContext;
-import graphql.execution.instrumentation.parameters.InstrumentationDeferredFieldParameters;
 import graphql.execution.instrumentation.parameters.InstrumentationExecutionStrategyParameters;
 import graphql.execution.instrumentation.parameters.InstrumentationFieldFetchParameters;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +23,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
 
   private final RequestStack stack = new RequestStack();
 
-  public AbstractTrackingApproach(DataLoaderRegistry dataLoaderRegistry) {
+  protected AbstractTrackingApproach(DataLoaderRegistry dataLoaderRegistry) {
     this.dataLoaderRegistry = dataLoaderRegistry;
   }
 
@@ -42,7 +38,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
   public ExecutionStrategyInstrumentationContext beginExecutionStrategy(
       InstrumentationExecutionStrategyParameters parameters) {
     ExecutionId executionId = parameters.getExecutionContext().getExecutionId();
-    ExecutionPath path = parameters.getExecutionStrategyParameters().getPath();
+    ResultPath path = parameters.getExecutionStrategyParameters().getPath();
     int parentLevel = path.getLevel();
     int curLevel = parentLevel + 1;
     int fieldCount = parameters.getExecutionStrategyParameters().getFields().size();
@@ -54,30 +50,19 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     return new ExecutionStrategyInstrumentationContext() {
       @Override
       public void onDispatched(CompletableFuture<ExecutionResult> result) {
-
+        // default empty implementation
       }
 
       @Override
       public void onCompleted(ExecutionResult result, Throwable t) {
-
+        // default empty implementation
       }
 
       @Override
       public void onFieldValuesInfo(List<FieldValueInfo> fieldValueInfoList) {
         synchronized (stack) {
-          stack.setStatus(executionId, handleOnFieldValuesInfo(fieldValueInfoList, stack, executionId, curLevel));
-          if (stack.allReady()) {
-            dispatchWithoutLocking();
-          }
-        }
-      }
-
-      @Override
-      public void onDeferredField(MergedField field) {
-        // fake fetch count for this field
-        synchronized (stack) {
-          stack.increaseFetchCount(executionId, curLevel);
-          stack.setStatus(executionId, dispatchIfNeeded(stack, executionId, curLevel));
+          stack.setStatus(executionId,
+              handleOnFieldValuesInfo(fieldValueInfoList, stack, executionId, curLevel));
           if (stack.allReady()) {
             dispatchWithoutLocking();
           }
@@ -89,7 +74,8 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
   //
   // thread safety : called with synchronised(stack)
   //
-  private boolean handleOnFieldValuesInfo(List<FieldValueInfo> fieldValueInfoList, RequestStack stack,
+  private boolean handleOnFieldValuesInfo(List<FieldValueInfo> fieldValueInfoList,
+      RequestStack stack,
       ExecutionId executionId, int curLevel) {
     stack.increaseHappenedOnFieldValueCalls(executionId, curLevel);
     int expectedStrategyCalls = 0;
@@ -117,40 +103,10 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
   }
 
   @Override
-  public DeferredFieldInstrumentationContext beginDeferredField(InstrumentationDeferredFieldParameters parameters) {
+  public InstrumentationContext<Object> beginFieldFetch(
+      InstrumentationFieldFetchParameters parameters) {
     ExecutionId executionId = parameters.getExecutionContext().getExecutionId();
-    int level = parameters.getExecutionStrategyParameters().getPath().getLevel();
-    synchronized (stack) {
-      stack.clearAndMarkCurrentLevelAsReady(executionId, level);
-    }
-
-    return new DeferredFieldInstrumentationContext() {
-      @Override
-      public void onDispatched(CompletableFuture<ExecutionResult> result) {
-
-      }
-
-      @Override
-      public void onCompleted(ExecutionResult result, Throwable t) {
-      }
-
-      @Override
-      public void onFieldValueInfo(FieldValueInfo fieldValueInfo) {
-        synchronized (stack) {
-          stack.setStatus(executionId,
-              handleOnFieldValuesInfo(Collections.singletonList(fieldValueInfo), stack, executionId, level));
-          if (stack.allReady()) {
-            dispatchWithoutLocking();
-          }
-        }
-      }
-    };
-  }
-
-  @Override
-  public InstrumentationContext<Object> beginFieldFetch(InstrumentationFieldFetchParameters parameters) {
-    ExecutionId executionId = parameters.getExecutionContext().getExecutionId();
-    ExecutionPath path = parameters.getEnvironment().getExecutionStepInfo().getPath();
+    ResultPath path = parameters.getEnvironment().getExecutionStepInfo().getPath();
     int level = path.getLevel();
     return new InstrumentationContext<Object>() {
 
@@ -168,6 +124,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
 
       @Override
       public void onCompleted(Object result, Throwable t) {
+        // default empty implementation
       }
     };
   }
@@ -201,8 +158,10 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
       // level 1 is special: there is only one strategy call and that's it
       return stack.allFetchesHappened(executionId, 1);
     }
-    return (levelReady(stack, executionId, level - 1) && stack.allOnFieldCallsHappened(executionId, level - 1)
-        && stack.allStrategyCallsHappened(executionId, level) && stack.allFetchesHappened(executionId, level));
+    return (levelReady(stack, executionId, level - 1) && stack
+        .allOnFieldCallsHappened(executionId, level - 1)
+        && stack.allStrategyCallsHappened(executionId, level) && stack
+        .allFetchesHappened(executionId, level));
   }
 
   @Override

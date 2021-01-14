@@ -38,13 +38,16 @@ public class ApolloWebSocketSubscriptionProtocolFactory
   public ApolloWebSocketSubscriptionProtocolFactory(GraphQLObjectMapper objectMapper,
       GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
       GraphQLInvoker graphQLInvoker,
-      Collection<ApolloSubscriptionConnectionListener> connectionListeners, Duration keepAliveInterval) {
-    super(objectMapper, invocationInputFactory, graphQLInvoker, connectionListeners, keepAliveInterval);
+      Collection<ApolloSubscriptionConnectionListener> connectionListeners,
+      Duration keepAliveInterval) {
+    super(objectMapper, invocationInputFactory, graphQLInvoker, connectionListeners,
+        keepAliveInterval);
   }
 
   @Override
   public SubscriptionSession createSession(Session session) {
-    return new ApolloWebSocketSubscriptionSession(new GraphQLSubscriptionMapper(getObjectMapper()), session);
+    return new ApolloWebSocketSubscriptionSession(new GraphQLSubscriptionMapper(getObjectMapper()),
+        session);
   }
 
 }

@@ -35,7 +35,7 @@ public class WebSocketSendSubscriber implements Subscriber<String> {
 
   @Override
   public void onError(Throwable t) {
-
+    log.error("WebSocket error", t);
   }
 
   @Override

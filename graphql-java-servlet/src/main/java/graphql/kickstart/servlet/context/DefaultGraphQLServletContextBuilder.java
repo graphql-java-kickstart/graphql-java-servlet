@@ -20,7 +20,8 @@ public class DefaultGraphQLServletContextBuilder extends DefaultGraphQLContextBu
 
   @Override
   public GraphQLContext build(Session session, HandshakeRequest handshakeRequest) {
-    return DefaultGraphQLWebSocketContext.createWebSocketContext().with(session).with(handshakeRequest).build();
+    return DefaultGraphQLWebSocketContext.createWebSocketContext().with(session)
+        .with(handshakeRequest).build();
   }
 
 }

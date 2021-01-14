@@ -5,9 +5,9 @@ import graphql.Scalars
 import graphql.execution.ExecutionStepInfo
 import graphql.execution.MergedField
 import graphql.execution.reactive.SingleSubscriberPublisher
+import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory
 import graphql.language.Field
 import graphql.schema.GraphQLNonNull
-import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
@@ -127,7 +127,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getResponseContent().data.echo == "special char á"
     }
 
-    def "async query over HTTP GET starts async request"() {
+    def "disabling async support on request over HTTP GET does not start async request"() {
         setup:
         servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
@@ -136,14 +136,15 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 publisherRef.get().noMoreData()
             }))
             return publisherRef.get()
-        }, true)
+        })
         request.addParameter('query', 'query { echo(arg:"test") }')
+        request.setAsyncSupported(false)
 
         when:
         servlet.doGet(request, response)
 
         then:
-        request.asyncStarted == true
+        request.asyncContext == null
     }
 
     def "query over HTTP GET with variables returns data"() {
@@ -313,27 +314,6 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getBatchedResponseContent()[1].data.echo == "test"
     }
 
-    def "deferred query over HTTP GET"() {
-        setup:
-        request.addParameter('query', 'query { echo(arg:"test") @defer }')
-
-        when:
-        servlet.doGet(request, response)
-
-        then:
-        response.getStatus() == STATUS_OK
-        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
-        getSubscriptionResponseContent()[0].data.echo == null
-
-        when:
-        subscriptionLatch.await(1, TimeUnit.SECONDS)
-
-        then:
-        def content = getSubscriptionResponseContent()
-        content[1].data == "test"
-        content[1].path == ["echo"]
-    }
-
     def "Batch Execution Handler allows limiting batches and sending error messages."() {
         setup:
         servlet = TestUtils.createBatchCustomizedServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
@@ -442,7 +422,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getResponseContent().data.echo == "test"
     }
 
-    def "async query over HTTP POST starts async request"() {
+    def "disabling async support on request over HTTP POST does not start async request"() {
         setup:
         servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
             AtomicReference<SingleSubscriberPublisher<String>> publisherRef = new AtomicReference<>();
@@ -451,16 +431,17 @@ class AbstractGraphQLHttpServletSpec extends Specification {
                 publisherRef.get().noMoreData()
             }))
             return publisherRef.get()
-        }, true)
+        })
         request.setContent(mapper.writeValueAsBytes([
                 query: 'query { echo(arg:"test") }'
         ]))
+        request.setAsyncSupported(false)
 
         when:
         servlet.doPost(request, response)
 
         then:
-        request.asyncStarted == true
+        request.asyncContext == null
     }
 
     def "query over HTTP POST body with graphql contentType returns data"() {
@@ -1098,68 +1079,12 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
     }
 
-    def "defer query over HTTP POST"() {
-        setup:
-        request.setContent('{"query": "subscription Subscription($arg: String!) { echo(arg: $arg) }", "operationName": "Subscription", "variables": {"arg": "test"}}'.bytes)
-        request.setAsyncSupported(true)
-        request.setMethod("POST")
-
-        when:
-        servlet.doPost(request, response)
-        then:
-        response.getStatus() == STATUS_OK
-        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
-
-        when:
-        subscriptionLatch.await(1, TimeUnit.SECONDS)
-        then:
-        getSubscriptionResponseContent()[0].data.echo == "First\n\ntest"
-        getSubscriptionResponseContent()[1].data.echo == "Second\n\ntest"
-    }
-
-    def "deferred query that takes longer than initial results, should still be sent second"() {
-        setup:
-        servlet = TestUtils.createDefaultServlet({ env ->
-            if (env.getField().name == "a") {
-                Thread.sleep(1000)
-            }
-            env.arguments.arg
-        })
-        request.setContent(mapper.writeValueAsBytes([
-                query: '''
-                    { 
-                        object { 
-                            a(arg: "Hello") 
-                            b(arg: "World") @defer
-                        }     
-                    }
-                '''
-        ]))
-        request.setAsyncSupported(true)
-        request.setMethod("POST")
-
-        when:
-        servlet.doPost(request, response)
-
-        then:
-        response.getStatus() == STATUS_OK
-        response.getContentType() == CONTENT_TYPE_SERVER_SENT_EVENTS
-        getSubscriptionResponseContent()[0].data.object.a == "Hello" // a has a Thread.sleep
-
-        when:
-        subscriptionLatch.await(1, TimeUnit.SECONDS)
-
-        then:
-        def content = getSubscriptionResponseContent()
-        content[1].data == "World"
-        content[1].path == ["object", "b"]
-    }
-
     def "errors before graphql schema execution return internal server error"() {
         setup:
-        servlet = SimpleGraphQLHttpServlet.newBuilder(GraphQLInvocationInputFactory.newBuilder {
+        GraphQLConfiguration configuration = GraphQLConfiguration.with(GraphQLInvocationInputFactory.newBuilder {
             throw new TestException()
         }.build()).build()
+        servlet = GraphQLHttpServlet.with(configuration)
         servlet.init(null)
 
         request.setPathInfo('/schema.json')
