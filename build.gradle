@@ -28,7 +28,7 @@ buildscript {
 
 plugins {
     id "biz.aQute.bnd.builder" version "5.1.2" apply false
-    id "org.sonarqube" version "3.0"
+    id "org.sonarqube" version "3.2.0"
     id "jacoco"
     id 'io.codearte.nexus-staging' version '0.30.0'
 }
