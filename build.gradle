@@ -27,7 +27,6 @@ buildscript {
 }
 
 plugins {
-    id 'io.franzbecker.gradle-lombok' version '3.2.0' apply false
     id "biz.aQute.bnd.builder" version "5.1.2" apply false
     id "org.sonarqube" version "3.0"
     id "jacoco"
@@ -49,13 +48,20 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
-    apply plugin: 'io.franzbecker.gradle-lombok'
 
     repositories {
         mavenLocal()
         mavenCentral()
         maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
         maven { url "https://repo.spring.io/libs-milestone" }
+    }
+
+    dependencies {
+        compileOnly "org.projectlombok:lombok:$LIB_LOMBOK_VER"
+        annotationProcessor "org.projectlombok:lombok:$LIB_LOMBOK_VER"
+
+        testCompileOnly "org.projectlombok:lombok:$LIB_LOMBOK_VER"
+        testAnnotationProcessor "org.projectlombok:lombok:$LIB_LOMBOK_VER"
     }
 
     idea {
@@ -72,11 +78,6 @@ subprojects {
 
     compileJava.dependsOn(processResources)
 
-    lombok {
-        version = "1.18.16"
-        sha256 = ""
-    }
-
     jacocoTestReport {
         reports {
             xml.enabled = true
@@ -86,7 +87,6 @@ subprojects {
     }
 
     if (!it.name.startsWith('example')) {
-
         jar {
             from "LICENSE.md"
         }
