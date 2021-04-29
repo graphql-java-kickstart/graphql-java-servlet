@@ -21,24 +21,17 @@ buildscript {
     repositories {
         mavenLocal()
         mavenCentral()
-        jcenter()
-        maven { url "https://dl.bintray.com/graphql-java-kickstart/releases" }
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://repo.spring.io/plugins-release' }
-    }
-    dependencies {
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.+"
-        classpath 'net.researchgate:gradle-release:2.7.0'
     }
 }
 
 plugins {
-    id 'net.researchgate.release' version '2.7.0'
     id 'io.franzbecker.gradle-lombok' version '3.2.0' apply false
-    id "com.jfrog.artifactory" version "4.11.0" apply false
     id "biz.aQute.bnd.builder" version "5.1.2" apply false
     id "org.sonarqube" version "3.0"
     id "jacoco"
+    id 'io.codearte.nexus-staging' version '0.30.0'
 }
 
 sonarqube {
@@ -55,16 +48,13 @@ subprojects {
     apply plugin: 'org.sonarqube'
     apply plugin: 'java'
     apply plugin: 'maven-publish'
-    apply plugin: "com.jfrog.bintray"
+    apply plugin: 'signing'
     apply plugin: 'io.franzbecker.gradle-lombok'
-    apply plugin: 'com.jfrog.artifactory'
 
     repositories {
         mavenLocal()
         mavenCentral()
-        jcenter()
-        maven { url "https://dl.bintray.com/graphql-java-kickstart/releases" }
-        maven { url "https://oss.jfrog.org/artifactory/oss-snapshot-local" }
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
         maven { url "https://repo.spring.io/libs-milestone" }
     }
 
@@ -101,142 +91,96 @@ subprojects {
             from "LICENSE.md"
         }
 
-        task sourcesJar(type: Jar) {
-            dependsOn classes
-            classifier 'sources'
-            from sourceSets.main.allSource
+        java {
+            withSourcesJar()
+            withJavadocJar()
         }
 
-        task javadocJar(type: Jar, dependsOn: javadoc) {
-            classifier = 'javadoc'
-            from javadoc.destinationDir
-        }
+        if (!version.toString().endsWith('-SNAPSHOT')) {
+            ext["signing.keyId"] = System.env.SIGNING_KEY_ID
+            ext["signing.password"] = System.env.SIGNING_PASSWORD
+            ext["signing.secretKeyRingFile"] = System.env.SIGNING_SECRET_KEY_RING_FILE
 
-        artifacts {
-            archives sourcesJar
-            archives javadocJar
+            signing {
+                sign publishing.publications
+            }
         }
 
         publishing {
             publications {
-                mainProjectPublication(MavenPublication) {
+                mavenJava(MavenPublication) {
                     version version
                     from components.java
 
-                    artifact sourcesJar {
-                        classifier "sources"
+                    versionMapping {
+                        usage('java-api') {
+                            fromResolutionOf('runtimeClasspath')
+                        }
+                        usage('java-runtime') {
+                            fromResolutionResult()
+                        }
                     }
-                    artifact javadocJar {
-                        classifier "javadoc"
-                    }
 
-                    pom.withXml {
-                        asNode().children().last() + {
-                            resolveStrategy = Closure.DELEGATE_FIRST
-                            name PROJECT_NAME
-                            description 'relay.js-compatible GraphQL servlet'
-                            url 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
-                            inceptionYear '2016'
+                    pom {
+                        name = PROJECT_NAME
+                        description = 'relay.js-compatible GraphQL servlet'
+                        url = 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
+                        inceptionYear = '2016'
 
-                            scm {
-                                url 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
-                                connection 'scm:https://github.com/graphql-java-kickstart/graphql-java-servlet.git'
-                                developerConnection 'scm:git://github.com/graphql-java-kickstart/graphql-java-servlet.git'
-                            }
+                        scm {
+                            url = 'https://github.com/graphql-java-kickstart/graphql-java-servlet'
+                            connection = 'scm:https://github.com/graphql-java-kickstart/graphql-java-servlet.git'
+                            developerConnection = 'scm:git://github.com/graphql-java-kickstart/graphql-java-servlet.git'
+                        }
 
-                            licenses {
-                                license {
-                                    name 'The Apache Software License, Version 2.0'
-                                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                                    distribution 'repo'
-                                }
-                            }
-
-                            developers {
-                                developer {
-                                    id 'yrashk'
-                                    name 'Yurii Rashkovskii'
-                                    email 'yrashk@gmail.com'
-                                }
-                                developer {
-                                    id 'apottere'
-                                    name 'Andrew Potter'
-                                    email 'apottere@gmail.com'
-                                }
+                        licenses {
+                            license {
+                                name = 'The Apache Software License, Version 2.0'
+                                url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                                distribution = 'repo'
                             }
                         }
-                        // https://discuss.gradle.org/t/maven-publish-plugin-generated-pom-making-dependency-scope-runtime/7494/10
-                        asNode().dependencies.'*'.findAll() {
-                            it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
-                                dep.name == it.artifactId.text()
+
+                        developers {
+                            developer {
+                                id = 'oliemansm'
+                                name = 'Michiel Oliemans'
                             }
-                        }.each { it.scope*.value = 'compile' }
+                            developer {
+                                id = 'yrashk'
+                                name = 'Yurii Rashkovskii'
+                                email = 'yrashk@gmail.com'
+                            }
+                            developer {
+                                id = 'apottere'
+                                name = 'Andrew Potter'
+                                email = 'apottere@gmail.com'
+                            }
+                        }
                     }
                 }
             }
-        }
-
-        bintray {
-            user = System.env.BINTRAY_USER ?: project.findProperty('BINTRAY_USER') ?: ''
-            key = System.env.BINTRAY_PASS ?: project.findProperty('BINTRAY_PASS') ?: ''
-            publications = ['mainProjectPublication']
-            publish = true
-            pkg {
-                repo = 'releases'
-                name = PROJECT_NAME
-                desc = PROJECT_DESC
-                licenses = [PROJECT_LICENSE]
-                vcsUrl = PROJECT_GIT_REPO_URL
-                userOrg = 'graphql-java-kickstart'
-                version {
-                    name = project.version
-                    gpg {
-                        sign = true
+            repositories {
+                maven {
+                    name 'ossrh'
+                    if (version.toString().endsWith("-SNAPSHOT")) {
+                        url "https://oss.sonatype.org/content/repositories/snapshots/"
+                    } else {
+                        url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
                     }
-                    mavenCentralSync {
-                        user = System.env.OSS_USER_TOKEN_KEY ?: project.findProperty('OSS_USER_TOKEN_KEY') ?: ''
+                    credentials {
+                        username = System.env.OSS_USER_TOKEN_KEY ?: project.findProperty('OSS_USER_TOKEN_KEY') ?: ''
                         password = System.env.OSS_USER_TOKEN_PASS ?: project.findProperty('OSS_USER_TOKEN_PASS') ?: ''
                     }
                 }
             }
         }
-
-        artifactory {
-            contextUrl = 'http://oss.jfrog.org'
-            publish {
-                repository {
-                    if (project.version.endsWith("-SNAPSHOT")) {
-                        repoKey = 'oss-snapshot-local'
-                    } else {
-                        repoKey = 'oss-release-local'
-                    }
-                    username = System.env.BINTRAY_USER ?: project.findProperty('BINTRAY_USER') ?: ''
-                    password = System.env.BINTRAY_PASS ?: project.findProperty('BINTRAY_PASS') ?: ''
-                }
-                defaults {
-                    publications('mainProjectPublication')
-                    publishArtifacts = true
-                    publishPom = true
-                }
-            }
-            resolve {
-                repoKey = 'oss-snapshot-local'
-            }
-            clientConfig.info.setBuildNumber(System.getProperty('build.number'))
-        }
     }
 }
 
-release {
-    tagTemplate = 'v${version}'
-    failOnPublishNeeded = false
-    ignoredSnapshotDependencies = ['com.graphql-java-kickstart:graphql-java-servlet']
-}
-
-task build {
-    dependsOn subprojects.findResults { it.tasks.findByName('assemble') }
-    dependsOn subprojects.findResults { it.tasks.findByName('check') }
-    dependsOn subprojects.findResults { it.tasks.findByName('bintray') }
+nexusStaging {
+    username = System.env.OSS_USER_TOKEN_KEY ?: project.findProperty('OSS_USER_TOKEN_KEY') ?: ''
+    password = System.env.OSS_USER_TOKEN_PASS ?: project.findProperty('OSS_USER_TOKEN_PASS') ?: ''
 }
 
 wrapper {
