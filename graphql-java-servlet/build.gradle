@@ -32,7 +32,7 @@ dependencies {
     testImplementation 'io.github.graphql-java:graphql-java-annotations:8.3'
 
     // Unit testing
-    testImplementation "org.codehaus.groovy:groovy-all:2.4.1"
+    testImplementation "org.codehaus.groovy:groovy-all:2.5.14"
     testImplementation "org.spockframework:spock-core:1.1-groovy-2.4-rc-3"
     testRuntimeOnly "cglib:cglib-nodep:3.2.4"
     testRuntimeOnly "org.objenesis:objenesis:2.5.1"
