@@ -18,6 +18,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
+          distribution: 'zulu'
           java-version: 8
       - name: Cache Gradle
         uses: actions/cache@v2
@@ -44,6 +45,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
+          distribution: 'zulu'
           java-version: 8
       - name: Cache Gradle
         uses: actions/cache@v2
