@@ -4,14 +4,16 @@ jar {
     bndfile = 'bnd.bnd'
 }
 
+apply plugin: 'java-library-distribution'
+
 dependencies {
     // GraphQL
-    apiElements "com.graphql-java:graphql-java:$LIB_GRAPHQL_JAVA_VER"
+    api "com.graphql-java:graphql-java:$LIB_GRAPHQL_JAVA_VER"
     implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"
 
     // JSON
-    apiElements "com.fasterxml.jackson.core:jackson-core:$LIB_JACKSON_VER"
-    apiElements "com.fasterxml.jackson.core:jackson-annotations:$LIB_JACKSON_VER"
-    apiElements "com.fasterxml.jackson.core:jackson-databind:$LIB_JACKSON_VER"
-    apiElements "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$LIB_JACKSON_VER"
+    api "com.fasterxml.jackson.core:jackson-core:$LIB_JACKSON_VER"
+    api "com.fasterxml.jackson.core:jackson-annotations:$LIB_JACKSON_VER"
+    api "com.fasterxml.jackson.core:jackson-databind:$LIB_JACKSON_VER"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$LIB_JACKSON_VER"
 }

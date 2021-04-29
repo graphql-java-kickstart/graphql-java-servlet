@@ -184,5 +184,5 @@ nexusStaging {
 }
 
 wrapper {
-    gradleVersion = "${GRADLE_WRAPPER_VER}"
+    distributionType = Wrapper.DistributionType.ALL
 }
