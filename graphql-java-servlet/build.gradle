@@ -17,8 +17,8 @@ dependencies {
     api(project(':graphql-java-kickstart'))
 
     // Servlet
-    compile 'javax.servlet:javax.servlet-api:3.1.0'
-    compile 'javax.websocket:javax.websocket-api:1.1'
+    api 'javax.servlet:javax.servlet-api:3.1.0'
+    api 'javax.websocket:javax.websocket-api:1.1'
     implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"
 
     // OSGi
