@@ -25,7 +25,7 @@ dependencies {
     compileOnly 'org.osgi:org.osgi.core:6.0.0'
     compileOnly 'org.osgi:org.osgi.service.cm:1.6.0'
     compileOnly 'org.osgi:org.osgi.service.component:1.3.0'
-    compileOnly 'org.osgi:org.osgi.service.component.annotations:1.3.0'
+    compileOnly 'org.osgi:org.osgi.service.component.annotations:1.4.0'
     compileOnly 'org.osgi:org.osgi.service.metatype.annotations:1.4.0'
     compileOnly 'org.osgi:org.osgi.annotation:6.0.0'
 
