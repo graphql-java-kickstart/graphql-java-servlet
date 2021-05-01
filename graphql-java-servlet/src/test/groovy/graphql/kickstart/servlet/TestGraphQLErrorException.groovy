@@ -9,24 +9,24 @@ import graphql.language.SourceLocation
  */
 class TestGraphQLErrorException extends RuntimeException implements GraphQLError {
 
-    public TestGraphQLErrorException(String message) {
-        super(message);
-    }
+  TestGraphQLErrorException(String message) {
+    super(message)
+  }
 
-    @Override
-    public Map<String, Object> getExtensions() {
-        Map<String, Object> customAttributes = new LinkedHashMap<>();
-        customAttributes.put("foo", "bar");
-        return customAttributes;
-    }
+  @Override
+  Map<String, Object> getExtensions() {
+    Map<String, Object> customAttributes = new LinkedHashMap<>()
+    customAttributes.put("foo", "bar")
+    return customAttributes
+  }
 
-    @Override
-    List<SourceLocation> getLocations() {
-        return null
-    }
+  @Override
+  List<SourceLocation> getLocations() {
+    return null
+  }
 
-    @Override
-    ErrorType getErrorType() {
-        return ErrorType.ValidationError;
-    }
+  @Override
+  ErrorType getErrorType() {
+    return ErrorType.ValidationError
+  }
 }
