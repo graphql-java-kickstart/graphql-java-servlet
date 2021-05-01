@@ -8,6 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: gradle/wrapper-validation-action@v1
+
   test:
     name: Test run
     needs: validation
@@ -34,7 +35,8 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Gradle Check
-        run: ./gradlew --info check
+        run: ./gradlew --info check -x verifyGoogleJavaFormat
+
   build:
     name: Publish release
     needs: test
