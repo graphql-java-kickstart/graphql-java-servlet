@@ -27,7 +27,7 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
     // GiB of memory allocation during large response processing.
     List<byte[]> serializedResults = new ArrayList<>(2 * results.size() + 1);
 
-    if (results.size() > 0) {
+    if (!results.isEmpty()) {
       serializedResults.add("[".getBytes(StandardCharsets.UTF_8));
     } else {
       serializedResults.add("[]".getBytes(StandardCharsets.UTF_8));
