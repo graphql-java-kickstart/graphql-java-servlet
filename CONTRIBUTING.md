@@ -1,8 +1,7 @@
 # How to contribute
 
 We're really glad you're reading this, because we need more volunteer developers
-to help with this project! If you haven't already, connect with us on 
-[Spectrum](https://spectrum.chat/graphql-java-kick?tab=posts).
+to help with this project!
 
 We can use all the help we can get on all our [GraphQL Java Kickstart](https://github.com/graphql-java-kickstart)
 projects. This work ranges from adding new features, fixing bugs, and answering questions to writing documentation. 
