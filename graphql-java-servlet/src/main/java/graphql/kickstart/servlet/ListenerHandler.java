@@ -49,7 +49,7 @@ class ListenerHandler {
         .collect(Collectors.toList());
   }
 
-  <T> void runCallbacks(List<T> callbacks, Consumer<T> action) {
+  void runCallbacks(Consumer<RequestCallback> action) {
     callbacks.forEach(
         callback -> {
           try {
@@ -61,14 +61,14 @@ class ListenerHandler {
   }
 
   void onSuccess() {
-    callbacks.forEach(it -> it.onSuccess(request, response));
+    runCallbacks(it -> it.onSuccess(request, response));
   }
 
   void onError(Throwable throwable) {
-    callbacks.forEach(it -> it.onError(request, response, throwable));
+    runCallbacks(it -> it.onError(request, response, throwable));
   }
 
   void onFinally() {
-    callbacks.forEach(it -> it.onFinally(request, response));
+    runCallbacks(it -> it.onFinally(request, response));
   }
 }
