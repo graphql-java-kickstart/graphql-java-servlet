@@ -15,9 +15,11 @@ public class CachingQueryResponseWriter implements QueryResponseWriter {
   private final GraphQLInvocationInput invocationInput;
   private final boolean error;
 
-  public CachingQueryResponseWriter(QueryResponseWriter delegate,
+  public CachingQueryResponseWriter(
+      QueryResponseWriter delegate,
       GraphQLResponseCacheManager responseCache,
-      GraphQLInvocationInput invocationInput, boolean error) {
+      GraphQLInvocationInput invocationInput,
+      boolean error) {
     this.delegate = delegate;
     this.responseCache = responseCache;
     this.invocationInput = invocationInput;
@@ -27,8 +29,8 @@ public class CachingQueryResponseWriter implements QueryResponseWriter {
   @Override
   public void write(HttpServletRequest request, HttpServletResponse response) throws IOException {
     if (responseCache.isCacheable(request, invocationInput)) {
-      BufferedHttpServletResponse cachingResponseWrapper = new BufferedHttpServletResponse(
-          response);
+      BufferedHttpServletResponse cachingResponseWrapper =
+          new BufferedHttpServletResponse(response);
 
       delegate.write(request, cachingResponseWrapper);
 
@@ -37,8 +39,8 @@ public class CachingQueryResponseWriter implements QueryResponseWriter {
           int errorStatusCode = cachingResponseWrapper.getStatus();
           String errorMessage = cachingResponseWrapper.getErrorMessage();
 
-          responseCache
-              .put(request, invocationInput, CachedResponse.ofError(errorStatusCode, errorMessage));
+          responseCache.put(
+              request, invocationInput, CachedResponse.ofError(errorStatusCode, errorMessage));
         } else {
           byte[] contentBytes = cachingResponseWrapper.getContentAsByteArray();
 
@@ -54,5 +56,4 @@ public class CachingQueryResponseWriter implements QueryResponseWriter {
       delegate.write(request, response);
     }
   }
-
 }

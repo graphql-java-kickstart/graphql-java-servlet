@@ -33,6 +33,12 @@ description. You can download the
 [IntelliJ Java Google Style](https://github.com/google/styleguide/blob/gh-pages/intellij-java-google-style.xml)
 to import in these settings in IntelliJ.
 
+These conventions are checked during the build phase. If the build fails because
+the code is not using the correct style you can fix this easily by running a gradle task
+```bash
+./gradlew googleJavaFormat
+```
+
 ### SonarLint
 
 It would also be very helpful to install the SonarLint plugin in your IDE and fix any

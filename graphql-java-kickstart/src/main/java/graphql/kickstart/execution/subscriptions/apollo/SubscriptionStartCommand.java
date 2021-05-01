@@ -28,23 +28,23 @@ class SubscriptionStartCommand implements SubscriptionCommand {
   public void apply(SubscriptionSession session, OperationMessage message) {
     log.debug("Apollo subscription start: {} --> {}", session, message.getPayload());
     connectionListeners.forEach(it -> it.onStart(session, message));
-    CompletableFuture<ExecutionResult> executionResult = executeAsync(message.getPayload(),
-        session);
+    CompletableFuture<ExecutionResult> executionResult =
+        executeAsync(message.getPayload(), session);
     executionResult.thenAccept(result -> handleSubscriptionStart(session, message.getId(), result));
   }
 
-  private CompletableFuture<ExecutionResult> executeAsync(Object payload,
-      SubscriptionSession session) {
+  private CompletableFuture<ExecutionResult> executeAsync(
+      Object payload, SubscriptionSession session) {
     Objects.requireNonNull(payload, "Payload is required");
     GraphQLRequest graphQLRequest = mapper.convertGraphQLRequest(payload);
 
-    GraphQLSingleInvocationInput invocationInput = invocationInputFactory
-        .create(graphQLRequest, session);
+    GraphQLSingleInvocationInput invocationInput =
+        invocationInputFactory.create(graphQLRequest, session);
     return graphQLInvoker.executeAsync(invocationInput);
   }
 
-  private void handleSubscriptionStart(SubscriptionSession session, String id,
-      ExecutionResult executionResult) {
+  private void handleSubscriptionStart(
+      SubscriptionSession session, String id, ExecutionResult executionResult) {
     ExecutionResult sanitizedExecutionResult = mapper.sanitizeErrors(executionResult);
     if (mapper.hasNoErrors(sanitizedExecutionResult)) {
       session.subscribe(id, sanitizedExecutionResult.getData());
@@ -53,5 +53,4 @@ class SubscriptionStartCommand implements SubscriptionCommand {
       session.sendMessage(new OperationMessage(GQL_ERROR, id, payload));
     }
   }
-
 }

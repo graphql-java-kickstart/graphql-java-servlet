@@ -8,23 +8,20 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public class VariablesDeserializer extends JsonDeserializer<Map<String, Object>> {
 
-  public static Map<String, Object> deserializeVariablesObject(Object variables,
-      ObjectCodec codec) {
+  public static Map<String, Object> deserializeVariablesObject(
+      Object variables, ObjectCodec codec) {
     if (variables instanceof Map) {
       @SuppressWarnings("unchecked")
       Map<String, Object> genericVariables = (Map<String, Object>) variables;
       return genericVariables;
     } else if (variables instanceof String) {
       try {
-        return codec
-            .readValue(codec.getFactory().createParser((String) variables),
-                new TypeReference<Map<String, Object>>() {
-                });
+        return codec.readValue(
+            codec.getFactory().createParser((String) variables),
+            new TypeReference<Map<String, Object>>() {});
       } catch (IOException e) {
         throw new VariablesDeserializationException("Cannot deserialize variables", e);
       }
@@ -39,6 +36,4 @@ public class VariablesDeserializer extends JsonDeserializer<Map<String, Object>>
       throws IOException {
     return deserializeVariablesObject(p.readValueAs(Object.class), p.getCodec());
   }
-
 }
-

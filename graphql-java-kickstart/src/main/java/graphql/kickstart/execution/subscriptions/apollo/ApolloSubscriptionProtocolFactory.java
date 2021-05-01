@@ -13,22 +13,21 @@ import java.util.Set;
 import java.util.function.Consumer;
 import lombok.Getter;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public class ApolloSubscriptionProtocolFactory extends SubscriptionProtocolFactory {
 
   public static final int KEEP_ALIVE_INTERVAL = 15;
-  @Getter
-  private final GraphQLObjectMapper objectMapper;
+  @Getter private final GraphQLObjectMapper objectMapper;
   private final ApolloCommandProvider commandProvider;
 
   public ApolloSubscriptionProtocolFactory(
       GraphQLObjectMapper objectMapper,
       GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
-      GraphQLInvoker graphQLInvoker
-  ) {
-    this(objectMapper, invocationInputFactory, graphQLInvoker,
+      GraphQLInvoker graphQLInvoker) {
+    this(
+        objectMapper,
+        invocationInputFactory,
+        graphQLInvoker,
         Duration.ofSeconds(KEEP_ALIVE_INTERVAL));
   }
 
@@ -50,8 +49,7 @@ public class ApolloSubscriptionProtocolFactory extends SubscriptionProtocolFacto
         invocationInputFactory,
         graphQLInvoker,
         connectionListeners,
-        Duration.ofSeconds(KEEP_ALIVE_INTERVAL)
-    );
+        Duration.ofSeconds(KEEP_ALIVE_INTERVAL));
   }
 
   public ApolloSubscriptionProtocolFactory(
@@ -66,20 +64,21 @@ public class ApolloSubscriptionProtocolFactory extends SubscriptionProtocolFacto
     if (connectionListeners != null) {
       listeners.addAll(connectionListeners);
     }
-    if (keepAliveInterval != null &&
-        listeners.stream().noneMatch(KeepAliveSubscriptionConnectionListener.class::isInstance)) {
+    if (keepAliveInterval != null
+        && listeners.stream()
+            .noneMatch(KeepAliveSubscriptionConnectionListener.class::isInstance)) {
       listeners.add(new KeepAliveSubscriptionConnectionListener(keepAliveInterval));
     }
-    commandProvider = new ApolloCommandProvider(
-        new GraphQLSubscriptionMapper(objectMapper),
-        invocationInputFactory,
-        graphQLInvoker,
-        listeners);
+    commandProvider =
+        new ApolloCommandProvider(
+            new GraphQLSubscriptionMapper(objectMapper),
+            invocationInputFactory,
+            graphQLInvoker,
+            listeners);
   }
 
   @Override
   public Consumer<String> createConsumer(SubscriptionSession session) {
     return new ApolloSubscriptionConsumer(session, objectMapper, commandProvider);
   }
-
 }

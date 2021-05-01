@@ -5,5 +5,4 @@ import graphql.GraphQL;
 public interface GraphQLBuilderConfigurer {
 
   void configure(GraphQL.Builder builder);
-
 }

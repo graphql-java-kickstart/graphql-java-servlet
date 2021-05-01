@@ -8,19 +8,18 @@ import graphql.introspection.IntrospectionQuery;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GraphQLRequest {
 
   private String query;
+
   @JsonDeserialize(using = VariablesDeserializer.class)
   private Map<String, Object> variables = new HashMap<>();
+
   private String operationName;
 
-  public GraphQLRequest() {
-  }
+  public GraphQLRequest() {}
 
   public GraphQLRequest(String query, Map<String, Object> variables, String operationName) {
     this.query = query;
@@ -31,8 +30,8 @@ public class GraphQLRequest {
   }
 
   public static GraphQLRequest createIntrospectionRequest() {
-    return new GraphQLRequest(IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(),
-        "IntrospectionQuery");
+    return new GraphQLRequest(
+        IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), "IntrospectionQuery");
   }
 
   public static GraphQLRequest createQueryOnlyRequest(String query) {
@@ -64,7 +63,4 @@ public class GraphQLRequest {
   public void setOperationName(String operationName) {
     this.operationName = operationName;
   }
-
 }
-
-

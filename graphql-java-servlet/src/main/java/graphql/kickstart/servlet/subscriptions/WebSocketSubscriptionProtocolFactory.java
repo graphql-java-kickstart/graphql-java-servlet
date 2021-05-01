@@ -9,5 +9,4 @@ public interface WebSocketSubscriptionProtocolFactory {
   Consumer<String> createConsumer(SubscriptionSession session);
 
   SubscriptionSession createSession(Session session);
-
 }

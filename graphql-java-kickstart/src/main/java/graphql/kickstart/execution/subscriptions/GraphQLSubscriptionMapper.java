@@ -47,5 +47,4 @@ public class GraphQLSubscriptionMapper {
       return e.getMessage();
     }
   }
-
 }

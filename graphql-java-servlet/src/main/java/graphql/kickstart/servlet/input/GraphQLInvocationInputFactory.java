@@ -21,9 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocationInputFactory {
 
   private final Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier;
@@ -55,27 +53,28 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
     return schemaProviderSupplier.get();
   }
 
-  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest,
-      HttpServletRequest request,
-      HttpServletResponse response) {
+  public GraphQLSingleInvocationInput create(
+      GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response) {
     return create(graphQLRequest, request, response, false);
   }
 
-  public GraphQLBatchedInvocationInput create(ContextSetting contextSetting,
+  public GraphQLBatchedInvocationInput create(
+      ContextSetting contextSetting,
       List<GraphQLRequest> graphQLRequests,
       HttpServletRequest request,
       HttpServletResponse response) {
     return create(contextSetting, graphQLRequests, request, response, false);
   }
 
-  public GraphQLSingleInvocationInput createReadOnly(GraphQLRequest graphQLRequest,
-      HttpServletRequest request,
-      HttpServletResponse response) {
+  public GraphQLSingleInvocationInput createReadOnly(
+      GraphQLRequest graphQLRequest, HttpServletRequest request, HttpServletResponse response) {
     return create(graphQLRequest, request, response, true);
   }
 
-  public GraphQLBatchedInvocationInput createReadOnly(ContextSetting contextSetting,
-      List<GraphQLRequest> graphQLRequests, HttpServletRequest request,
+  public GraphQLBatchedInvocationInput createReadOnly(
+      ContextSetting contextSetting,
+      List<GraphQLRequest> graphQLRequests,
+      HttpServletRequest request,
       HttpServletResponse response) {
     return create(contextSetting, graphQLRequests, request, response, true);
   }
@@ -85,67 +84,68 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
         graphQLRequest,
         schemaProviderSupplier.get().getSchema(),
         contextBuilderSupplier.get().build(),
-        rootObjectBuilderSupplier.get().build()
-    );
+        rootObjectBuilderSupplier.get().build());
   }
 
-  private GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest,
+  private GraphQLSingleInvocationInput create(
+      GraphQLRequest graphQLRequest,
       HttpServletRequest request,
       HttpServletResponse response,
       boolean readOnly) {
     return new GraphQLSingleInvocationInput(
         graphQLRequest,
-        readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request)
+        readOnly
+            ? schemaProviderSupplier.get().getReadOnlySchema(request)
             : schemaProviderSupplier.get().getSchema(request),
         contextBuilderSupplier.get().build(request, response),
-        rootObjectBuilderSupplier.get().build(request)
-    );
+        rootObjectBuilderSupplier.get().build(request));
   }
 
-  private GraphQLBatchedInvocationInput create(ContextSetting contextSetting,
+  private GraphQLBatchedInvocationInput create(
+      ContextSetting contextSetting,
       List<GraphQLRequest> graphQLRequests,
       HttpServletRequest request,
-      HttpServletResponse response, boolean readOnly) {
+      HttpServletResponse response,
+      boolean readOnly) {
     return contextSetting.getBatch(
         graphQLRequests,
-        readOnly ? schemaProviderSupplier.get().getReadOnlySchema(request)
+        readOnly
+            ? schemaProviderSupplier.get().getReadOnlySchema(request)
             : schemaProviderSupplier.get().getSchema(request),
         () -> contextBuilderSupplier.get().build(request, response),
-        rootObjectBuilderSupplier.get().build(request)
-    );
+        rootObjectBuilderSupplier.get().build(request));
   }
 
   @Override
-  public GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest,
-      SubscriptionSession session) {
-    HandshakeRequest request = (HandshakeRequest) session.getUserProperties()
-        .get(HandshakeRequest.class.getName());
+  public GraphQLSingleInvocationInput create(
+      GraphQLRequest graphQLRequest, SubscriptionSession session) {
+    HandshakeRequest request =
+        (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());
     return new GraphQLSingleInvocationInput(
         graphQLRequest,
         schemaProviderSupplier.get().getSchema(request),
         contextBuilderSupplier.get().build((Session) session.unwrap(), request),
-        rootObjectBuilderSupplier.get().build(request)
-    );
+        rootObjectBuilderSupplier.get().build(request));
   }
 
-  public GraphQLBatchedInvocationInput create(ContextSetting contextSetting,
-      List<GraphQLRequest> graphQLRequest,
-      Session session) {
-    HandshakeRequest request = (HandshakeRequest) session.getUserProperties()
-        .get(HandshakeRequest.class.getName());
+  public GraphQLBatchedInvocationInput create(
+      ContextSetting contextSetting, List<GraphQLRequest> graphQLRequest, Session session) {
+    HandshakeRequest request =
+        (HandshakeRequest) session.getUserProperties().get(HandshakeRequest.class.getName());
     return contextSetting.getBatch(
         graphQLRequest,
         schemaProviderSupplier.get().getSchema(request),
         () -> contextBuilderSupplier.get().build(session, request),
-        rootObjectBuilderSupplier.get().build(request)
-    );
+        rootObjectBuilderSupplier.get().build(request));
   }
 
   public static class Builder {
 
     private final Supplier<GraphQLSchemaServletProvider> schemaProviderSupplier;
-    private Supplier<GraphQLServletContextBuilder> contextBuilderSupplier = DefaultGraphQLServletContextBuilder::new;
-    private Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier = DefaultGraphQLRootObjectBuilder::new;
+    private Supplier<GraphQLServletContextBuilder> contextBuilderSupplier =
+        DefaultGraphQLServletContextBuilder::new;
+    private Supplier<GraphQLServletRootObjectBuilder> rootObjectBuilderSupplier =
+        DefaultGraphQLRootObjectBuilder::new;
 
     public Builder(GraphQLSchemaServletProvider schemaProvider) {
       this(() -> schemaProvider);
@@ -176,8 +176,8 @@ public class GraphQLInvocationInputFactory implements GraphQLSubscriptionInvocat
     }
 
     public GraphQLInvocationInputFactory build() {
-      return new GraphQLInvocationInputFactory(schemaProviderSupplier, contextBuilderSupplier,
-          rootObjectBuilderSupplier);
+      return new GraphQLInvocationInputFactory(
+          schemaProviderSupplier, contextBuilderSupplier, rootObjectBuilderSupplier);
     }
   }
 }

@@ -15,15 +15,16 @@ public class ApolloCommandProvider {
       GraphQLSubscriptionMapper mapper,
       GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
       GraphQLInvoker graphQLInvoker,
-      Collection<ApolloSubscriptionConnectionListener> connectionListeners
-  ) {
-    commands
-        .put(Type.GQL_CONNECTION_INIT, new SubscriptionConnectionInitCommand(connectionListeners));
-    commands.put(Type.GQL_START,
-        new SubscriptionStartCommand(mapper, invocationInputFactory, graphQLInvoker,
-            connectionListeners));
+      Collection<ApolloSubscriptionConnectionListener> connectionListeners) {
+    commands.put(
+        Type.GQL_CONNECTION_INIT, new SubscriptionConnectionInitCommand(connectionListeners));
+    commands.put(
+        Type.GQL_START,
+        new SubscriptionStartCommand(
+            mapper, invocationInputFactory, graphQLInvoker, connectionListeners));
     commands.put(Type.GQL_STOP, new SubscriptionStopCommand(connectionListeners));
-    commands.put(Type.GQL_CONNECTION_TERMINATE,
+    commands.put(
+        Type.GQL_CONNECTION_TERMINATE,
         new SubscriptionConnectionTerminateCommand(connectionListeners));
   }
 
@@ -33,5 +34,4 @@ public class ApolloCommandProvider {
     }
     throw new IllegalStateException("No command found for type " + type);
   }
-
 }

@@ -49,7 +49,7 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
 
     if (totalLength > Integer.MAX_VALUE) {
       throw new IllegalStateException(
-              "Response size exceed 2GiB. Query will fail. Seen size: " + totalLength);
+          "Response size exceed 2GiB. Query will fail. Seen size: " + totalLength);
     }
     response.setContentLength((int) totalLength);
 
@@ -57,5 +57,4 @@ class BatchedQueryResponseWriter implements QueryResponseWriter {
       response.getOutputStream().write(result);
     }
   }
-
 }

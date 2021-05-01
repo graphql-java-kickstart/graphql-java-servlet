@@ -20,5 +20,4 @@ public interface ApolloSubscriptionConnectionListener extends SubscriptionConnec
   default void onTerminate(SubscriptionSession session, OperationMessage message) {
     // do nothing
   }
-
 }

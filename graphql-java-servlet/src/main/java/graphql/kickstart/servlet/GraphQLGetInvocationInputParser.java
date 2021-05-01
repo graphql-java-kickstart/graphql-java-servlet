@@ -18,14 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputParser {
 
-  GraphQLGetInvocationInputParser(GraphQLInvocationInputFactory invocationInputFactory,
-      GraphQLObjectMapper graphQLObjectMapper, ContextSetting contextSetting) {
+  GraphQLGetInvocationInputParser(
+      GraphQLInvocationInputFactory invocationInputFactory,
+      GraphQLObjectMapper graphQLObjectMapper,
+      ContextSetting contextSetting) {
     super(invocationInputFactory, graphQLObjectMapper, contextSetting);
   }
 
-  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request,
-      HttpServletResponse response)
-      throws IOException {
+  public GraphQLInvocationInput getGraphQLInvocationInput(
+      HttpServletRequest request, HttpServletResponse response) throws IOException {
     if (isIntrospectionQuery(request)) {
       GraphQLRequest graphqlRequest = GraphQLRequest.createIntrospectionRequest();
       return invocationInputFactory.create(graphqlRequest, request, response);
@@ -44,13 +45,13 @@ class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputPars
     }
 
     List<GraphQLRequest> graphqlRequests = graphQLObjectMapper.readBatchedGraphQLRequest(query);
-    return invocationInputFactory
-        .createReadOnly(contextSetting, graphqlRequests, request, response);
+    return invocationInputFactory.createReadOnly(
+        contextSetting, graphqlRequests, request, response);
   }
 
   private boolean isIntrospectionQuery(HttpServletRequest request) {
-    String path = Optional.ofNullable(request.getPathInfo()).orElseGet(request::getServletPath)
-        .toLowerCase();
+    String path =
+        Optional.ofNullable(request.getPathInfo()).orElseGet(request::getServletPath).toLowerCase();
     return path.contentEquals("/schema.json");
   }
 
@@ -60,5 +61,4 @@ class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputPars
         .map(HashMap::new)
         .orElseGet(HashMap::new);
   }
-
 }

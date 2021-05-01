@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class GraphQLBatchedQueryResult implements GraphQLQueryResult {
 
-  @Getter
-  private final List<ExecutionResult> results;
+  @Getter private final List<ExecutionResult> results;
 
   @Override
   public boolean isBatched() {
@@ -20,5 +19,4 @@ class GraphQLBatchedQueryResult implements GraphQLQueryResult {
   public boolean isAsynchronous() {
     return false;
   }
-
 }

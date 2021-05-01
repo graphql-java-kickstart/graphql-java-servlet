@@ -16,7 +16,8 @@ public class DefaultGraphQLContext implements GraphQLContext {
   private final DataLoaderRegistry dataLoaderRegistry;
 
   public DefaultGraphQLContext(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
-    this.dataLoaderRegistry = Objects.requireNonNull(dataLoaderRegistry, "dataLoaderRegistry is required");
+    this.dataLoaderRegistry =
+        Objects.requireNonNull(dataLoaderRegistry, "dataLoaderRegistry is required");
     this.subject = subject;
   }
 
@@ -33,5 +34,4 @@ public class DefaultGraphQLContext implements GraphQLContext {
   public DataLoaderRegistry getDataLoaderRegistry() {
     return dataLoaderRegistry;
   }
-
 }

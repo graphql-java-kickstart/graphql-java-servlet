@@ -8,11 +8,9 @@ import graphql.kickstart.execution.subscriptions.SubscriptionSession;
 import java.util.function.Consumer;
 import javax.websocket.Session;
 
-/**
- * @author Andrew Potter
- */
-public class FallbackSubscriptionProtocolFactory extends SubscriptionProtocolFactory implements
-    WebSocketSubscriptionProtocolFactory {
+/** @author Andrew Potter */
+public class FallbackSubscriptionProtocolFactory extends SubscriptionProtocolFactory
+    implements WebSocketSubscriptionProtocolFactory {
 
   private final GraphQLSubscriptionMapper mapper;
   private final GraphQLSubscriptionInvocationInputFactory invocationInputFactory;
@@ -30,8 +28,8 @@ public class FallbackSubscriptionProtocolFactory extends SubscriptionProtocolFac
 
   @Override
   public Consumer<String> createConsumer(SubscriptionSession session) {
-    return new FallbackSubscriptionConsumer(session, mapper, invocationInputFactory,
-        graphQLInvoker);
+    return new FallbackSubscriptionConsumer(
+        session, mapper, invocationInputFactory, graphQLInvoker);
   }
 
   @Override

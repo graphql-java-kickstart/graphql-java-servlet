@@ -9,5 +9,4 @@ public interface GraphQLServletRootObjectBuilder extends GraphQLRootObjectBuilde
   Object build(HttpServletRequest req);
 
   Object build(HandshakeRequest req);
-
 }

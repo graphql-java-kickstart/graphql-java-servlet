@@ -48,5 +48,4 @@ class RenderableNonNullableFieldWasNullError implements GraphQLError {
   public Map<String, Object> getExtensions() {
     return delegate.getExtensions();
   }
-
 }

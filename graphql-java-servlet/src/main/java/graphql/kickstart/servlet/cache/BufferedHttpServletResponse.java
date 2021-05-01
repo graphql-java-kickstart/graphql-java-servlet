@@ -57,8 +57,9 @@ public class BufferedHttpServletResponse extends HttpServletResponseWrapper {
 
     if (writer == null) {
       copier = new BufferedOutputStream(getResponse().getOutputStream());
-      writer = new PrintWriter(new OutputStreamWriter(copier, getResponse().getCharacterEncoding()),
-          true);
+      writer =
+          new PrintWriter(
+              new OutputStreamWriter(copier, getResponse().getCharacterEncoding()), true);
     }
 
     return writer;
@@ -137,7 +138,5 @@ public class BufferedHttpServletResponse extends HttpServletResponseWrapper {
     public byte[] toByteArray() {
       return buf.toByteArray();
     }
-
   }
-
 }

@@ -10,5 +10,4 @@ class StaticDataPublisher<T> extends SingleSubscriberPublisher<T> implements Pub
     offer(data);
     noMoreData();
   }
-
 }

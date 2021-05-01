@@ -27,12 +27,15 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
   private final QueryResponseWriterFactory queryResponseWriterFactory;
 
   @Override
-  public void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
+  public void execute(
+      GraphQLInvocationInput invocationInput,
+      HttpServletRequest request,
       HttpServletResponse response) {
     if (request.isAsyncSupported()) {
-      AsyncContext asyncContext = request.isAsyncStarted()
-          ? request.getAsyncContext()
-          : request.startAsync(request, response);
+      AsyncContext asyncContext =
+          request.isAsyncStarted()
+              ? request.getAsyncContext()
+              : request.startAsync(request, response);
       asyncContext.setTimeout(configuration.getAsyncTimeout());
       invoke(invocationInput, request, response)
           .thenAccept(result -> writeResultResponse(invocationInput, result, request, response))
@@ -48,8 +51,10 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     }
   }
 
-  private void writeResultResponse(GraphQLInvocationInput invocationInput,
-      GraphQLQueryResult queryResult, HttpServletRequest request,
+  private void writeResultResponse(
+      GraphQLInvocationInput invocationInput,
+      GraphQLQueryResult queryResult,
+      HttpServletRequest request,
       HttpServletResponse response) {
     QueryResponseWriter queryResponseWriter = createWriter(invocationInput, queryResult);
     try {
@@ -59,8 +64,8 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     }
   }
 
-  protected QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput,
-      GraphQLQueryResult queryResult) {
+  protected QueryResponseWriter createWriter(
+      GraphQLInvocationInput invocationInput, GraphQLQueryResult queryResult) {
     return queryResponseWriterFactory.createWriter(invocationInput, queryResult, configuration);
   }
 
@@ -71,7 +76,8 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return null;
   }
 
-  private CompletableFuture<GraphQLQueryResult> invoke(GraphQLInvocationInput invocationInput,
+  private CompletableFuture<GraphQLQueryResult> invoke(
+      GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
       HttpServletResponse response) {
     if (invocationInput instanceof GraphQLSingleInvocationInput) {
@@ -85,8 +91,8 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       HttpServletRequest request,
       HttpServletResponse response) {
     BatchInputPreProcessor preprocessor = configuration.getBatchInputPreProcessor();
-    BatchInputPreProcessResult result = preprocessor
-        .preProcessBatch(batchedInvocationInput, request, response);
+    BatchInputPreProcessResult result =
+        preprocessor.preProcessBatch(batchedInvocationInput, request, response);
     if (result.isExecutable()) {
       return graphQLInvoker.queryAsync(result.getBatchedInvocationInput());
     }
@@ -94,5 +100,4 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return CompletableFuture.completedFuture(
         GraphQLQueryResult.createError(result.getStatusCode(), result.getStatusMessage()));
   }
-
 }

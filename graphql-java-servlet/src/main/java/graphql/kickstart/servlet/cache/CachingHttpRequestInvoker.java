@@ -22,20 +22,24 @@ public class CachingHttpRequestInvoker implements HttpRequestInvoker {
   private final CacheReader cacheReader;
 
   public CachingHttpRequestInvoker(GraphQLConfiguration configuration) {
-    this(configuration, new HttpRequestInvokerImpl(configuration, configuration.getGraphQLInvoker(),
-        new CachingQueryResponseWriterFactory()), new CacheReader());
+    this(
+        configuration,
+        new HttpRequestInvokerImpl(
+            configuration,
+            configuration.getGraphQLInvoker(),
+            new CachingQueryResponseWriterFactory()),
+        new CacheReader());
   }
 
-  /**
-   * Try to return value from cache if cache exists, otherwise process the query normally
-   */
+  /** Try to return value from cache if cache exists, otherwise process the query normally */
   @Override
-  public void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
+  public void execute(
+      GraphQLInvocationInput invocationInput,
+      HttpServletRequest request,
       HttpServletResponse response) {
     try {
       if (!cacheReader.responseFromCache(
-          invocationInput, request, response, configuration.getResponseCacheManager()
-      )) {
+          invocationInput, request, response, configuration.getResponseCacheManager())) {
         requestInvoker.execute(invocationInput, request, response);
       }
     } catch (IOException e) {
@@ -43,5 +47,4 @@ public class CachingHttpRequestInvoker implements HttpRequestInvoker {
       log.warn("Unexpected error happened during response from cache", e);
     }
   }
-
 }

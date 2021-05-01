@@ -31,7 +31,8 @@ public interface GraphQLResponseCacheManager {
    * @param invocationInput input data
    * @param cachedResponse response to cache
    */
-  void put(HttpServletRequest request, GraphQLInvocationInput invocationInput,
+  void put(
+      HttpServletRequest request,
+      GraphQLInvocationInput invocationInput,
       CachedResponse cachedResponse);
-
 }

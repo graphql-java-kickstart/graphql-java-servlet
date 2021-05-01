@@ -5,11 +5,9 @@ import graphql.schema.GraphQLSchema;
 import javax.servlet.http.HttpServletRequest;
 import javax.websocket.server.HandshakeRequest;
 
-/**
- * @author Andrew Potter
- */
-public class DefaultGraphQLSchemaServletProvider extends DefaultGraphQLSchemaProvider implements
-    GraphQLSchemaServletProvider {
+/** @author Andrew Potter */
+public class DefaultGraphQLSchemaServletProvider extends DefaultGraphQLSchemaProvider
+    implements GraphQLSchemaServletProvider {
 
   public DefaultGraphQLSchemaServletProvider(GraphQLSchema schema) {
     super(schema);
@@ -29,5 +27,4 @@ public class DefaultGraphQLSchemaServletProvider extends DefaultGraphQLSchemaPro
   public GraphQLSchema getReadOnlySchema(HttpServletRequest request) {
     return getReadOnlySchema();
   }
-
 }

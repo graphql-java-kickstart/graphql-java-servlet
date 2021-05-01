@@ -5,5 +5,4 @@ public class VariableMapException extends RuntimeException {
   VariableMapException(String message) {
     super(message);
   }
-
 }

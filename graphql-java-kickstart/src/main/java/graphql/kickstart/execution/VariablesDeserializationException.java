@@ -9,5 +9,4 @@ public class VariablesDeserializationException extends RuntimeException {
   VariablesDeserializationException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

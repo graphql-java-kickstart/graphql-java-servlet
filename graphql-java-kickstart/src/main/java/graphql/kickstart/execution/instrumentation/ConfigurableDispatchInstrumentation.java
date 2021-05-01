@@ -35,9 +35,7 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
   private final Function<DataLoaderRegistry, TrackingApproach> approachFunction;
 
-  /**
-   * Creates a DataLoaderDispatcherInstrumentation with the default options
-   */
+  /** Creates a DataLoaderDispatcherInstrumentation with the default options */
   public ConfigurableDispatchInstrumentation(
       Function<DataLoaderRegistry, TrackingApproach> approachFunction) {
     this(DataLoaderDispatcherInstrumentationOptions.newOptions(), approachFunction);
@@ -48,23 +46,25 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
    *
    * @param options the options to control the behaviour
    */
-  public ConfigurableDispatchInstrumentation(DataLoaderDispatcherInstrumentationOptions options,
+  public ConfigurableDispatchInstrumentation(
+      DataLoaderDispatcherInstrumentationOptions options,
       Function<DataLoaderRegistry, TrackingApproach> approachFunction) {
     this.options = options;
     this.approachFunction = approachFunction;
   }
 
-
   @Override
   public InstrumentationState createState(InstrumentationCreateStateParameters parameters) {
     DataLoaderRegistry registry = parameters.getExecutionInput().getDataLoaderRegistry();
-    return new DataLoaderDispatcherInstrumentationState(registry, approachFunction.apply(registry),
+    return new DataLoaderDispatcherInstrumentationState(
+        registry,
+        approachFunction.apply(registry),
         parameters.getExecutionInput().getExecutionId());
   }
 
   @Override
-  public DataFetcher<?> instrumentDataFetcher(DataFetcher<?> dataFetcher,
-      InstrumentationFieldFetchParameters parameters) {
+  public DataFetcher<?> instrumentDataFetcher(
+      DataFetcher<?> dataFetcher, InstrumentationFieldFetchParameters parameters) {
     DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
     if (state.isAggressivelyBatching()) {
       return dataFetcher;
@@ -73,11 +73,12 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
     // currently only AsyncExecutionStrategy with DataLoader and hence this allows us to "dispatch"
     // on every object if its not using aggressive batching for other execution strategies
     // which allows them to work if used.
-    return (DataFetcher<Object>) environment -> {
-      Object obj = dataFetcher.get(environment);
-      doImmediatelyDispatch(state);
-      return obj;
-    };
+    return (DataFetcher<Object>)
+        environment -> {
+          Object obj = dataFetcher.get(environment);
+          doImmediatelyDispatch(state);
+          return obj;
+        };
   }
 
   private void doImmediatelyDispatch(DataLoaderDispatcherInstrumentationState state) {
@@ -96,7 +97,8 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
   private boolean isDataLoaderCompatible(ExecutionContext executionContext) {
     //
-    // currently we only support Query operations and ONLY with AsyncExecutionStrategy as the query ES
+    // currently we only support Query operations and ONLY with AsyncExecutionStrategy as the query
+    // ES
     // This may change in the future but this is the fix for now
     //
     if (executionContext.getOperationDefinition().getOperation()
@@ -126,7 +128,6 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
           // default empty implementation
         }
       };
-
     }
     return state.getApproach().beginExecutionStrategy(parameters);
   }
@@ -146,25 +147,23 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
   @Override
   public CompletableFuture<ExecutionResult> instrumentExecutionResult(
-      ExecutionResult executionResult,
-      InstrumentationExecutionParameters parameters) {
+      ExecutionResult executionResult, InstrumentationExecutionParameters parameters) {
     DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
     state.getApproach().removeTracking(parameters.getExecutionInput().getExecutionId());
     if (!options.isIncludeStatistics()) {
       return CompletableFuture.completedFuture(executionResult);
     } else {
       Map<Object, Object> currentExt = executionResult.getExtensions();
-      Map<Object, Object> statsMap = new LinkedHashMap<>(
-          currentExt == null ? Collections.emptyMap() : currentExt);
+      Map<Object, Object> statsMap =
+          new LinkedHashMap<>(currentExt == null ? Collections.emptyMap() : currentExt);
       Map<Object, Object> dataLoaderStats = buildStatisticsMap(state);
       statsMap.put("dataloader", dataLoaderStats);
 
       log.debug("Data loader stats : {}", dataLoaderStats);
 
-      return CompletableFuture
-          .completedFuture(
-              new ExecutionResultImpl(executionResult.getData(), executionResult.getErrors(),
-                  statsMap));
+      return CompletableFuture.completedFuture(
+          new ExecutionResultImpl(
+              executionResult.getData(), executionResult.getErrors(), statsMap));
     }
   }
 

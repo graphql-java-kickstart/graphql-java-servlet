@@ -5,5 +5,4 @@ public class ContextSettingNotConfiguredException extends RuntimeException {
   ContextSettingNotConfiguredException() {
     super("Unconfigured context setting type");
   }
-
 }

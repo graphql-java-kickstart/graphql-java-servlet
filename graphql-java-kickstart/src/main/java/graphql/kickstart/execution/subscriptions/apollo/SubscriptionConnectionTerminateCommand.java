@@ -18,5 +18,4 @@ class SubscriptionConnectionTerminateCommand implements SubscriptionCommand {
     connectionListeners.forEach(it -> it.onTerminate(session, message));
     session.close("client requested " + GQL_CONNECTION_TERMINATE.getValue());
   }
-
 }

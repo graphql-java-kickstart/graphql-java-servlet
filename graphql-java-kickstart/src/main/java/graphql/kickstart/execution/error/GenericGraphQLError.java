@@ -8,9 +8,7 @@ import graphql.GraphQLError;
 import graphql.language.SourceLocation;
 import java.util.List;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public class GenericGraphQLError implements GraphQLError {
 
   private final String message;

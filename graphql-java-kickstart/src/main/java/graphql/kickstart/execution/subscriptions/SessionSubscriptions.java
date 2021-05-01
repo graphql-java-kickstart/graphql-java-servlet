@@ -4,9 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.reactivestreams.Subscription;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public class SessionSubscriptions {
 
   private final Object lock = new Object();

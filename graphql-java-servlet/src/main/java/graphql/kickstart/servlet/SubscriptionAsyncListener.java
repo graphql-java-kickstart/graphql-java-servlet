@@ -30,5 +30,4 @@ class SubscriptionAsyncListener implements AsyncListener {
   public void onStartAsync(AsyncEvent event) {
     // default empty implementation
   }
-
 }

@@ -7,11 +7,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 
-/**
- * Returns an empty context.
- */
-public class DefaultGraphQLServletContextBuilder extends DefaultGraphQLContextBuilder implements
-    GraphQLServletContextBuilder {
+/** Returns an empty context. */
+public class DefaultGraphQLServletContextBuilder extends DefaultGraphQLContextBuilder
+    implements GraphQLServletContextBuilder {
 
   @Override
   public GraphQLContext build(HttpServletRequest request, HttpServletResponse response) {
@@ -20,8 +18,9 @@ public class DefaultGraphQLServletContextBuilder extends DefaultGraphQLContextBu
 
   @Override
   public GraphQLContext build(Session session, HandshakeRequest handshakeRequest) {
-    return DefaultGraphQLWebSocketContext.createWebSocketContext().with(session)
-        .with(handshakeRequest).build();
+    return DefaultGraphQLWebSocketContext.createWebSocketContext()
+        .with(session)
+        .with(handshakeRequest)
+        .build();
   }
-
 }

@@ -26,5 +26,4 @@ public class ApolloSubscriptionSession extends DefaultSubscriptionSession {
   public void sendCompleteMessage(String id) {
     sendMessage(new OperationMessage(Type.GQL_COMPLETE, id, null));
   }
-
 }

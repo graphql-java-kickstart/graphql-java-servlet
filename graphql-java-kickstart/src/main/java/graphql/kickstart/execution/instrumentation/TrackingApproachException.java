@@ -5,5 +5,4 @@ public class TrackingApproachException extends RuntimeException {
   TrackingApproachException(String message) {
     super(message);
   }
-
 }

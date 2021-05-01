@@ -33,20 +33,26 @@ class ApolloSubscriptionKeepAliveRunner {
   }
 
   private ScheduledFuture<?> startKeepAlive(SubscriptionSession session) {
-    return executor.scheduleAtFixedRate(() -> {
-      try {
-        if (session.isOpen()) {
-          session.sendMessage(keepAliveMessage);
-        } else {
-          log.debug("Session {} appears to be closed. Aborting keep alive", session.getId());
-          abort(session);
-        }
-      } catch (Exception t) {
-        log.error("Cannot send keep alive message to session {}. Aborting keep alive",
-            session.getId(), t);
-        abort(session);
-      }
-    }, 0, keepAliveIntervalSeconds, TimeUnit.SECONDS);
+    return executor.scheduleAtFixedRate(
+        () -> {
+          try {
+            if (session.isOpen()) {
+              session.sendMessage(keepAliveMessage);
+            } else {
+              log.debug("Session {} appears to be closed. Aborting keep alive", session.getId());
+              abort(session);
+            }
+          } catch (Exception t) {
+            log.error(
+                "Cannot send keep alive message to session {}. Aborting keep alive",
+                session.getId(),
+                t);
+            abort(session);
+          }
+        },
+        0,
+        keepAliveIntervalSeconds,
+        TimeUnit.SECONDS);
   }
 
   void abort(SubscriptionSession session) {
@@ -55,5 +61,4 @@ class ApolloSubscriptionKeepAliveRunner {
       future.cancel(true);
     }
   }
-
 }

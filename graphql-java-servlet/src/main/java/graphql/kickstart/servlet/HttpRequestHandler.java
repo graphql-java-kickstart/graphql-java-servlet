@@ -14,5 +14,4 @@ public interface HttpRequestHandler {
   int STATUS_INTERNAL_SERVER_ERROR = 500;
 
   void handle(HttpServletRequest request, HttpServletResponse response) throws IOException;
-
 }

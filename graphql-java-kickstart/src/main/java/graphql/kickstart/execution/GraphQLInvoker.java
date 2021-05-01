@@ -35,14 +35,15 @@ public class GraphQLInvoker {
       return executeAsync((GraphQLSingleInvocationInput) invocationInput)
           .thenApply(GraphQLQueryResult::create);
     }
-    GraphQLBatchedInvocationInput batchedInvocationInput = (GraphQLBatchedInvocationInput) invocationInput;
+    GraphQLBatchedInvocationInput batchedInvocationInput =
+        (GraphQLBatchedInvocationInput) invocationInput;
     return executeAsync(batchedInvocationInput).thenApply(GraphQLQueryResult::create);
   }
 
   private CompletableFuture<List<ExecutionResult>> executeAsync(
       GraphQLBatchedInvocationInput batchedInvocationInput) {
-    GraphQL graphQL = batchedDataLoaderGraphQLBuilder
-        .newGraphQL(batchedInvocationInput, graphQLBuilder);
+    GraphQL graphQL =
+        batchedDataLoaderGraphQLBuilder.newGraphQL(batchedInvocationInput, graphQLBuilder);
     return sequence(
         batchedInvocationInput.getExecutionInputs().stream()
             .map(executionInput -> proxy.executeAsync(graphQL, executionInput))
@@ -52,14 +53,15 @@ public class GraphQLInvoker {
   @SuppressWarnings({"unchecked", "rawtypes"})
   private <T> CompletableFuture<List<T>> sequence(List<CompletableFuture<T>> futures) {
     CompletableFuture[] futuresArray = futures.toArray(new CompletableFuture[0]);
-    return CompletableFuture.allOf(futuresArray).thenApply(aVoid -> {
-      List<T> result = new ArrayList<>(futures.size());
-      for (CompletableFuture future : futuresArray) {
-        assert future.isDone(); // per the API contract of allOf()
-        result.add((T) future.join());
-      }
-      return result;
-    });
+    return CompletableFuture.allOf(futuresArray)
+        .thenApply(
+            aVoid -> {
+              List<T> result = new ArrayList<>(futures.size());
+              for (CompletableFuture future : futuresArray) {
+                assert future.isDone(); // per the API contract of allOf()
+                result.add((T) future.join());
+              }
+              return result;
+            });
   }
 }
-

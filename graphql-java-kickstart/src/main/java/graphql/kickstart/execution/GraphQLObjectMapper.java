@@ -24,20 +24,18 @@ import java.util.Map;
 import java.util.function.Supplier;
 import lombok.SneakyThrows;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public class GraphQLObjectMapper {
 
-  private static final TypeReference<Map<String, List<String>>>
-      MULTIPART_MAP_TYPE_REFERENCE = new TypeReference<Map<String, List<String>>>() {
-  };
+  private static final TypeReference<Map<String, List<String>>> MULTIPART_MAP_TYPE_REFERENCE =
+      new TypeReference<Map<String, List<String>>>() {};
   private final ObjectMapperProvider objectMapperProvider;
   private final Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier;
 
   private ObjectMapper mapper;
 
-  protected GraphQLObjectMapper(ObjectMapperProvider objectMapperProvider,
+  protected GraphQLObjectMapper(
+      ObjectMapperProvider objectMapperProvider,
       Supplier<GraphQLErrorHandler> graphQLErrorHandlerSupplier) {
     this.objectMapperProvider = objectMapperProvider;
     this.graphQLErrorHandlerSupplier = graphQLErrorHandlerSupplier;
@@ -62,9 +60,7 @@ public class GraphQLObjectMapper {
     return result;
   }
 
-  /**
-   * @return an {@link ObjectReader} for deserializing {@link GraphQLRequest}
-   */
+  /** @return an {@link ObjectReader} for deserializing {@link GraphQLRequest} */
   public ObjectReader getGraphQLRequestMapper() {
     return getJacksonMapper().reader().forType(GraphQLRequest.class);
   }
@@ -102,8 +98,7 @@ public class GraphQLObjectMapper {
 
   @SneakyThrows
   public String serializeResultAsJson(ExecutionResult executionResult) {
-    return getJacksonMapper()
-        .writeValueAsString(createResultFromExecutionResult(executionResult));
+    return getJacksonMapper().writeValueAsString(createResultFromExecutionResult(executionResult));
   }
 
   public void serializeResultAsJson(Writer writer, ExecutionResult executionResult)
@@ -120,8 +115,7 @@ public class GraphQLObjectMapper {
    */
   @SneakyThrows
   public byte[] serializeResultAsBytes(ExecutionResult executionResult) {
-    return getJacksonMapper()
-        .writeValueAsBytes(createResultFromExecutionResult(executionResult));
+    return getJacksonMapper().writeValueAsBytes(createResultFromExecutionResult(executionResult));
   }
 
   public boolean areErrorsPresent(ExecutionResult executionResult) {
@@ -151,13 +145,16 @@ public class GraphQLObjectMapper {
     return convertSanitizedExecutionResult(executionResult, true);
   }
 
-  public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult,
-      boolean includeData) {
+  public Map<String, Object> convertSanitizedExecutionResult(
+      ExecutionResult executionResult, boolean includeData) {
     final Map<String, Object> result = new LinkedHashMap<>();
 
     if (areErrorsPresent(executionResult)) {
-      result.put("errors", executionResult.getErrors().stream().map(GraphQLError::toSpecification)
-          .collect(toList()));
+      result.put(
+          "errors",
+          executionResult.getErrors().stream()
+              .map(GraphQLError::toSpecification)
+              .collect(toList()));
     }
 
     if (executionResult.getExtensions() != null && !executionResult.getExtensions().isEmpty()) {
@@ -173,9 +170,8 @@ public class GraphQLObjectMapper {
 
   @SneakyThrows
   public Map<String, Object> deserializeVariables(String variables) {
-    return VariablesDeserializer
-        .deserializeVariablesObject(getJacksonMapper().readValue(variables, Object.class),
-            getJacksonMapper());
+    return VariablesDeserializer.deserializeVariablesObject(
+        getJacksonMapper().readValue(variables, Object.class), getJacksonMapper());
   }
 
   @SneakyThrows

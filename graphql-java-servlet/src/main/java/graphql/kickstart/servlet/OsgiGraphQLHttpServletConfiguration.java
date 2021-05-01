@@ -3,7 +3,9 @@ package graphql.kickstart.servlet;
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
-@ObjectClassDefinition(name = "GraphQL HTTP Servlet", description = "GraphQL HTTP Servlet Configuration")
+@ObjectClassDefinition(
+    name = "GraphQL HTTP Servlet",
+    description = "GraphQL HTTP Servlet Configuration")
 @interface OsgiGraphQLHttpServletConfiguration {
 
   @AttributeDefinition(name = "alias", description = "Servlet alias")

@@ -8,5 +8,4 @@ import java.util.concurrent.CompletableFuture;
 public interface GraphQLInvokerProxy {
 
   CompletableFuture<ExecutionResult> executeAsync(GraphQL graphQL, ExecutionInput executionInput);
-
 }

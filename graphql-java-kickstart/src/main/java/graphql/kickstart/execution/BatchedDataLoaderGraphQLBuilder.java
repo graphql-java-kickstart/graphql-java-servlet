@@ -24,23 +24,25 @@ public class BatchedDataLoaderGraphQLBuilder {
   }
 
   GraphQL newGraphQL(GraphQLBatchedInvocationInput invocationInput, GraphQLBuilder graphQLBuilder) {
-    Supplier<Instrumentation> supplier = augment(invocationInput,
-        graphQLBuilder.getInstrumentationSupplier());
-    return invocationInput.getInvocationInputs().stream().findFirst()
+    Supplier<Instrumentation> supplier =
+        augment(invocationInput, graphQLBuilder.getInstrumentationSupplier());
+    return invocationInput.getInvocationInputs().stream()
+        .findFirst()
         .map(GraphQLSingleInvocationInput::getSchema)
         .map(schema -> graphQLBuilder.build(schema, supplier))
-        .orElseThrow(() -> new IllegalArgumentException(
-            "Batched invocation input must contain at least one query"));
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Batched invocation input must contain at least one query"));
   }
 
   private Supplier<Instrumentation> augment(
       GraphQLBatchedInvocationInput batchedInvocationInput,
-      Supplier<Instrumentation> instrumentationSupplier
-  ) {
+      Supplier<Instrumentation> instrumentationSupplier) {
     List<ExecutionInput> executionInputs = batchedInvocationInput.getExecutionInputs();
-    return batchedInvocationInput.getContextSetting()
-        .configureInstrumentationForContext(instrumentationSupplier, executionInputs,
-            optionsSupplier.get());
+    return batchedInvocationInput
+        .getContextSetting()
+        .configureInstrumentationForContext(
+            instrumentationSupplier, executionInputs, optionsSupplier.get());
   }
-
 }

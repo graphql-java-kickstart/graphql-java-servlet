@@ -2,9 +2,7 @@ package graphql.kickstart.servlet;
 
 import graphql.schema.GraphQLSchema;
 
-/**
- * @author Michiel Oliemans
- */
+/** @author Michiel Oliemans */
 public abstract class GraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
   public static GraphQLHttpServlet with(GraphQLSchema schema) {
@@ -17,5 +15,4 @@ public abstract class GraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
   @Override
   protected abstract GraphQLConfiguration getConfiguration();
-
 }

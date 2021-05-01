@@ -27,21 +27,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInputParser {
 
-  private static final String[] MULTIPART_KEYS = new String[]{"operations", "graphql", "query"};
+  private static final String[] MULTIPART_KEYS = new String[] {"operations", "graphql", "query"};
 
-  GraphQLMultipartInvocationInputParser(GraphQLInvocationInputFactory invocationInputFactory,
-      GraphQLObjectMapper graphQLObjectMapper, ContextSetting contextSetting) {
+  GraphQLMultipartInvocationInputParser(
+      GraphQLInvocationInputFactory invocationInputFactory,
+      GraphQLObjectMapper graphQLObjectMapper,
+      ContextSetting contextSetting) {
     super(invocationInputFactory, graphQLObjectMapper, contextSetting);
   }
 
   @Override
-  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request,
-      HttpServletResponse response)
-      throws IOException {
+  public GraphQLInvocationInput getGraphQLInvocationInput(
+      HttpServletRequest request, HttpServletResponse response) throws IOException {
     try {
-      final Map<String, List<Part>> parts = request.getParts()
-          .stream()
-          .collect(Collectors.groupingBy(Part::getName));
+      final Map<String, List<Part>> parts =
+          request.getParts().stream().collect(Collectors.groupingBy(Part::getName));
 
       for (String key : MULTIPART_KEYS) {
         // Check to see if there is a part under the key we seek
@@ -67,20 +67,25 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
     }
   }
 
-  private GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request,
-      HttpServletResponse response, Map<String, List<Part>> parts, String key,
-      Part queryItem) throws IOException {
+  private GraphQLInvocationInput getGraphQLInvocationInput(
+      HttpServletRequest request,
+      HttpServletResponse response,
+      Map<String, List<Part>> parts,
+      String key,
+      Part queryItem)
+      throws IOException {
     InputStream inputStream = queryItem.getInputStream();
 
     final Optional<Map<String, List<String>>> variablesMap =
         getPart(parts, "map")
-            .map(part -> {
-              try (InputStream is = part.getInputStream()) {
-                return graphQLObjectMapper.deserializeMultipartMap(is);
-              } catch (IOException e) {
-                throw new PartIOException("Unable to read input stream from part", e);
-              }
-            });
+            .map(
+                part -> {
+                  try (InputStream is = part.getInputStream()) {
+                    return graphQLObjectMapper.deserializeMultipartMap(is);
+                  } catch (IOException e) {
+                    throw new PartIOException("Unable to read input stream from part", e);
+                  }
+                });
 
     String query = read(inputStream);
     if ("query".equals(key) && isSingleQuery(query)) {
@@ -95,8 +100,7 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
       List<GraphQLRequest> graphqlRequests = graphQLObjectMapper.readBatchedGraphQLRequest(query);
       variablesMap.ifPresent(
           map -> graphqlRequests.forEach(r -> mapMultipartVariables(r, map, parts)));
-      return invocationInputFactory
-          .create(contextSetting, graphqlRequests, request, response);
+      return invocationInputFactory.create(contextSetting, graphqlRequests, request, response);
     }
   }
 
@@ -114,29 +118,36 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
         .map(list -> list.get(0));
   }
 
-  private void mapMultipartVariables(GraphQLRequest request,
+  private void mapMultipartVariables(
+      GraphQLRequest request,
       Map<String, List<String>> variablesMap,
       Map<String, List<Part>> fileItems) {
     Map<String, Object> variables = request.getVariables();
 
-    variablesMap.forEach((partName, objectPaths) -> {
-      Part part = getPart(fileItems, partName)
-          .orElseThrow(() -> new RuntimeException("unable to find part name " +
-              partName +
-              " as referenced in the variables map"));
+    variablesMap.forEach(
+        (partName, objectPaths) -> {
+          Part part =
+              getPart(fileItems, partName)
+                  .orElseThrow(
+                      () ->
+                          new RuntimeException(
+                              "unable to find part name "
+                                  + partName
+                                  + " as referenced in the variables map"));
 
-      objectPaths.forEach(objectPath -> VariableMapper.mapVariable(objectPath, variables, part));
-    });
+          objectPaths.forEach(
+              objectPath -> VariableMapper.mapVariable(objectPath, variables, part));
+        });
   }
 
-  private GraphQLRequest buildRequestFromQuery(String query,
-      GraphQLObjectMapper graphQLObjectMapper,
-      Map<String, List<Part>> parts) throws IOException {
+  private GraphQLRequest buildRequestFromQuery(
+      String query, GraphQLObjectMapper graphQLObjectMapper, Map<String, List<Part>> parts)
+      throws IOException {
     Map<String, Object> variables = null;
     final Optional<Part> variablesItem = getPart(parts, "variables");
     if (variablesItem.isPresent()) {
-      variables = graphQLObjectMapper
-          .deserializeVariables(read(variablesItem.get().getInputStream()));
+      variables =
+          graphQLObjectMapper.deserializeVariables(read(variablesItem.get().getInputStream()));
     }
 
     String operationName = null;
@@ -154,5 +165,4 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
       return reader.lines().collect(joining());
     }
   }
-
 }

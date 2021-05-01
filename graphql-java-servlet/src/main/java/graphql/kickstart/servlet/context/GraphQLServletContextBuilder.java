@@ -9,9 +9,8 @@ import javax.websocket.server.HandshakeRequest;
 
 public interface GraphQLServletContextBuilder extends GraphQLContextBuilder {
 
-  GraphQLContext build(HttpServletRequest httpServletRequest,
-      HttpServletResponse httpServletResponse);
+  GraphQLContext build(
+      HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse);
 
   GraphQLContext build(Session session, HandshakeRequest handshakeRequest);
-
 }

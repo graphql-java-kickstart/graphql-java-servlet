@@ -17,14 +17,15 @@ class GraphQLPostInvocationInputParser extends AbstractGraphQLInvocationInputPar
 
   private static final String APPLICATION_GRAPHQL = "application/graphql";
 
-  GraphQLPostInvocationInputParser(GraphQLInvocationInputFactory invocationInputFactory,
-      GraphQLObjectMapper graphQLObjectMapper, ContextSetting contextSetting) {
+  GraphQLPostInvocationInputParser(
+      GraphQLInvocationInputFactory invocationInputFactory,
+      GraphQLObjectMapper graphQLObjectMapper,
+      ContextSetting contextSetting) {
     super(invocationInputFactory, graphQLObjectMapper, contextSetting);
   }
 
-  public GraphQLInvocationInput getGraphQLInvocationInput(HttpServletRequest request,
-      HttpServletResponse response)
-      throws IOException {
+  public GraphQLInvocationInput getGraphQLInvocationInput(
+      HttpServletRequest request, HttpServletResponse response) throws IOException {
     if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
       String query = request.getReader().lines().collect(joining());
       GraphQLRequest graphqlRequest = GraphQLRequest.createQueryOnlyRequest(query);
@@ -44,5 +45,4 @@ class GraphQLPostInvocationInputParser extends AbstractGraphQLInvocationInputPar
 
     throw new GraphQLException("No valid query found in request");
   }
-
 }

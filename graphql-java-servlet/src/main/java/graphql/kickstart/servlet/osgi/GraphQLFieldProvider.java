@@ -6,5 +6,4 @@ import java.util.Collection;
 public interface GraphQLFieldProvider extends GraphQLProvider {
 
   Collection<GraphQLFieldDefinition> getFields();
-
 }

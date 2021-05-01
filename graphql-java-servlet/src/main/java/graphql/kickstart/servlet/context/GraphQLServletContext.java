@@ -16,5 +16,4 @@ public interface GraphQLServletContext extends GraphQLContext {
   HttpServletRequest getHttpServletRequest();
 
   HttpServletResponse getHttpServletResponse();
-
 }

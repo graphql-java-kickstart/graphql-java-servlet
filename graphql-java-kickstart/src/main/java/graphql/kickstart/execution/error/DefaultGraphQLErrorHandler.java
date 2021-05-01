@@ -7,9 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 @Slf4j
 public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
 
@@ -21,9 +19,7 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
       // Some errors were filtered out to hide implementation - put a generic error in place.
       clientErrors.add(new GenericGraphQLError("Internal Server Error(s) while executing query"));
 
-      errors.stream()
-          .filter(error -> !isClientError(error))
-          .forEach(this::logError);
+      errors.stream().filter(error -> !isClientError(error)).forEach(this::logError);
     }
 
     return clientErrors;
@@ -33,11 +29,13 @@ public class DefaultGraphQLErrorHandler implements GraphQLErrorHandler {
     if (error instanceof Throwable) {
       log.error("Error executing query!", (Throwable) error);
     } else if (error instanceof ExceptionWhileDataFetching) {
-      log.error("Error executing query {}", error.getMessage(),
+      log.error(
+          "Error executing query {}",
+          error.getMessage(),
           ((ExceptionWhileDataFetching) error).getException());
     } else {
-      log.error("Error executing query ({}): {}", error.getClass().getSimpleName(),
-          error.getMessage());
+      log.error(
+          "Error executing query ({}): {}", error.getClass().getSimpleName(), error.getMessage());
     }
   }
 

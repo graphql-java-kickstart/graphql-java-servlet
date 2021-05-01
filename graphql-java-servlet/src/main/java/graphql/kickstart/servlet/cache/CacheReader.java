@@ -15,13 +15,15 @@ public class CacheReader {
    * Response from cache if possible, if nothing in cache will not produce any response
    *
    * @return {@literal true} if response was fulfilled from cache, {@literal false} is cache not
-   * found or an error occurred while reading value from cache
+   *     found or an error occurred while reading value from cache
    * @throws IOException if can not read value from the cache
    */
-  public boolean responseFromCache(GraphQLInvocationInput invocationInput,
+  public boolean responseFromCache(
+      GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
       HttpServletResponse response,
-      GraphQLResponseCacheManager cacheManager) throws IOException {
+      GraphQLResponseCacheManager cacheManager)
+      throws IOException {
     try {
       CachedResponse cachedResponse = cacheManager.get(request, invocationInput);
       if (cachedResponse != null) {
@@ -47,5 +49,4 @@ public class CacheReader {
       response.getOutputStream().write(cachedResponse.getContentBytes());
     }
   }
-
 }

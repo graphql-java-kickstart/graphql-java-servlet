@@ -40,5 +40,4 @@ class DecoratedExecutionResult implements ExecutionResult {
   public Map<String, Object> toSpecification() {
     return result.toSpecification();
   }
-
 }

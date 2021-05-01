@@ -30,9 +30,7 @@ public enum ContextSetting {
    */
   PER_REQUEST_WITH_INSTRUMENTATION,
   PER_REQUEST_WITHOUT_INSTRUMENTATION,
-  /**
-   * Each GraphQL execution should always have its own context.
-   */
+  /** Each GraphQL execution should always have its own context. */
   PER_QUERY_WITH_INSTRUMENTATION,
   PER_QUERY_WITHOUT_INSTRUMENTATION;
 
@@ -42,19 +40,22 @@ public enum ContextSetting {
    * @param requests the GraphQL requests to execute.
    * @param schema the GraphQL schema to execute the requests against.
    * @param contextSupplier method that returns the context to use for each execution or for the
-   * request as a whole.
+   *     request as a whole.
    * @param root the root object to use for each execution.
    * @return a configured batch input.
    */
-  public GraphQLBatchedInvocationInput getBatch(List<GraphQLRequest> requests, GraphQLSchema schema,
-      Supplier<GraphQLContext> contextSupplier, Object root) {
+  public GraphQLBatchedInvocationInput getBatch(
+      List<GraphQLRequest> requests,
+      GraphQLSchema schema,
+      Supplier<GraphQLContext> contextSupplier,
+      Object root) {
     switch (this) {
       case PER_QUERY_WITH_INSTRUMENTATION:
-        //Intentional fallthrough
+        // Intentional fallthrough
       case PER_QUERY_WITHOUT_INSTRUMENTATION:
         return new PerQueryBatchedInvocationInput(requests, schema, contextSupplier, root, this);
       case PER_REQUEST_WITHOUT_INSTRUMENTATION:
-        //Intentional fallthrough
+        // Intentional fallthrough
       case PER_REQUEST_WITH_INSTRUMENTATION:
         return new PerRequestBatchedInvocationInput(requests, schema, contextSupplier, root, this);
       default:
@@ -78,29 +79,33 @@ public enum ContextSetting {
     ConfigurableDispatchInstrumentation dispatchInstrumentation;
     switch (this) {
       case PER_REQUEST_WITH_INSTRUMENTATION:
-        DataLoaderRegistry registry = executionInputs.stream().findFirst()
-            .map(ExecutionInput::getDataLoaderRegistry)
-            .orElseThrow(IllegalArgumentException::new);
-        List<ExecutionId> executionIds = executionInputs.stream()
-            .map(ExecutionInput::getExecutionId)
-            .collect(Collectors.toList());
-        RequestLevelTrackingApproach requestTrackingApproach = new RequestLevelTrackingApproach(
-            executionIds, registry);
-        dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options,
-            (dataLoaderRegistry -> requestTrackingApproach));
+        DataLoaderRegistry registry =
+            executionInputs.stream()
+                .findFirst()
+                .map(ExecutionInput::getDataLoaderRegistry)
+                .orElseThrow(IllegalArgumentException::new);
+        List<ExecutionId> executionIds =
+            executionInputs.stream()
+                .map(ExecutionInput::getExecutionId)
+                .collect(Collectors.toList());
+        RequestLevelTrackingApproach requestTrackingApproach =
+            new RequestLevelTrackingApproach(executionIds, registry);
+        dispatchInstrumentation =
+            new ConfigurableDispatchInstrumentation(
+                options, (dataLoaderRegistry -> requestTrackingApproach));
         break;
       case PER_QUERY_WITH_INSTRUMENTATION:
-        dispatchInstrumentation = new ConfigurableDispatchInstrumentation(options,
-            FieldLevelTrackingApproach::new);
+        dispatchInstrumentation =
+            new ConfigurableDispatchInstrumentation(options, FieldLevelTrackingApproach::new);
         break;
       case PER_REQUEST_WITHOUT_INSTRUMENTATION:
-        //Intentional fallthrough
+        // Intentional fallthrough
       case PER_QUERY_WITHOUT_INSTRUMENTATION:
         return instrumentation;
       default:
         throw new ContextSettingNotConfiguredException();
     }
-    return () -> new ChainedInstrumentation(
-        Arrays.asList(dispatchInstrumentation, instrumentation.get()));
+    return () ->
+        new ChainedInstrumentation(Arrays.asList(dispatchInstrumentation, instrumentation.get()));
   }
 }

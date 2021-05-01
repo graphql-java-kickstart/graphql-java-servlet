@@ -33,5 +33,4 @@ public class WebSocketSubscriptionSession extends DefaultSubscriptionSession {
   public Session unwrap() {
     return session;
   }
-
 }

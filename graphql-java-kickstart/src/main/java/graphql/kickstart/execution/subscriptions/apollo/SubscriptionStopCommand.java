@@ -14,5 +14,4 @@ class SubscriptionStopCommand implements SubscriptionCommand {
     connectionListeners.forEach(it -> it.onStop(session, message));
     session.unsubscribe(message.getId());
   }
-
 }

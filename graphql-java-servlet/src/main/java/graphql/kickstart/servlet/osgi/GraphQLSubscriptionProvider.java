@@ -10,5 +10,4 @@ public interface GraphQLSubscriptionProvider extends GraphQLFieldProvider {
   default Collection<GraphQLFieldDefinition> getFields() {
     return getSubscriptions();
   }
-
 }

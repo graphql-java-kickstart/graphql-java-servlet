@@ -5,5 +5,4 @@ public class DefaultGraphQLRootObjectBuilder extends StaticGraphQLRootObjectBuil
   public DefaultGraphQLRootObjectBuilder() {
     super(new Object());
   }
-
 }

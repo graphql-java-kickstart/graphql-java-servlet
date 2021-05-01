@@ -13,8 +13,8 @@ public class CachedResponse implements Serializable {
   private final Integer errorStatusCode;
   private final String errorMessage;
 
-  private CachedResponse(byte[] contentBytes, boolean error, Integer errorStatusCode,
-      String errorMessage) {
+  private CachedResponse(
+      byte[] contentBytes, boolean error, Integer errorStatusCode, String errorMessage) {
     this.contentBytes = contentBytes;
     this.error = error;
     this.errorStatusCode = errorStatusCode;
@@ -42,33 +42,26 @@ public class CachedResponse implements Serializable {
     return new CachedResponse(null, true, errorStatusCode, errorMessage);
   }
 
-  /**
-   * @return {@literal true} when this request was failed
-   */
+  /** @return {@literal true} when this request was failed */
   public boolean isError() {
     return error;
   }
 
   /**
    * @return the response body for success requests, {@literal null} when {@link #isError()} is
-   * {@literal true}
+   *     {@literal true}
    */
   public byte[] getContentBytes() {
     return contentBytes;
   }
 
-  /**
-   * @return the response error code
-   */
+  /** @return the response error code */
   public Integer getErrorStatusCode() {
     return errorStatusCode;
   }
 
-  /**
-   * @return the response error message
-   */
+  /** @return the response error message */
   public String getErrorMessage() {
     return errorMessage;
   }
-
 }

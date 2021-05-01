@@ -32,8 +32,7 @@ import org.osgi.service.metatype.annotations.Designate;
 
 @Component(
     service = {javax.servlet.http.HttpServlet.class, javax.servlet.Servlet.class},
-    property = {"service.description=GraphQL HTTP Servlet"}
-)
+    property = {"service.description=GraphQL HTTP Servlet"})
 @Designate(ocd = OsgiGraphQLHttpServletConfiguration.class, factory = true)
 public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
@@ -172,7 +171,10 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     schemaBuilder.setRootObjectBuilder(new DefaultGraphQLRootObjectBuilder());
   }
 
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  @Reference(
+      cardinality = ReferenceCardinality.OPTIONAL,
+      policy = ReferencePolicy.DYNAMIC,
+      policyOption = ReferencePolicyOption.GREEDY)
   public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
     schemaBuilder.setExecutionStrategyProvider(provider);
   }
@@ -181,7 +183,10 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     schemaBuilder.setExecutionStrategyProvider(new DefaultExecutionStrategyProvider());
   }
 
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  @Reference(
+      cardinality = ReferenceCardinality.OPTIONAL,
+      policy = ReferencePolicy.DYNAMIC,
+      policyOption = ReferencePolicyOption.GREEDY)
   public void setInstrumentationProvider(InstrumentationProvider provider) {
     schemaBuilder.setInstrumentationProvider(provider);
   }
@@ -190,7 +195,10 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     schemaBuilder.setInstrumentationProvider(new NoOpInstrumentationProvider());
   }
 
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  @Reference(
+      cardinality = ReferenceCardinality.OPTIONAL,
+      policy = ReferencePolicy.DYNAMIC,
+      policyOption = ReferencePolicyOption.GREEDY)
   public void setErrorHandler(GraphQLErrorHandler errorHandler) {
     schemaBuilder.setErrorHandler(errorHandler);
   }
@@ -199,7 +207,10 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     schemaBuilder.setErrorHandler(new DefaultGraphQLErrorHandler());
   }
 
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  @Reference(
+      cardinality = ReferenceCardinality.OPTIONAL,
+      policy = ReferencePolicy.DYNAMIC,
+      policyOption = ReferencePolicyOption.GREEDY)
   public void setPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
     schemaBuilder.setPreparsedDocumentProvider(preparsedDocumentProvider);
   }
@@ -208,7 +219,10 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     schemaBuilder.setPreparsedDocumentProvider(NoOpPreparsedDocumentProvider.INSTANCE);
   }
 
-  @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY)
+  @Reference(
+      cardinality = ReferenceCardinality.OPTIONAL,
+      policy = ReferencePolicy.DYNAMIC,
+      policyOption = ReferencePolicyOption.GREEDY)
   public void bindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
     schemaBuilder.setCodeRegistryProvider(graphQLCodeRegistryProvider);
     updateSchema();

@@ -9,5 +9,4 @@ public interface GraphQLWebSocketContext extends GraphQLContext {
   Session getSession();
 
   HandshakeRequest getHandshakeRequest();
-
 }

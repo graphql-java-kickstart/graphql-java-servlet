@@ -5,7 +5,8 @@ import graphql.kickstart.execution.input.GraphQLInvocationInput;
 
 public interface QueryResponseWriterFactory {
 
-  QueryResponseWriter createWriter(GraphQLInvocationInput invocationInput,
-      GraphQLQueryResult queryResult, GraphQLConfiguration configuration);
-
+  QueryResponseWriter createWriter(
+      GraphQLInvocationInput invocationInput,
+      GraphQLQueryResult queryResult,
+      GraphQLConfiguration configuration);
 }

@@ -34,5 +34,4 @@ public class ApolloWebSocketSubscriptionSession extends ApolloSubscriptionSessio
   public Session unwrap() {
     return webSocketSubscriptionSession.unwrap();
   }
-
 }

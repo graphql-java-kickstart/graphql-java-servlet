@@ -12,9 +12,7 @@ import graphql.kickstart.execution.config.GraphQLBuilder;
 import java.util.List;
 import java.util.function.Supplier;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public class GraphQLQueryInvoker {
 
   private final Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider;
@@ -22,7 +20,8 @@ public class GraphQLQueryInvoker {
   private final Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider;
   private final Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier;
 
-  protected GraphQLQueryInvoker(Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider,
+  protected GraphQLQueryInvoker(
+      Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider,
       Supplier<Instrumentation> getInstrumentation,
       Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider,
       Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier) {
@@ -37,20 +36,24 @@ public class GraphQLQueryInvoker {
   }
 
   public GraphQLInvoker toGraphQLInvoker() {
-    GraphQLBuilder graphQLBuilder = new GraphQLBuilder()
-        .executionStrategyProvider(getExecutionStrategyProvider)
-        .instrumentation(getInstrumentation)
-        .preparsedDocumentProvider(getPreparsedDocumentProvider);
+    GraphQLBuilder graphQLBuilder =
+        new GraphQLBuilder()
+            .executionStrategyProvider(getExecutionStrategyProvider)
+            .instrumentation(getInstrumentation)
+            .preparsedDocumentProvider(getPreparsedDocumentProvider);
     return new GraphQLInvoker(graphQLBuilder, new BatchedDataLoaderGraphQLBuilder(optionsSupplier));
   }
 
   public static class Builder {
 
-    private Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider = DefaultExecutionStrategyProvider::new;
+    private Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider =
+        DefaultExecutionStrategyProvider::new;
     private Supplier<Instrumentation> getInstrumentation = () -> SimpleInstrumentation.INSTANCE;
-    private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider = () -> NoOpPreparsedDocumentProvider.INSTANCE;
-    private Supplier<DataLoaderDispatcherInstrumentationOptions> dataLoaderDispatcherInstrumentationOptionsSupplier = DataLoaderDispatcherInstrumentationOptions::newOptions;
-
+    private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider =
+        () -> NoOpPreparsedDocumentProvider.INSTANCE;
+    private Supplier<DataLoaderDispatcherInstrumentationOptions>
+        dataLoaderDispatcherInstrumentationOptionsSupplier =
+            DataLoaderDispatcherInstrumentationOptions::newOptions;
 
     public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
       return withExecutionStrategyProvider(() -> provider);
@@ -103,7 +106,9 @@ public class GraphQLQueryInvoker {
     }
 
     public GraphQLQueryInvoker build() {
-      return new GraphQLQueryInvoker(getExecutionStrategyProvider, getInstrumentation,
+      return new GraphQLQueryInvoker(
+          getExecutionStrategyProvider,
+          getInstrumentation,
           getPreparsedDocumentProvider,
           dataLoaderDispatcherInstrumentationOptionsSupplier);
     }

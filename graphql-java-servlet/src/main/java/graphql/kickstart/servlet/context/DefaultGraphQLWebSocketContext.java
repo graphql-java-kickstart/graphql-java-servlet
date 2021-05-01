@@ -6,14 +6,17 @@ import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import org.dataloader.DataLoaderRegistry;
 
-public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implements
-    GraphQLWebSocketContext {
+public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext
+    implements GraphQLWebSocketContext {
 
   private final Session session;
   private final HandshakeRequest handshakeRequest;
 
-  private DefaultGraphQLWebSocketContext(DataLoaderRegistry dataLoaderRegistry, Subject subject,
-      Session session, HandshakeRequest handshakeRequest) {
+  private DefaultGraphQLWebSocketContext(
+      DataLoaderRegistry dataLoaderRegistry,
+      Subject subject,
+      Session session,
+      HandshakeRequest handshakeRequest) {
     super(dataLoaderRegistry, subject);
     this.session = session;
     this.handshakeRequest = handshakeRequest;
@@ -50,8 +53,8 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implem
     }
 
     public DefaultGraphQLWebSocketContext build() {
-      return new DefaultGraphQLWebSocketContext(dataLoaderRegistry, subject, session,
-          handshakeRequest);
+      return new DefaultGraphQLWebSocketContext(
+          dataLoaderRegistry, subject, session, handshakeRequest);
     }
 
     public Builder with(Session session) {
@@ -74,5 +77,4 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext implem
       return this;
     }
   }
-
 }

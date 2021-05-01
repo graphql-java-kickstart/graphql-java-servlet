@@ -6,7 +6,8 @@ import javax.servlet.http.HttpServletResponse;
 
 public interface HttpRequestInvoker {
 
-  void execute(GraphQLInvocationInput invocationInput, HttpServletRequest request,
+  void execute(
+      GraphQLInvocationInput invocationInput,
+      HttpServletRequest request,
       HttpServletResponse response);
-
 }

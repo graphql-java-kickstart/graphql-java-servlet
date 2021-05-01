@@ -4,9 +4,7 @@ import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * A default BatchInputPreProcessor that returns the input.
- */
+/** A default BatchInputPreProcessor that returns the input. */
 public class NoOpBatchInputPreProcessor implements BatchInputPreProcessor {
 
   @Override

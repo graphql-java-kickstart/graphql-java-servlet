@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class OperationNameExtractor {
 
-  static String extractOperationName(String gqlQuery, String requestedOperationName,
-      String defaultIfNotFound) {
+  static String extractOperationName(
+      String gqlQuery, String requestedOperationName, String defaultIfNotFound) {
     if (isNotEmpty(requestedOperationName)) {
       return requestedOperationName;
     }
@@ -27,8 +27,8 @@ class OperationNameExtractor {
   private static String parseForOperationName(String gqlQuery, String defaultIfNotFound) {
     try {
       Document document = new Parser().parseDocument(gqlQuery);
-      List<OperationDefinition> operations = document
-          .getDefinitionsOfType(OperationDefinition.class);
+      List<OperationDefinition> operations =
+          document.getDefinitionsOfType(OperationDefinition.class);
       if (operations.size() == 1) {
         String name = operations.get(0).getName();
         if (isNotEmpty(name)) {
@@ -40,5 +40,4 @@ class OperationNameExtractor {
     }
     return defaultIfNotFound;
   }
-
 }

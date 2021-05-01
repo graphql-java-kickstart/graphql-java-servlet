@@ -3,9 +3,7 @@ package graphql.kickstart.execution.error;
 import graphql.GraphQLError;
 import java.util.List;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public interface GraphQLErrorHandler {
 
   default boolean errorsPresent(List<GraphQLError> errors) {

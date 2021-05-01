@@ -13,9 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.dataloader.DataLoaderRegistry;
 
-/**
- * Handles logic common to tracking approaches.
- */
+/** Handles logic common to tracking approaches. */
 @Slf4j
 public abstract class AbstractTrackingApproach implements TrackingApproach {
 
@@ -27,9 +25,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     this.dataLoaderRegistry = dataLoaderRegistry;
   }
 
-  /**
-   * @return allows extending classes to modify the stack.
-   */
+  /** @return allows extending classes to modify the stack. */
   protected RequestStack getStack() {
     return stack;
   }
@@ -61,7 +57,8 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
       @Override
       public void onFieldValuesInfo(List<FieldValueInfo> fieldValueInfoList) {
         synchronized (stack) {
-          stack.setStatus(executionId,
+          stack.setStatus(
+              executionId,
               handleOnFieldValuesInfo(fieldValueInfoList, stack, executionId, curLevel));
           if (stack.allReady()) {
             dispatchWithoutLocking();
@@ -74,9 +71,11 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
   //
   // thread safety : called with synchronised(stack)
   //
-  private boolean handleOnFieldValuesInfo(List<FieldValueInfo> fieldValueInfoList,
+  private boolean handleOnFieldValuesInfo(
+      List<FieldValueInfo> fieldValueInfoList,
       RequestStack stack,
-      ExecutionId executionId, int curLevel) {
+      ExecutionId executionId,
+      int curLevel) {
     stack.increaseHappenedOnFieldValueCalls(executionId, curLevel);
     int expectedStrategyCalls = 0;
     for (FieldValueInfo fieldValueInfo : fieldValueInfoList) {
@@ -139,7 +138,6 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     }
   }
 
-
   //
   // thread safety : called with synchronised(stack)
   //
@@ -158,10 +156,10 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
       // level 1 is special: there is only one strategy call and that's it
       return stack.allFetchesHappened(executionId, 1);
     }
-    return (levelReady(stack, executionId, level - 1) && stack
-        .allOnFieldCallsHappened(executionId, level - 1)
-        && stack.allStrategyCallsHappened(executionId, level) && stack
-        .allFetchesHappened(executionId, level));
+    return (levelReady(stack, executionId, level - 1)
+        && stack.allOnFieldCallsHappened(executionId, level - 1)
+        && stack.allStrategyCallsHappened(executionId, level)
+        && stack.allFetchesHappened(executionId, level));
   }
 
   @Override

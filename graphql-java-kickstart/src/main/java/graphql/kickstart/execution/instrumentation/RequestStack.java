@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Manages sets of call stack state for ongoing executions.
- */
+/** Manages sets of call stack state for ongoing executions. */
 public class RequestStack {
 
   private final Map<ExecutionId, CallStack> activeRequests = new LinkedHashMap<>();
@@ -35,18 +33,14 @@ public class RequestStack {
     }
   }
 
-  /**
-   * @return if all managed executions are ready to be dispatched.
-   */
+  /** @return if all managed executions are ready to be dispatched. */
   public boolean allReady() {
-    return status.values().stream().noneMatch(Boolean.FALSE::equals) &&
-        activeRequests.values().stream().map(CallStack::getDispatchedLevels).distinct().count()
+    return status.values().stream().noneMatch(Boolean.FALSE::equals)
+        && activeRequests.values().stream().map(CallStack::getDispatchedLevels).distinct().count()
             <= 1;
   }
 
-  /**
-   * Removes all dispatch status. Should be used after a call to dispatch.
-   */
+  /** Removes all dispatch status. Should be used after a call to dispatch. */
   public void allReset() {
     status.keySet().forEach(key -> status.put(key, false));
   }
@@ -142,8 +136,8 @@ public class RequestStack {
    * @param curLevel level to increase
    * @param expectedStrategyCalls number to increment by
    */
-  public void increaseExpectedStrategyCalls(ExecutionId executionId, int curLevel,
-      int expectedStrategyCalls) {
+  public void increaseExpectedStrategyCalls(
+      ExecutionId executionId, int curLevel, int expectedStrategyCalls) {
     if (!activeRequests.containsKey(executionId)) {
       throw new IllegalStateException(
           String.format(
@@ -230,9 +224,9 @@ public class RequestStack {
   public void increaseFetchCount(ExecutionId executionId, int level) {
     if (!activeRequests.containsKey(executionId)) {
       throw new IllegalStateException(
-          String
-              .format("Execution %s not managed by this RequestStack, can not increase fetch count",
-                  executionId));
+          String.format(
+              "Execution %s not managed by this RequestStack, can not increase fetch count",
+              executionId));
     }
     activeRequests.get(executionId).increaseFetchCount(level);
   }
@@ -261,17 +255,15 @@ public class RequestStack {
     private final Map<Integer, Integer> happenedStrategyCallsPerLevel = new LinkedHashMap<>();
     private final Map<Integer, Integer> happenedOnFieldValueCallsPerLevel = new LinkedHashMap<>();
 
-
     private final List<Integer> dispatchedLevels = new ArrayList<>();
 
     private CallStack() {
       expectedStrategyCallsPerLevel.put(1, 1);
     }
 
-
     private void increaseExpectedFetchCount(int level, int count) {
-      expectedFetchCountPerLevel
-          .put(level, expectedFetchCountPerLevel.getOrDefault(level, 0) + count);
+      expectedFetchCountPerLevel.put(
+          level, expectedFetchCountPerLevel.getOrDefault(level, 0) + count);
     }
 
     private void increaseFetchCount(int level) {
@@ -279,28 +271,28 @@ public class RequestStack {
     }
 
     private void increaseExpectedStrategyCalls(int level, int count) {
-      expectedStrategyCallsPerLevel
-          .put(level, expectedStrategyCallsPerLevel.getOrDefault(level, 0) + count);
+      expectedStrategyCallsPerLevel.put(
+          level, expectedStrategyCallsPerLevel.getOrDefault(level, 0) + count);
     }
 
     private void increaseHappenedStrategyCalls(int level) {
-      happenedStrategyCallsPerLevel
-          .put(level, happenedStrategyCallsPerLevel.getOrDefault(level, 0) + 1);
+      happenedStrategyCallsPerLevel.put(
+          level, happenedStrategyCallsPerLevel.getOrDefault(level, 0) + 1);
     }
 
     private void increaseHappenedOnFieldValueCalls(int level) {
-      happenedOnFieldValueCallsPerLevel
-          .put(level, happenedOnFieldValueCallsPerLevel.getOrDefault(level, 0) + 1);
+      happenedOnFieldValueCallsPerLevel.put(
+          level, happenedOnFieldValueCallsPerLevel.getOrDefault(level, 0) + 1);
     }
 
     private boolean allStrategyCallsHappened(int level) {
-      return Objects.equals(happenedStrategyCallsPerLevel.get(level),
-          expectedStrategyCallsPerLevel.get(level));
+      return Objects.equals(
+          happenedStrategyCallsPerLevel.get(level), expectedStrategyCallsPerLevel.get(level));
     }
 
     private boolean allOnFieldCallsHappened(int level) {
-      return Objects.equals(happenedOnFieldValueCallsPerLevel.get(level),
-          expectedStrategyCallsPerLevel.get(level));
+      return Objects.equals(
+          happenedOnFieldValueCallsPerLevel.get(level), expectedStrategyCallsPerLevel.get(level));
     }
 
     private boolean allFetchesHappened(int level) {
@@ -313,14 +305,20 @@ public class RequestStack {
 
     @Override
     public String toString() {
-      return "CallStack{" +
-          "expectedFetchCountPerLevel=" + expectedFetchCountPerLevel +
-          ", fetchCountPerLevel=" + fetchCountPerLevel +
-          ", expectedStrategyCallsPerLevel=" + expectedStrategyCallsPerLevel +
-          ", happenedStrategyCallsPerLevel=" + happenedStrategyCallsPerLevel +
-          ", happenedOnFieldValueCallsPerLevel=" + happenedOnFieldValueCallsPerLevel +
-          ", dispatchedLevels" + dispatchedLevels +
-          '}';
+      return "CallStack{"
+          + "expectedFetchCountPerLevel="
+          + expectedFetchCountPerLevel
+          + ", fetchCountPerLevel="
+          + fetchCountPerLevel
+          + ", expectedStrategyCallsPerLevel="
+          + expectedStrategyCallsPerLevel
+          + ", happenedStrategyCallsPerLevel="
+          + happenedStrategyCallsPerLevel
+          + ", happenedOnFieldValueCallsPerLevel="
+          + happenedOnFieldValueCallsPerLevel
+          + ", dispatchedLevels"
+          + dispatchedLevels
+          + '}';
     }
 
     private boolean dispatchIfNotDispatchedBefore(int level) {

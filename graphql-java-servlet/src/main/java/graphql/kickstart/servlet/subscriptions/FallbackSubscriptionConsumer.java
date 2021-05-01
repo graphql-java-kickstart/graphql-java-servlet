@@ -13,9 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 @RequiredArgsConstructor
 public class FallbackSubscriptionConsumer implements Consumer<String> {
 
@@ -31,18 +29,18 @@ public class FallbackSubscriptionConsumer implements Consumer<String> {
         result -> handleSubscriptionStart(session, UUID.randomUUID().toString(), result));
   }
 
-  private CompletableFuture<ExecutionResult> executeAsync(String payload,
-      SubscriptionSession session) {
+  private CompletableFuture<ExecutionResult> executeAsync(
+      String payload, SubscriptionSession session) {
     Objects.requireNonNull(payload, "Payload is required");
     GraphQLRequest graphQLRequest = mapper.readGraphQLRequest(payload);
 
-    GraphQLSingleInvocationInput invocationInput = invocationInputFactory
-        .create(graphQLRequest, session);
+    GraphQLSingleInvocationInput invocationInput =
+        invocationInputFactory.create(graphQLRequest, session);
     return graphQLInvoker.executeAsync(invocationInput);
   }
 
-  private void handleSubscriptionStart(SubscriptionSession session, String id,
-      ExecutionResult executionResult) {
+  private void handleSubscriptionStart(
+      SubscriptionSession session, String id, ExecutionResult executionResult) {
     ExecutionResult sanitizedExecutionResult = mapper.sanitizeErrors(executionResult);
     if (mapper.hasNoErrors(sanitizedExecutionResult)) {
       session.subscribe(id, sanitizedExecutionResult.getData());
@@ -51,5 +49,4 @@ public class FallbackSubscriptionConsumer implements Consumer<String> {
       session.sendDataMessage(id, payload);
     }
   }
-
 }

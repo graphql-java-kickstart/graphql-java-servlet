@@ -10,5 +10,4 @@ public interface GraphQLMutationProvider extends GraphQLFieldProvider {
   default Collection<GraphQLFieldDefinition> getFields() {
     return getMutations();
   }
-
 }

@@ -14,5 +14,4 @@ class ConfiguredGraphQLHttpServlet extends GraphQLHttpServlet {
   protected GraphQLConfiguration getConfiguration() {
     return configuration;
   }
-
 }

@@ -1,8 +1,4 @@
 package graphql.kickstart.execution.subscriptions;
 
-/**
- * Marker interface
- */
-public interface SubscriptionConnectionListener {
-
-}
+/** Marker interface */
+public interface SubscriptionConnectionListener {}

@@ -30,30 +30,22 @@ public class BatchInputPreProcessResult {
     this.messsage = messsage;
   }
 
-  /**
-   * @return If the servlet should try executing this batched input
-   */
+  /** @return If the servlet should try executing this batched input */
   public boolean isExecutable() {
     return executable;
   }
 
-  /**
-   * @return the batched input the servlet will try to execute.
-   */
+  /** @return the batched input the servlet will try to execute. */
   public GraphQLBatchedInvocationInput getBatchedInvocationInput() {
     return batchedInvocationInput;
   }
 
-  /**
-   * @return status message the servlet will use if isExecutable is false.
-   */
+  /** @return status message the servlet will use if isExecutable is false. */
   public String getStatusMessage() {
     return messsage;
   }
 
-  /**
-   * @return status code the servlet will use if if isExecutable is false.
-   */
+  /** @return status code the servlet will use if if isExecutable is false. */
   public int getStatusCode() {
     return statusCode;
   }

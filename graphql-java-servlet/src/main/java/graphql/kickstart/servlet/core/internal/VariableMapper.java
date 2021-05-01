@@ -9,28 +9,30 @@ public class VariableMapper {
 
   private static final Pattern PERIOD = Pattern.compile("\\.");
 
-  private static final Mapper<Map<String, Object>> MAP_MAPPER = new Mapper<Map<String, Object>>() {
-    @Override
-    public Object set(Map<String, Object> location, String target, Part value) {
-      return location.put(target, value);
-    }
+  private static final Mapper<Map<String, Object>> MAP_MAPPER =
+      new Mapper<Map<String, Object>>() {
+        @Override
+        public Object set(Map<String, Object> location, String target, Part value) {
+          return location.put(target, value);
+        }
 
-    @Override
-    public Object recurse(Map<String, Object> location, String target) {
-      return location.get(target);
-    }
-  };
-  private static final Mapper<List<Object>> LIST_MAPPER = new Mapper<List<Object>>() {
-    @Override
-    public Object set(List<Object> location, String target, Part value) {
-      return location.set(Integer.parseInt(target), value);
-    }
+        @Override
+        public Object recurse(Map<String, Object> location, String target) {
+          return location.get(target);
+        }
+      };
+  private static final Mapper<List<Object>> LIST_MAPPER =
+      new Mapper<List<Object>>() {
+        @Override
+        public Object set(List<Object> location, String target, Part value) {
+          return location.set(Integer.parseInt(target), value);
+        }
 
-    @Override
-    public Object recurse(List<Object> location, String target) {
-      return location.get(Integer.parseInt(target));
-    }
-  };
+        @Override
+        public Object recurse(List<Object> location, String target) {
+          return location.get(Integer.parseInt(target));
+        }
+      };
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   public static void mapVariable(String objectPath, Map<String, Object> variables, Part part) {
@@ -61,8 +63,8 @@ public class VariableMapper {
     }
   }
 
-  private static Mapper<?> determineMapper(Object currentLocation, String objectPath,
-      String segmentName) {
+  private static Mapper<?> determineMapper(
+      Object currentLocation, String objectPath, String segmentName) {
     if (currentLocation instanceof Map) {
       return MAP_MAPPER;
     } else if (currentLocation instanceof List) {

@@ -12,21 +12,21 @@ import javax.security.auth.Subject;
 public class GraphQLInvokerSubjectProxy implements GraphQLInvokerProxy {
 
   @Override
-  public CompletableFuture<ExecutionResult> executeAsync(GraphQL graphQL,
-      ExecutionInput executionInput) {
+  public CompletableFuture<ExecutionResult> executeAsync(
+      GraphQL graphQL, ExecutionInput executionInput) {
     GraphQLContext context = (GraphQLContext) executionInput.getContext();
-    if (Subject.getSubject(AccessController.getContext()) == null && context.getSubject()
-        .isPresent()) {
-      return context.getSubject()
+    if (Subject.getSubject(AccessController.getContext()) == null
+        && context.getSubject().isPresent()) {
+      return context
+          .getSubject()
           .map(it -> Subject.doAs(it, doAction(graphQL, executionInput)))
           .orElseGet(() -> graphQL.executeAsync(executionInput));
     }
     return graphQL.executeAsync(executionInput);
   }
 
-  private PrivilegedAction<CompletableFuture<ExecutionResult>> doAction(GraphQL graphQL,
-      ExecutionInput executionInput) {
+  private PrivilegedAction<CompletableFuture<ExecutionResult>> doAction(
+      GraphQL graphQL, ExecutionInput executionInput) {
     return () -> graphQL.executeAsync(executionInput);
   }
-
 }

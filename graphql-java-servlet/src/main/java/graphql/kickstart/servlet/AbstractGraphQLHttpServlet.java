@@ -19,12 +19,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 @Slf4j
-public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements Servlet,
-    GraphQLMBean {
+public abstract class AbstractGraphQLHttpServlet extends HttpServlet
+    implements Servlet, GraphQLMBean {
 
   protected abstract GraphQLConfiguration getConfiguration();
 
@@ -38,26 +36,38 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
   @Override
   public String[] getQueries() {
-    return getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema()
+    return getConfiguration()
+        .getInvocationInputFactory()
+        .getSchemaProvider()
+        .getSchema()
         .getQueryType()
-        .getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
+        .getFieldDefinitions()
+        .stream()
+        .map(GraphQLFieldDefinition::getName)
+        .toArray(String[]::new);
   }
 
   @Override
   public String[] getMutations() {
-    return getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema()
+    return getConfiguration()
+        .getInvocationInputFactory()
+        .getSchemaProvider()
+        .getSchema()
         .getMutationType()
-        .getFieldDefinitions().stream().map(GraphQLFieldDefinition::getName).toArray(String[]::new);
+        .getFieldDefinitions()
+        .stream()
+        .map(GraphQLFieldDefinition::getName)
+        .toArray(String[]::new);
   }
 
   @Override
   public String executeQuery(String query) {
     try {
       GraphQLRequest graphQLRequest = createQueryOnlyRequest(query);
-      GraphQLSingleInvocationInput invocationInput = getConfiguration().getInvocationInputFactory()
-          .create(graphQLRequest);
-      ExecutionResult result = getConfiguration().getGraphQLInvoker().query(invocationInput)
-          .getResult();
+      GraphQLSingleInvocationInput invocationInput =
+          getConfiguration().getInvocationInputFactory().create(graphQLRequest);
+      ExecutionResult result =
+          getConfiguration().getGraphQLInvoker().query(invocationInput).getResult();
       return getConfiguration().getObjectMapper().serializeResultAsJson(result);
     } catch (Exception e) {
       return e.getMessage();
@@ -75,8 +85,8 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
   }
 
   private void doRequest(HttpServletRequest request, HttpServletResponse response) {
-    List<GraphQLServletListener.RequestCallback> requestCallbacks = runListeners(
-        l -> l.onRequest(request, response));
+    List<GraphQLServletListener.RequestCallback> requestCallbacks =
+        runListeners(l -> l.onRequest(request, response));
 
     try {
       getConfiguration().getHttpRequestHandler().handle(request, response);
@@ -91,26 +101,27 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet implements 
 
   private <R> List<R> runListeners(Function<? super GraphQLServletListener, R> action) {
     return getConfiguration().getListeners().stream()
-        .map(listener -> {
-          try {
-            return action.apply(listener);
-          } catch (Exception t) {
-            log.error("Error running listener: {}", listener, t);
-            return null;
-          }
-        })
+        .map(
+            listener -> {
+              try {
+                return action.apply(listener);
+              } catch (Exception t) {
+                log.error("Error running listener: {}", listener, t);
+                return null;
+              }
+            })
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
   private <T> void runCallbacks(List<T> callbacks, Consumer<T> action) {
-    callbacks.forEach(callback -> {
-      try {
-        action.accept(callback);
-      } catch (Exception t) {
-        log.error("Error running callback: {}", callback, t);
-      }
-    });
+    callbacks.forEach(
+        callback -> {
+          try {
+            action.accept(callback);
+          } catch (Exception t) {
+            log.error("Error running callback: {}", callback, t);
+          }
+        });
   }
-
 }

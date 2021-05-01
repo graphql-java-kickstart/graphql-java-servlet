@@ -15,5 +15,4 @@ public class SubscriptionException extends Exception {
   public Object getPayload() {
     return payload;
   }
-
 }

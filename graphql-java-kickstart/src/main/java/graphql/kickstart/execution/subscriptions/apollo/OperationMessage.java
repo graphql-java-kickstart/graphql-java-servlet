@@ -72,6 +72,5 @@ public class OperationMessage {
     public String getValue() {
       return value;
     }
-
   }
 }

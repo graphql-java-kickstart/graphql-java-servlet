@@ -51,5 +51,4 @@ public class WebSocketSendSubscriber implements Subscriber<String> {
     }
     subscriptionRef.get().cancel();
   }
-
 }

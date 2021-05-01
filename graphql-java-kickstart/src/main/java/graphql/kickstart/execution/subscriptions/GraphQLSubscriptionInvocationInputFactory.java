@@ -6,5 +6,4 @@ import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 public interface GraphQLSubscriptionInvocationInputFactory {
 
   GraphQLSingleInvocationInput create(GraphQLRequest graphQLRequest, SubscriptionSession session);
-
 }

@@ -19,7 +19,8 @@ class SessionSubscriber implements Subscriber<ExecutionResult> {
 
   private final SubscriptionSession session;
   private final String id;
-  private AtomicSubscriptionSubscription subscriptionReference = new AtomicSubscriptionSubscription();
+  private AtomicSubscriptionSubscription subscriptionReference =
+      new AtomicSubscriptionSubscription();
 
   @Override
   public void onSubscribe(Subscription subscription) {
@@ -45,13 +46,12 @@ class SessionSubscriber implements Subscriber<ExecutionResult> {
     Map<String, Object> payload = new HashMap<>();
     if (throwable.getCause() instanceof NonNullableFieldWasNullException) {
       NonNullableFieldWasNullException e = (NonNullableFieldWasNullException) throwable.getCause();
-      payload.put("errors", singletonList(GraphqlErrorBuilder.newError()
-          .message(e.getMessage())
-          .path(e.getPath())
-          .build()));
+      payload.put(
+          "errors",
+          singletonList(
+              GraphqlErrorBuilder.newError().message(e.getMessage()).path(e.getPath()).build()));
     } else {
-      payload
-          .put("errors", singletonList(new GenericGraphQLError(throwable.getMessage())));
+      payload.put("errors", singletonList(new GenericGraphQLError(throwable.getMessage())));
     }
 
     session.unsubscribe(id);
@@ -63,5 +63,4 @@ class SessionSubscriber implements Subscriber<ExecutionResult> {
     session.unsubscribe(id);
     session.sendCompleteMessage(id);
   }
-
 }

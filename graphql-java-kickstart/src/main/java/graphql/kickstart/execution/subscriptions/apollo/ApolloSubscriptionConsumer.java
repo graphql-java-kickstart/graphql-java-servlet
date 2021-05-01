@@ -19,8 +19,8 @@ public class ApolloSubscriptionConsumer implements Consumer<String> {
   @Override
   public void accept(String request) {
     try {
-      OperationMessage message = objectMapper.getJacksonMapper()
-          .readValue(request, OperationMessage.class);
+      OperationMessage message =
+          objectMapper.getJacksonMapper().readValue(request, OperationMessage.class);
       SubscriptionCommand command = commandProvider.getByType(message.getType());
       command.apply(session, message);
     } catch (JsonProcessingException e) {
@@ -28,5 +28,4 @@ public class ApolloSubscriptionConsumer implements Consumer<String> {
       session.sendMessage(new OperationMessage(Type.GQL_CONNECTION_ERROR, null, e.getMessage()));
     }
   }
-
 }

@@ -54,12 +54,14 @@ class OsgiSchemaBuilder {
 
   private GraphQLServletContextBuilder contextBuilder = new DefaultGraphQLServletContextBuilder();
   private GraphQLServletRootObjectBuilder rootObjectBuilder = new DefaultGraphQLRootObjectBuilder();
-  private ExecutionStrategyProvider executionStrategyProvider = new DefaultExecutionStrategyProvider();
+  private ExecutionStrategyProvider executionStrategyProvider =
+      new DefaultExecutionStrategyProvider();
   private InstrumentationProvider instrumentationProvider = new NoOpInstrumentationProvider();
   private GraphQLErrorHandler errorHandler = new DefaultGraphQLErrorHandler();
-  private PreparsedDocumentProvider preparsedDocumentProvider = NoOpPreparsedDocumentProvider.INSTANCE;
-  private GraphQLCodeRegistryProvider codeRegistryProvider = () -> GraphQLCodeRegistry
-      .newCodeRegistry().build();
+  private PreparsedDocumentProvider preparsedDocumentProvider =
+      NoOpPreparsedDocumentProvider.INSTANCE;
+  private GraphQLCodeRegistryProvider codeRegistryProvider =
+      () -> GraphQLCodeRegistry.newCodeRegistry().build();
 
   private GraphQLSchemaServletProvider schemaProvider;
 
@@ -88,24 +90,26 @@ class OsgiSchemaBuilder {
         updateFuture.cancel(true);
       }
 
-      updateFuture = executor
-          .schedule(this::doUpdateSchema, schemaUpdateDelay, TimeUnit.MILLISECONDS);
+      updateFuture =
+          executor.schedule(this::doUpdateSchema, schemaUpdateDelay, TimeUnit.MILLISECONDS);
     }
   }
 
   private void doUpdateSchema() {
-    this.schemaProvider = new DefaultGraphQLSchemaServletProvider(
-        newSchema().query(buildQueryType())
-            .mutation(buildMutationType())
-            .subscription(buildSubscriptionType())
-            .additionalTypes(buildTypes())
-            .codeRegistry(codeRegistryProvider.getCodeRegistry())
-            .build());
+    this.schemaProvider =
+        new DefaultGraphQLSchemaServletProvider(
+            newSchema()
+                .query(buildQueryType())
+                .mutation(buildMutationType())
+                .subscription(buildSubscriptionType())
+                .additionalTypes(buildTypes())
+                .codeRegistry(codeRegistryProvider.getCodeRegistry())
+                .build());
   }
 
   private GraphQLObjectType buildQueryType() {
-    final GraphQLObjectType.Builder queryTypeBuilder = newObject().name("Query")
-        .description("Root query type");
+    final GraphQLObjectType.Builder queryTypeBuilder =
+        newObject().name("Query").description("Root query type");
 
     if (!queryProviders.isEmpty()) {
       for (GraphQLQueryProvider provider : queryProviders) {
@@ -116,8 +120,7 @@ class OsgiSchemaBuilder {
     } else {
       // graphql-java enforces Query type to be there with at least some field.
       queryTypeBuilder.field(
-          GraphQLFieldDefinition
-              .newFieldDefinition()
+          GraphQLFieldDefinition.newFieldDefinition()
               .name("_empty")
               .type(Scalars.GraphQLBoolean)
               .build());
@@ -142,8 +145,8 @@ class OsgiSchemaBuilder {
 
   private GraphQLObjectType buildObjectType(String name, List<GraphQLFieldProvider> providers) {
     if (!providers.isEmpty()) {
-      final GraphQLObjectType.Builder typeBuilder = newObject().name(name)
-          .description("Root " + name.toLowerCase() + " type");
+      final GraphQLObjectType.Builder typeBuilder =
+          newObject().name(name).description("Root " + name.toLowerCase() + " type");
 
       for (GraphQLFieldProvider provider : providers) {
         provider.getFields().forEach(typeBuilder::field);
@@ -193,8 +196,7 @@ class OsgiSchemaBuilder {
   }
 
   GraphQLConfiguration buildConfiguration() {
-    return GraphQLConfiguration
-        .with(buildInvocationInputFactory())
+    return GraphQLConfiguration.with(buildInvocationInputFactory())
         .with(buildQueryInvoker())
         .with(buildObjectMapper())
         .with(listeners)
@@ -212,13 +214,12 @@ class OsgiSchemaBuilder {
     return GraphQLQueryInvoker.newBuilder()
         .withPreparsedDocumentProvider(preparsedDocumentProvider)
         .withInstrumentation(() -> instrumentationProvider.getInstrumentation())
-        .withExecutionStrategyProvider(executionStrategyProvider).build();
+        .withExecutionStrategyProvider(executionStrategyProvider)
+        .build();
   }
 
   private GraphQLObjectMapper buildObjectMapper() {
-    return GraphQLObjectMapper.newBuilder()
-        .withGraphQLErrorHandler(errorHandler)
-        .build();
+    return GraphQLObjectMapper.newBuilder().withGraphQLErrorHandler(errorHandler).build();
   }
 
   void add(GraphQLServletListener listener) {

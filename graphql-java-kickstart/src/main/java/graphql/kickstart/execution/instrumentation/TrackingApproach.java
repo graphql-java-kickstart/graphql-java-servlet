@@ -17,9 +17,7 @@ public interface TrackingApproach extends InstrumentationState {
    */
   InstrumentationState createState(ExecutionId executionId);
 
-  /**
-   * Dispatch dataloaders and clean up state.
-   */
+  /** Dispatch dataloaders and clean up state. */
   void dispatch();
 
   /**

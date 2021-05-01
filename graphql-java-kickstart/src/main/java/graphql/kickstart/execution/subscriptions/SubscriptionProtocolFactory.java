@@ -2,9 +2,7 @@ package graphql.kickstart.execution.subscriptions;
 
 import java.util.function.Consumer;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public abstract class SubscriptionProtocolFactory {
 
   private final String protocol;
@@ -18,5 +16,4 @@ public abstract class SubscriptionProtocolFactory {
   }
 
   public abstract Consumer<String> createConsumer(SubscriptionSession session);
-
 }

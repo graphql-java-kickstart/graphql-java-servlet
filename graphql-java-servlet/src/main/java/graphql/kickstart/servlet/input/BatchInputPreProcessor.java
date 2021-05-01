@@ -15,7 +15,8 @@ public interface BatchInputPreProcessor {
    * @param response the servlet response
    * @return wrapped batch to possibly process.
    */
-  BatchInputPreProcessResult preProcessBatch(GraphQLBatchedInvocationInput batchedInvocationInput,
+  BatchInputPreProcessResult preProcessBatch(
+      GraphQLBatchedInvocationInput batchedInvocationInput,
       HttpServletRequest request,
       HttpServletResponse response);
 }

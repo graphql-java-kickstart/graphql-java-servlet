@@ -2,9 +2,7 @@ package graphql.kickstart.execution.config;
 
 import graphql.schema.GraphQLSchema;
 
-/**
- * @author Andrew Potter
- */
+/** @author Andrew Potter */
 public class DefaultGraphQLSchemaProvider implements GraphQLSchemaProvider {
 
   private final GraphQLSchema schema;
@@ -28,5 +26,4 @@ public class DefaultGraphQLSchemaProvider implements GraphQLSchemaProvider {
   public GraphQLSchema getReadOnlySchema() {
     return readOnlySchema;
   }
-
 }

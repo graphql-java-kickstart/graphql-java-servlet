@@ -21,5 +21,4 @@ public class GraphQLThreadFactory implements ThreadFactory {
     t.setPriority(Thread.NORM_PRIORITY);
     return t;
   }
-
 }

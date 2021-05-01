@@ -9,12 +9,14 @@ public class ConfiguringObjectMapperProvider implements ObjectMapperProvider {
 
   private final GraphQLServletObjectMapperConfigurer objectMapperConfigurer;
 
-  public ConfiguringObjectMapperProvider(ObjectMapper objectMapperTemplate,
+  public ConfiguringObjectMapperProvider(
+      ObjectMapper objectMapperTemplate,
       GraphQLServletObjectMapperConfigurer objectMapperConfigurer) {
     this.objectMapperTemplate =
         objectMapperTemplate == null ? new ObjectMapper() : objectMapperTemplate;
     this.objectMapperConfigurer =
-        objectMapperConfigurer == null ? new DefaultGraphQLServletObjectMapperConfigurer()
+        objectMapperConfigurer == null
+            ? new DefaultGraphQLServletObjectMapperConfigurer()
             : objectMapperConfigurer;
   }
 

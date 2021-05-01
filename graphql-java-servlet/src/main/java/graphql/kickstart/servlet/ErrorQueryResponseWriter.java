@@ -15,5 +15,4 @@ class ErrorQueryResponseWriter implements QueryResponseWriter {
   public void write(HttpServletRequest request, HttpServletResponse response) throws IOException {
     response.sendError(statusCode, message);
   }
-
 }

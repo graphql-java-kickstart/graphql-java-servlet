@@ -15,8 +15,7 @@ import org.reactivestreams.Subscription;
 @RequiredArgsConstructor
 public class DefaultSubscriptionSession implements SubscriptionSession {
 
-  @Getter
-  private final GraphQLSubscriptionMapper mapper;
+  @Getter private final GraphQLSubscriptionMapper mapper;
   private SingleSubscriberPublisher<String> publisher = new SingleSubscriberPublisher<>();
   private SessionSubscriptions subscriptions = new SessionSubscriptions();
 
@@ -103,5 +102,4 @@ public class DefaultSubscriptionSession implements SubscriptionSession {
   public String toString() {
     return getId();
   }
-
 }

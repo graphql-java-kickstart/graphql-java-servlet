@@ -23,5 +23,4 @@ public class AtomicSubscriptionSubscription {
 
     return subscription;
   }
-
 }
