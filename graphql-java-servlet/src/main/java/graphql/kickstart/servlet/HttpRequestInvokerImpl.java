@@ -32,9 +32,10 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       HttpServletRequest request,
       HttpServletResponse response) {
     if (request.isAsyncSupported()) {
-      AsyncContext asyncContext = request.isAsyncStarted()
-          ? request.getAsyncContext()
-          : request.startAsync(request, response);
+      AsyncContext asyncContext =
+          request.isAsyncStarted()
+              ? request.getAsyncContext()
+              : request.startAsync(request, response);
       asyncContext.setTimeout(configuration.getAsyncTimeout());
       invokeAndHandle(invocationInput, request, response)
           .thenAccept(aVoid -> asyncContext.complete());
@@ -46,13 +47,13 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
   private CompletableFuture<Void> invokeAndHandle(
       GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
-      HttpServletResponse response
-  ) {
-    ListenerHandler listenerHandler = ListenerHandler
-        .start(request, response, configuration.getListeners());
+      HttpServletResponse response) {
+    ListenerHandler listenerHandler =
+        ListenerHandler.start(request, response, configuration.getListeners());
     return invoke(invocationInput, request, response)
-        .thenAccept(result ->
-            writeResultResponse(invocationInput, result, request, response, listenerHandler))
+        .thenAccept(
+            result ->
+                writeResultResponse(invocationInput, result, request, response, listenerHandler))
         .exceptionally(t -> writeErrorResponse(t, response, listenerHandler))
         .thenAccept(aVoid -> listenerHandler.onFinally());
   }
@@ -77,7 +78,8 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return queryResponseWriterFactory.createWriter(invocationInput, queryResult, configuration);
   }
 
-  private Void writeErrorResponse(Throwable t, HttpServletResponse response, ListenerHandler listenerHandler) {
+  private Void writeErrorResponse(
+      Throwable t, HttpServletResponse response, ListenerHandler listenerHandler) {
     response.setStatus(STATUS_BAD_REQUEST);
     log.info(
         "Bad request: path was not \"/schema.json\" or no query variable named \"query\" given", t);

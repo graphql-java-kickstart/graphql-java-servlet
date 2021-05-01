@@ -86,5 +86,4 @@ public abstract class AbstractGraphQLHttpServlet extends HttpServlet
       log.error("Error executing GraphQL request!", t);
     }
   }
-
 }
