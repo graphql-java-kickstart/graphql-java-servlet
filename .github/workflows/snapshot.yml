@@ -11,6 +11,34 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: gradle/wrapper-validation-action@v1
+
+  verify-google-java-format:
+    name: Google Java Format Verification
+    runs-on: ubuntu-latest
+    needs: validation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: 15
+      - name: Cache Gradle
+        uses: actions/cache@v2
+        env:
+          java-version: 15
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: ${{ runner.os }}-${{ env.java-version }}-gradle-
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+      - name: Gradle Check
+        run: ./gradlew --info build -x test
+
   test:
     name: Test run
     needs: validation
@@ -37,7 +65,8 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Gradle Check
-        run: ./gradlew --info check
+        run: ./gradlew --info check -x verifyGoogleJavaFormat
+
   build:
     name: Publish snapshot
     needs: test
@@ -68,7 +97,8 @@ jobs:
         env:
           OSS_USER_TOKEN_KEY: ${{ secrets.OSS_USER_TOKEN_KEY }}
           OSS_USER_TOKEN_PASS: ${{ secrets.OSS_USER_TOKEN_PASS }}
-        run: ./gradlew clean build publish -x test
+        run: ./gradlew clean build publish -x test verifyGoogleJavaFormat
+
   sonar:
     name: Sonar analysis
     needs: validation
@@ -98,4 +128,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build jacocoTestReport sonarqube --info
+        if: env.SONAR_TOKEN != null
+        run: ./gradlew build jacocoTestReport sonarqube --info -x verifyGoogleJavaFormat

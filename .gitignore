@@ -3,7 +3,8 @@ build/
 *.iml
 *.ipr
 *.iws
-**/.idea/
+.idea/*
+!.idea/codeStyles/
 target/
 /out/
 .classpath
