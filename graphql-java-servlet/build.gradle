@@ -1,6 +1,5 @@
 buildscript {
     repositories {
-        jcenter()
         mavenCentral()
     }
 }
@@ -32,8 +31,8 @@ dependencies {
     testImplementation 'io.github.graphql-java:graphql-java-annotations:8.3'
 
     // Unit testing
-    testImplementation "org.codehaus.groovy:groovy-all:2.5.14"
-    testImplementation "org.spockframework:spock-core:1.3-groovy-2.5"
+    testImplementation "org.codehaus.groovy:groovy-all:3.0.8"
+    testImplementation "org.spockframework:spock-core:2.0-M5-groovy-3.0"
     testRuntimeOnly "cglib:cglib-nodep:3.3.0"
     testRuntimeOnly "org.objenesis:objenesis:3.2"
     testImplementation "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
