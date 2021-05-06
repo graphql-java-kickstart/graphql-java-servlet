@@ -37,28 +37,37 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
               ? request.getAsyncContext()
               : request.startAsync(request, response);
       asyncContext.setTimeout(configuration.getAsyncTimeout());
-      invoke(invocationInput, request, response)
-          .thenAccept(result -> writeResultResponse(invocationInput, result, request, response))
-          .exceptionally(t -> writeErrorResponse(t, response))
+      invokeAndHandle(invocationInput, request, response)
           .thenAccept(aVoid -> asyncContext.complete());
     } else {
-      try {
-        GraphQLQueryResult result = invoke(invocationInput, request, response).join();
-        writeResultResponse(invocationInput, result, request, response);
-      } catch (Exception t) {
-        writeErrorResponse(t, response);
-      }
+      invokeAndHandle(invocationInput, request, response).join();
     }
+  }
+
+  private CompletableFuture<Void> invokeAndHandle(
+      GraphQLInvocationInput invocationInput,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    ListenerHandler listenerHandler =
+        ListenerHandler.start(request, response, configuration.getListeners());
+    return invoke(invocationInput, request, response)
+        .thenAccept(
+            result ->
+                writeResultResponse(invocationInput, result, request, response, listenerHandler))
+        .exceptionally(t -> writeErrorResponse(t, response, listenerHandler))
+        .thenAccept(aVoid -> listenerHandler.onFinally());
   }
 
   private void writeResultResponse(
       GraphQLInvocationInput invocationInput,
       GraphQLQueryResult queryResult,
       HttpServletRequest request,
-      HttpServletResponse response) {
+      HttpServletResponse response,
+      ListenerHandler listenerHandler) {
     QueryResponseWriter queryResponseWriter = createWriter(invocationInput, queryResult);
     try {
       queryResponseWriter.write(request, response);
+      listenerHandler.onSuccess();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -69,10 +78,12 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return queryResponseWriterFactory.createWriter(invocationInput, queryResult, configuration);
   }
 
-  private Void writeErrorResponse(Throwable t, HttpServletResponse response) {
+  private Void writeErrorResponse(
+      Throwable t, HttpServletResponse response, ListenerHandler listenerHandler) {
     response.setStatus(STATUS_BAD_REQUEST);
     log.info(
         "Bad request: path was not \"/schema.json\" or no query variable named \"query\" given", t);
+    listenerHandler.onError(t);
     return null;
   }
 
