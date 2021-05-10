@@ -7,7 +7,7 @@
       "matchPackagePatterns": [
         "^com.graphql-java"
       ],
-      "allowedVersions": "/^[0-9]+\\.[0-9]+\\.[0-9]+?$/"
+      "allowedVersions": "/^[0-9]+\\.[0-9]+(\\.[0-9]+)?$/"
     },
     {
       "matchPackageNames": [
