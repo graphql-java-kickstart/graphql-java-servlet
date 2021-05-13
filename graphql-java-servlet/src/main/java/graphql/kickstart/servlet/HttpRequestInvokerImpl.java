@@ -64,7 +64,8 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
         () -> {
           FutureExecutionResult futureResult = invoke(invocationInput, request, response);
           futureHolder.set(futureResult);
-          handle(futureResult, request, response, listenerHandler);
+          handle(futureResult, request, response, listenerHandler)
+            .thenAccept(it -> asyncContext.complete());
         });
   }
 
