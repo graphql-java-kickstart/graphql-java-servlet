@@ -2,7 +2,6 @@ package graphql.kickstart.servlet;
 
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
-import graphql.GraphQLException;
 import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
 import graphql.kickstart.execution.error.GenericGraphQLError;
@@ -109,10 +108,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       Throwable t) {
     if (!response.isCommitted()) {
       writeResultResponse(
-          invocationInput,
-          GraphQLQueryResult.create(toErrorResult(t)),
-          request,
-          response);
+          invocationInput, GraphQLQueryResult.create(toErrorResult(t)), request, response);
       listenerHandler.onError(t);
     } else {
       log.warn(
