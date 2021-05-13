@@ -58,16 +58,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     asyncContext.setTimeout(configuration.getAsyncTimeout());
     AtomicReference<FutureExecutionResult> futureHolder = new AtomicReference<>();
     AsyncTimeoutListener timeoutListener =
-        event -> {
-          Optional.ofNullable(futureHolder.get()).ifPresent(FutureExecutionResult::cancel);
-          writeResultResponse(
-              invocationInput,
-              GraphQLQueryResult.create(
-                  new ExecutionResultImpl(new GenericGraphQLError("Timeout"))),
-              (HttpServletRequest) event.getAsyncContext().getRequest(),
-              (HttpServletResponse) event.getAsyncContext().getResponse());
-          listenerHandler.onError(event.getThrowable());
-        };
+        event -> Optional.ofNullable(futureHolder.get()).ifPresent(FutureExecutionResult::cancel);
     asyncContext.addListener(timeoutListener);
     asyncContext.start(
         () -> {
