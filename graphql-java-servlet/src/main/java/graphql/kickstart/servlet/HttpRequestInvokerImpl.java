@@ -1,8 +1,8 @@
 package graphql.kickstart.servlet;
 
-import static graphql.kickstart.servlet.HttpRequestHandler.STATUS_BAD_REQUEST;
-
+import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
+import graphql.GraphQLException;
 import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
 import graphql.kickstart.execution.error.GenericGraphQLError;
@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
@@ -82,7 +83,8 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return invoke(invocationInput, request, response)
         .thenAccept(it -> writeResultResponse(invocationInput, it, request, response))
         .thenAccept(it -> listenerHandler.onSuccess())
-        .exceptionally(t -> writeBadRequestError(t, response, listenerHandler))
+        .exceptionally(
+            t -> writeErrorResponse(invocationInput, request, response, listenerHandler, t))
         .thenAccept(it -> listenerHandler.onFinally());
   }
 
@@ -99,24 +101,37 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     }
   }
 
-  protected QueryResponseWriter createWriter(
-      GraphQLInvocationInput invocationInput, GraphQLQueryResult queryResult) {
-    return queryResponseWriterFactory.createWriter(invocationInput, queryResult, configuration);
-  }
-
-  private Void writeBadRequestError(
-      Throwable t, HttpServletResponse response, ListenerHandler listenerHandler) {
+  private Void writeErrorResponse(
+      GraphQLInvocationInput invocationInput,
+      HttpServletRequest request,
+      HttpServletResponse response,
+      ListenerHandler listenerHandler,
+      Throwable t) {
     if (!response.isCommitted()) {
-      response.setStatus(STATUS_BAD_REQUEST);
-      log.info(
-          "Bad request: path was not \"/schema.json\" or no query variable named \"query\" given",
-          t);
+      writeResultResponse(
+          invocationInput,
+          GraphQLQueryResult.create(toErrorResult(t)),
+          request,
+          response);
       listenerHandler.onError(t);
     } else {
       log.warn(
           "Cannot write GraphQL response, because the HTTP response is already committed. It most likely timed out.");
     }
     return null;
+  }
+
+  private ExecutionResult toErrorResult(Throwable t) {
+    String message =
+        t instanceof CompletionException && t.getCause() != null
+            ? t.getCause().getMessage()
+            : t.getMessage();
+    return new ExecutionResultImpl(new GenericGraphQLError(message));
+  }
+
+  protected QueryResponseWriter createWriter(
+      GraphQLInvocationInput invocationInput, GraphQLQueryResult queryResult) {
+    return queryResponseWriterFactory.createWriter(invocationInput, queryResult, configuration);
   }
 
   private CompletableFuture<GraphQLQueryResult> invoke(

@@ -1,12 +1,15 @@
 package graphql.kickstart.servlet.cache
 
+import graphql.ExecutionResult
 import graphql.kickstart.execution.GraphQLInvoker
+import graphql.kickstart.execution.GraphQLObjectMapper
 import graphql.kickstart.execution.GraphQLQueryResult
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput
 import graphql.kickstart.servlet.GraphQLConfiguration
 import graphql.kickstart.servlet.HttpRequestInvoker
 import spock.lang.Specification
 
+import javax.servlet.ServletOutputStream
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.CompletableFuture
@@ -22,6 +25,8 @@ class CachingHttpRequestInvokerTest extends Specification {
   def httpRequestInvokerMock
   def graphqlInvoker
   def configuration
+  def graphqlObjectMapper
+  def outputStreamMock
 
   def setup() {
     cacheReaderMock = Mock(CacheReader)
@@ -32,11 +37,17 @@ class CachingHttpRequestInvokerTest extends Specification {
     configuration = Mock(GraphQLConfiguration)
     httpRequestInvokerMock = Mock(HttpRequestInvoker)
     graphqlInvoker = Mock(GraphQLInvoker)
+    graphqlObjectMapper = Mock(GraphQLObjectMapper)
+    outputStreamMock = Mock(ServletOutputStream)
     cachingInvoker = new CachingHttpRequestInvoker(configuration, httpRequestInvokerMock, cacheReaderMock)
 
     configuration.getResponseCacheManager() >> responseCacheManagerMock
     configuration.getGraphQLInvoker() >> graphqlInvoker
+    configuration.getObjectMapper() >> graphqlObjectMapper
+    graphqlObjectMapper.serializeResultAsBytes(_ as ExecutionResult) >> new byte[0]
     graphqlInvoker.queryAsync(invocationInputMock) >> CompletableFuture.completedFuture(Mock(GraphQLQueryResult))
+
+    responseMock.getOutputStream() >> outputStreamMock
   }
 
   def "should execute regular invoker if cache not exists"() {
