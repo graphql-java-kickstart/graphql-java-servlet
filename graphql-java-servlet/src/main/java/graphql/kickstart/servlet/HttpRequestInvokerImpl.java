@@ -2,6 +2,7 @@ package graphql.kickstart.servlet;
 
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
+import graphql.kickstart.execution.FutureExecutionResult;
 import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
 import graphql.kickstart.execution.error.GenericGraphQLError;
@@ -13,6 +14,7 @@ import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,7 +42,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     if (request.isAsyncSupported()) {
       invokeAndHandleAsync(invocationInput, request, response, listenerHandler);
     } else {
-      invokeAndHandle(invocationInput, request, response, listenerHandler).join();
+      handle(invoke(invocationInput, request, response), request, response, listenerHandler).join();
     }
   }
 
@@ -54,10 +56,10 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
             ? request.getAsyncContext()
             : request.startAsync(request, response);
     asyncContext.setTimeout(configuration.getAsyncTimeout());
-    AtomicReference<CompletableFuture<Void>> futureHolder = new AtomicReference<>();
+    AtomicReference<FutureExecutionResult> futureHolder = new AtomicReference<>();
     AsyncTimeoutListener timeoutListener =
         event -> {
-          Optional.ofNullable(futureHolder.get()).ifPresent(it -> it.cancel(true));
+          Optional.ofNullable(futureHolder.get()).ifPresent(FutureExecutionResult::cancel);
           writeResultResponse(
               invocationInput,
               GraphQLQueryResult.create(
@@ -68,22 +70,27 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
         };
     asyncContext.addListener(timeoutListener);
     asyncContext.start(
-        () ->
-            futureHolder.set(
-                invokeAndHandle(invocationInput, request, response, listenerHandler)
-                    .thenAccept(aVoid -> asyncContext.complete())));
+        () -> {
+          FutureExecutionResult futureResult = invoke(invocationInput, request, response);
+          futureHolder.set(futureResult);
+          handle(futureResult, request, response, listenerHandler);
+        });
   }
 
-  private CompletableFuture<Void> invokeAndHandle(
-      GraphQLInvocationInput invocationInput,
+  private CompletableFuture<Void> handle(
+      FutureExecutionResult futureResult,
       HttpServletRequest request,
       HttpServletResponse response,
       ListenerHandler listenerHandler) {
-    return invoke(invocationInput, request, response)
-        .thenAccept(it -> writeResultResponse(invocationInput, it, request, response))
+    return futureResult
+        .thenApplyQueryResult()
+        .thenAccept(
+            it -> writeResultResponse(futureResult.getInvocationInput(), it, request, response))
         .thenAccept(it -> listenerHandler.onSuccess())
         .exceptionally(
-            t -> writeErrorResponse(invocationInput, request, response, listenerHandler, t))
+            t ->
+                writeErrorResponse(
+                    futureResult.getInvocationInput(), request, response, listenerHandler, t))
         .thenAccept(it -> listenerHandler.onFinally());
   }
 
@@ -106,10 +113,11 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       HttpServletResponse response,
       ListenerHandler listenerHandler,
       Throwable t) {
+    Throwable cause = getCause(t);
     if (!response.isCommitted()) {
       writeResultResponse(
-          invocationInput, GraphQLQueryResult.create(toErrorResult(t)), request, response);
-      listenerHandler.onError(t);
+          invocationInput, GraphQLQueryResult.create(toErrorResult(cause)), request, response);
+      listenerHandler.onError(cause);
     } else {
       log.warn(
           "Cannot write GraphQL response, because the HTTP response is already committed. It most likely timed out.");
@@ -117,11 +125,20 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return null;
   }
 
+  private Throwable getCause(Throwable t) {
+    return t instanceof CompletionException && t.getCause() != null ? t.getCause() : t;
+  }
+
   private ExecutionResult toErrorResult(Throwable t) {
     String message =
-        t instanceof CompletionException && t.getCause() != null
-            ? t.getCause().getMessage()
+        t instanceof CancellationException
+            ? "Execution canceled because timeout of "
+                + configuration.getAsyncTimeout()
+                + " millis was reached"
             : t.getMessage();
+    if (message == null) {
+      message = "Unexpected error occurred";
+    }
     return new ExecutionResultImpl(new GenericGraphQLError(message));
   }
 
@@ -130,17 +147,17 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return queryResponseWriterFactory.createWriter(invocationInput, queryResult, configuration);
   }
 
-  private CompletableFuture<GraphQLQueryResult> invoke(
+  private FutureExecutionResult invoke(
       GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
       HttpServletResponse response) {
     if (invocationInput instanceof GraphQLSingleInvocationInput) {
-      return graphQLInvoker.queryAsync(invocationInput);
+      return graphQLInvoker.execute(invocationInput);
     }
     return invokeBatched((GraphQLBatchedInvocationInput) invocationInput, request, response);
   }
 
-  private CompletableFuture<GraphQLQueryResult> invokeBatched(
+  private FutureExecutionResult invokeBatched(
       GraphQLBatchedInvocationInput batchedInvocationInput,
       HttpServletRequest request,
       HttpServletResponse response) {
@@ -148,10 +165,10 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     BatchInputPreProcessResult result =
         preprocessor.preProcessBatch(batchedInvocationInput, request, response);
     if (result.isExecutable()) {
-      return graphQLInvoker.queryAsync(result.getBatchedInvocationInput());
+      return graphQLInvoker.execute(result.getBatchedInvocationInput());
     }
 
-    return CompletableFuture.completedFuture(
+    return FutureExecutionResult.error(
         GraphQLQueryResult.createError(result.getStatusCode(), result.getStatusMessage()));
   }
 }

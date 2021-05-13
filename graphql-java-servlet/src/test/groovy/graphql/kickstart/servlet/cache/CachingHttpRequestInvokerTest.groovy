@@ -1,6 +1,7 @@
 package graphql.kickstart.servlet.cache
 
 import graphql.ExecutionResult
+import graphql.kickstart.execution.FutureExecutionResult
 import graphql.kickstart.execution.GraphQLInvoker
 import graphql.kickstart.execution.GraphQLObjectMapper
 import graphql.kickstart.execution.GraphQLQueryResult
@@ -39,6 +40,7 @@ class CachingHttpRequestInvokerTest extends Specification {
     graphqlInvoker = Mock(GraphQLInvoker)
     graphqlObjectMapper = Mock(GraphQLObjectMapper)
     outputStreamMock = Mock(ServletOutputStream)
+    graphqlInvoker.execute(invocationInputMock) >> FutureExecutionResult.single(invocationInputMock, CompletableFuture.completedFuture(Mock(GraphQLQueryResult)))
     cachingInvoker = new CachingHttpRequestInvoker(configuration, httpRequestInvokerMock, cacheReaderMock)
 
     configuration.getResponseCacheManager() >> responseCacheManagerMock
