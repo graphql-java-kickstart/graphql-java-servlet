@@ -35,7 +35,7 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
       - name: Gradle Check
-        run: ./gradlew --info check -x verifyGoogleJavaFormat
+        run: ./gradlew --info check
 
   build:
     name: Publish release
