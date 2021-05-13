@@ -23,5 +23,6 @@ class SingleQueryResponseWriter implements QueryResponseWriter {
     byte[] contentBytes = graphQLObjectMapper.serializeResultAsBytes(result);
     response.setContentLength(contentBytes.length);
     response.getOutputStream().write(contentBytes);
+    response.getOutputStream().flush();
   }
 }

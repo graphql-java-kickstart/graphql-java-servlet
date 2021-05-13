@@ -31,7 +31,6 @@ plugins {
     id "org.sonarqube" version "3.2.0"
     id "jacoco"
     id 'io.codearte.nexus-staging' version '0.30.0'
-    id 'com.github.sherter.google-java-format' version '0.9' apply false
 }
 
 sonarqube {
@@ -49,7 +48,6 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
-    apply plugin: 'com.github.sherter.google-java-format'
 
     repositories {
         mavenLocal()
@@ -79,8 +77,6 @@ subprojects {
     }
 
     compileJava.dependsOn(processResources)
-
-    compileJava.mustRunAfter verifyGoogleJavaFormat
 
     test {
         useJUnitPlatform()

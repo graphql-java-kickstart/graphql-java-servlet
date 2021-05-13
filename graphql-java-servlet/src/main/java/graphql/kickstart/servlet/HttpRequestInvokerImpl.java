@@ -1,9 +1,11 @@
 package graphql.kickstart.servlet;
 
-import static graphql.kickstart.servlet.HttpRequestHandler.STATUS_BAD_REQUEST;
-
+import graphql.ExecutionResult;
+import graphql.ExecutionResultImpl;
+import graphql.kickstart.execution.FutureExecutionResult;
 import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
+import graphql.kickstart.execution.error.GenericGraphQLError;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
@@ -11,7 +13,11 @@ import graphql.kickstart.servlet.input.BatchInputPreProcessResult;
 import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,46 +37,100 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
       HttpServletResponse response) {
+    ListenerHandler listenerHandler =
+        ListenerHandler.start(request, response, configuration.getListeners());
     if (request.isAsyncSupported()) {
-      AsyncContext asyncContext =
-          request.isAsyncStarted()
-              ? request.getAsyncContext()
-              : request.startAsync(request, response);
-      asyncContext.setTimeout(configuration.getAsyncTimeout());
-      invokeAndHandle(invocationInput, request, response)
-          .thenAccept(aVoid -> asyncContext.complete());
+      invokeAndHandleAsync(invocationInput, request, response, listenerHandler);
     } else {
-      invokeAndHandle(invocationInput, request, response).join();
+      handle(invoke(invocationInput, request, response), request, response, listenerHandler).join();
     }
   }
 
-  private CompletableFuture<Void> invokeAndHandle(
+  private void invokeAndHandleAsync(
       GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
-      HttpServletResponse response) {
-    ListenerHandler listenerHandler =
-        ListenerHandler.start(request, response, configuration.getListeners());
-    return invoke(invocationInput, request, response)
+      HttpServletResponse response,
+      ListenerHandler listenerHandler) {
+    AsyncContext asyncContext =
+        request.isAsyncStarted()
+            ? request.getAsyncContext()
+            : request.startAsync(request, response);
+    asyncContext.setTimeout(configuration.getAsyncTimeout());
+    AtomicReference<FutureExecutionResult> futureHolder = new AtomicReference<>();
+    AsyncTimeoutListener timeoutListener =
+        event -> Optional.ofNullable(futureHolder.get()).ifPresent(FutureExecutionResult::cancel);
+    asyncContext.addListener(timeoutListener);
+    asyncContext.start(
+        () -> {
+          FutureExecutionResult futureResult = invoke(invocationInput, request, response);
+          futureHolder.set(futureResult);
+          handle(futureResult, request, response, listenerHandler);
+        });
+  }
+
+  private CompletableFuture<Void> handle(
+      FutureExecutionResult futureResult,
+      HttpServletRequest request,
+      HttpServletResponse response,
+      ListenerHandler listenerHandler) {
+    return futureResult
+        .thenApplyQueryResult()
         .thenAccept(
-            result ->
-                writeResultResponse(invocationInput, result, request, response, listenerHandler))
-        .exceptionally(t -> writeErrorResponse(t, response, listenerHandler))
-        .thenAccept(aVoid -> listenerHandler.onFinally());
+            it -> writeResultResponse(futureResult.getInvocationInput(), it, request, response))
+        .thenAccept(it -> listenerHandler.onSuccess())
+        .exceptionally(
+            t ->
+                writeErrorResponse(
+                    futureResult.getInvocationInput(), request, response, listenerHandler, t))
+        .thenAccept(it -> listenerHandler.onFinally());
   }
 
   private void writeResultResponse(
       GraphQLInvocationInput invocationInput,
       GraphQLQueryResult queryResult,
       HttpServletRequest request,
-      HttpServletResponse response,
-      ListenerHandler listenerHandler) {
+      HttpServletResponse response) {
     QueryResponseWriter queryResponseWriter = createWriter(invocationInput, queryResult);
     try {
       queryResponseWriter.write(request, response);
-      listenerHandler.onSuccess();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
+  }
+
+  private Void writeErrorResponse(
+      GraphQLInvocationInput invocationInput,
+      HttpServletRequest request,
+      HttpServletResponse response,
+      ListenerHandler listenerHandler,
+      Throwable t) {
+    Throwable cause = getCause(t);
+    if (!response.isCommitted()) {
+      writeResultResponse(
+          invocationInput, GraphQLQueryResult.create(toErrorResult(cause)), request, response);
+      listenerHandler.onError(cause);
+    } else {
+      log.warn(
+          "Cannot write GraphQL response, because the HTTP response is already committed. It most likely timed out.");
+    }
+    return null;
+  }
+
+  private Throwable getCause(Throwable t) {
+    return t instanceof CompletionException && t.getCause() != null ? t.getCause() : t;
+  }
+
+  private ExecutionResult toErrorResult(Throwable t) {
+    String message =
+        t instanceof CancellationException
+            ? "Execution canceled because timeout of "
+                + configuration.getAsyncTimeout()
+                + " millis was reached"
+            : t.getMessage();
+    if (message == null) {
+      message = "Unexpected error occurred";
+    }
+    return new ExecutionResultImpl(new GenericGraphQLError(message));
   }
 
   protected QueryResponseWriter createWriter(
@@ -78,26 +138,17 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return queryResponseWriterFactory.createWriter(invocationInput, queryResult, configuration);
   }
 
-  private Void writeErrorResponse(
-      Throwable t, HttpServletResponse response, ListenerHandler listenerHandler) {
-    response.setStatus(STATUS_BAD_REQUEST);
-    log.info(
-        "Bad request: path was not \"/schema.json\" or no query variable named \"query\" given", t);
-    listenerHandler.onError(t);
-    return null;
-  }
-
-  private CompletableFuture<GraphQLQueryResult> invoke(
+  private FutureExecutionResult invoke(
       GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
       HttpServletResponse response) {
     if (invocationInput instanceof GraphQLSingleInvocationInput) {
-      return graphQLInvoker.queryAsync(invocationInput);
+      return graphQLInvoker.execute(invocationInput);
     }
     return invokeBatched((GraphQLBatchedInvocationInput) invocationInput, request, response);
   }
 
-  private CompletableFuture<GraphQLQueryResult> invokeBatched(
+  private FutureExecutionResult invokeBatched(
       GraphQLBatchedInvocationInput batchedInvocationInput,
       HttpServletRequest request,
       HttpServletResponse response) {
@@ -105,10 +156,10 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     BatchInputPreProcessResult result =
         preprocessor.preProcessBatch(batchedInvocationInput, request, response);
     if (result.isExecutable()) {
-      return graphQLInvoker.queryAsync(result.getBatchedInvocationInput());
+      return graphQLInvoker.execute(result.getBatchedInvocationInput());
     }
 
-    return CompletableFuture.completedFuture(
+    return FutureExecutionResult.error(
         GraphQLQueryResult.createError(result.getStatusCode(), result.getStatusMessage()));
   }
 }

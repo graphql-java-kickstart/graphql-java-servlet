@@ -12,13 +12,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor
 public class GraphQLInvoker {
 
   private final GraphQLBuilder graphQLBuilder;
   private final BatchedDataLoaderGraphQLBuilder batchedDataLoaderGraphQLBuilder;
   private final GraphQLInvokerProxy proxy = GraphQL::executeAsync;
+
+  public FutureExecutionResult execute(GraphQLInvocationInput invocationInput) {
+    if (invocationInput instanceof GraphQLSingleInvocationInput) {
+      return FutureExecutionResult.single(
+          invocationInput, executeAsync((GraphQLSingleInvocationInput) invocationInput));
+    }
+    return FutureExecutionResult.batched(
+        invocationInput, executeAsync((GraphQLBatchedInvocationInput) invocationInput));
+  }
 
   public CompletableFuture<ExecutionResult> executeAsync(
       GraphQLSingleInvocationInput invocationInput) {
