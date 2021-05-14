@@ -19,4 +19,5 @@ public interface GraphQLBatchedInvocationInput extends GraphQLInvocationInput {
   }
 
   ContextSetting getContextSetting();
+
 }

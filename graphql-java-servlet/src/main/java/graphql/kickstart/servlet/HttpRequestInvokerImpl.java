@@ -13,7 +13,6 @@ import graphql.kickstart.servlet.input.BatchInputPreProcessResult;
 import graphql.kickstart.servlet.input.BatchInputPreProcessor;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -58,14 +57,27 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     asyncContext.setTimeout(configuration.getAsyncTimeout());
     AtomicReference<FutureExecutionResult> futureHolder = new AtomicReference<>();
     AsyncTimeoutListener timeoutListener =
-        event -> Optional.ofNullable(futureHolder.get()).ifPresent(FutureExecutionResult::cancel);
+        event -> {
+          log.warn(
+              "GraphQL execution canceled because timeout of "
+                  + configuration.getAsyncTimeout()
+                  + " millis was reached. The following query was being executed when this happened:\n{}",
+              String.join("\n", invocationInput.getQueries()));
+          FutureExecutionResult futureResult = futureHolder.get();
+          if (futureResult != null) {
+            futureResult.cancel();
+          } else {
+            writeErrorResponse(
+                invocationInput, request, response, listenerHandler, new CancellationException());
+          }
+        };
     asyncContext.addListener(timeoutListener);
     asyncContext.start(
         () -> {
           FutureExecutionResult futureResult = invoke(invocationInput, request, response);
           futureHolder.set(futureResult);
           handle(futureResult, request, response, listenerHandler)
-            .thenAccept(it -> asyncContext.complete());
+              .thenAccept(it -> asyncContext.complete());
         });
   }
 

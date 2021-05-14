@@ -1,5 +1,7 @@
 package graphql.kickstart.execution.input;
 
+import static java.util.stream.Collectors.toList;
+
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.context.GraphQLContext;
@@ -29,5 +31,13 @@ public class PerQueryBatchedInvocationInput implements GraphQLBatchedInvocationI
                     new GraphQLSingleInvocationInput(request, schema, contextSupplier.get(), root))
             .collect(Collectors.toList());
     this.contextSetting = contextSetting;
+  }
+
+  @Override
+  public List<String> getQueries() {
+    return invocationInputs.stream()
+        .map(GraphQLSingleInvocationInput::getQueries)
+        .flatMap(List::stream)
+        .collect(toList());
   }
 }

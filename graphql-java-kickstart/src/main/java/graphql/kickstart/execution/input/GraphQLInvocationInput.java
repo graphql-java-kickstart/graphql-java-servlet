@@ -1,3 +1,7 @@
 package graphql.kickstart.execution.input;
 
-public interface GraphQLInvocationInput {}
+import java.util.List;
+
+public interface GraphQLInvocationInput {
+  List<String> getQueries();
+}

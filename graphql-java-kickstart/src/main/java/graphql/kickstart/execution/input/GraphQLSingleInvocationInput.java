@@ -1,10 +1,13 @@
 package graphql.kickstart.execution.input;
 
+import static java.util.Collections.singletonList;
+
 import graphql.ExecutionInput;
 import graphql.execution.ExecutionId;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.context.GraphQLContext;
 import graphql.schema.GraphQLSchema;
+import java.util.List;
 import java.util.Optional;
 import javax.security.auth.Subject;
 
@@ -50,4 +53,10 @@ public class GraphQLSingleInvocationInput implements GraphQLInvocationInput {
   public ExecutionInput getExecutionInput() {
     return executionInput;
   }
+
+  @Override
+  public List<String> getQueries() {
+    return singletonList(executionInput.getQuery());
+  }
+
 }
