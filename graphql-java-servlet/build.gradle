@@ -32,7 +32,7 @@ dependencies {
 
     // Unit testing
     testImplementation "org.codehaus.groovy:groovy-all:3.0.8"
-    testImplementation "org.spockframework:spock-core:2.0-M5-groovy-3.0"
+    testImplementation "org.spockframework:spock-core:2.0-groovy-3.0"
     testRuntimeOnly "cglib:cglib-nodep:3.3.0"
     testRuntimeOnly "org.objenesis:objenesis:3.2"
     testImplementation "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
