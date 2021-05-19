@@ -18,7 +18,9 @@ import graphql.schema.GraphQLSchema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.Getter;
 
@@ -142,7 +144,10 @@ public class GraphQLConfiguration {
     private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier =
         NoOpBatchInputPreProcessor::new;
     private GraphQLResponseCacheManager responseCacheManager;
-    private Executor asyncExecutor = Executors.newCachedThreadPool();
+    private int asyncCorePoolSize = 10;
+    private int asyncMaxPoolSize = 200;
+    private Executor asyncExecutor;
+    private AsyncTaskDecorator asyncTaskDecorator;
 
     private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
       this.invocationInputFactoryBuilder = invocationInputFactoryBuilder;
@@ -203,6 +208,16 @@ public class GraphQLConfiguration {
       return this;
     }
 
+    public Builder asyncCorePoolSize(int asyncCorePoolSize) {
+      this.asyncCorePoolSize = asyncCorePoolSize;
+      return this;
+    }
+
+    public Builder asyncMaxPoolSize(int asyncMaxPoolSize) {
+      this.asyncMaxPoolSize = asyncMaxPoolSize;
+      return this;
+    }
+
     public Builder with(ContextSetting contextSetting) {
       if (contextSetting != null) {
         this.contextSetting = contextSetting;
@@ -229,6 +244,27 @@ public class GraphQLConfiguration {
       return this;
     }
 
+    public Builder with(AsyncTaskDecorator asyncTaskDecorator) {
+      this.asyncTaskDecorator = asyncTaskDecorator;
+      return this;
+    }
+
+    private Executor getAsyncExecutor() {
+      if (asyncExecutor != null) {
+        return asyncExecutor;
+      }
+      return new ThreadPoolExecutor(
+          asyncCorePoolSize,
+          asyncMaxPoolSize,
+          60,
+          TimeUnit.SECONDS,
+          new LinkedBlockingQueue<>(Integer.MAX_VALUE));
+    }
+
+    private Executor getAsyncTaskExecutor() {
+      return new AsyncTaskExecutor(getAsyncExecutor(), asyncTaskDecorator);
+    }
+
     public GraphQLConfiguration build() {
       return new GraphQLConfiguration(
           this.invocationInputFactory != null
@@ -243,7 +279,7 @@ public class GraphQLConfiguration {
           contextSetting,
           batchInputPreProcessorSupplier,
           responseCacheManager,
-          asyncExecutor);
+          getAsyncTaskExecutor());
     }
   }
 }
