@@ -72,13 +72,15 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
           }
         };
     asyncContext.addListener(timeoutListener);
-    asyncContext.start(
-        () -> {
-          FutureExecutionResult futureResult = invoke(invocationInput, request, response);
-          futureHolder.set(futureResult);
-          handle(futureResult, request, response, listenerHandler)
-              .thenAccept(it -> asyncContext.complete());
-        });
+    configuration
+        .getAsyncExecutor()
+        .execute(
+            () -> {
+              FutureExecutionResult futureResult = invoke(invocationInput, request, response);
+              futureHolder.set(futureResult);
+              handle(futureResult, request, response, listenerHandler)
+                  .thenAccept(it -> asyncContext.complete());
+            });
   }
 
   private CompletableFuture<Void> handle(

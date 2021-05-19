@@ -1,7 +1,6 @@
 package graphql.kickstart.servlet
 
 import com.google.common.io.ByteStreams
-import graphql.Directives
 import graphql.Scalars
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.kickstart.execution.context.ContextSetting
@@ -15,7 +14,9 @@ import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
 import graphql.schema.idl.errors.SchemaProblem
+import org.jetbrains.annotations.NotNull
 
+import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicReference
 
 class TestUtils {
@@ -59,6 +60,7 @@ class TestUtils {
         .with(schema)
         .with(contextSetting)
         .with(contextBuilder)
+        .with(executor())
         .build())
     servlet.init(null)
     return servlet
@@ -96,7 +98,17 @@ class TestUtils {
     if (listeners != null) {
       configBuilder.with(Arrays.asList(listeners))
     }
+    configBuilder.with(executor());
     configBuilder.build()
+  }
+
+  private static Executor executor() {
+    new Executor() {
+      @Override
+      void execute(@NotNull Runnable command) {
+        command.run()
+      }
+    }
   }
 
   static def createBatchExecutionHandler() {
