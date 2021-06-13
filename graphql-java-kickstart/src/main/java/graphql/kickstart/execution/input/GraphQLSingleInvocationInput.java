@@ -45,6 +45,7 @@ public class GraphQLSingleInvocationInput implements GraphQLInvocationInput {
         .context(context)
         .root(root)
         .variables(graphQLRequest.getVariables())
+        .extensions(graphQLRequest.getExtensions())
         .dataLoaderRegistry(context.getDataLoaderRegistry())
         .executionId(ExecutionId.generate())
         .build();
