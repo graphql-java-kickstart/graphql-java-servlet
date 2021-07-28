@@ -17,13 +17,23 @@ public class GraphQLRequest {
   @JsonDeserialize(using = VariablesDeserializer.class)
   private Map<String, Object> variables = new HashMap<>();
 
+  @JsonDeserialize(using = ExtensionsDeserializer.class)
+  private Map<String, Object> extensions = new HashMap<>();
+
   private String operationName;
 
   public GraphQLRequest() {}
 
-  public GraphQLRequest(String query, Map<String, Object> variables, String operationName) {
+  public GraphQLRequest(
+      String query,
+      Map<String, Object> variables,
+      Map<String, Object> extensions,
+      String operationName) {
     this.query = query;
     this.operationName = operationName;
+    if (extensions != null) {
+      this.extensions = extensions;
+    }
     if (variables != null) {
       this.variables = variables;
     }
@@ -31,11 +41,14 @@ public class GraphQLRequest {
 
   public static GraphQLRequest createIntrospectionRequest() {
     return new GraphQLRequest(
-        IntrospectionQuery.INTROSPECTION_QUERY, new HashMap<>(), "IntrospectionQuery");
+        IntrospectionQuery.INTROSPECTION_QUERY,
+        new HashMap<>(),
+        new HashMap<>(),
+        "IntrospectionQuery");
   }
 
   public static GraphQLRequest createQueryOnlyRequest(String query) {
-    return new GraphQLRequest(query, new HashMap<>(), null);
+    return new GraphQLRequest(query, new HashMap<>(), new HashMap<>(), null);
   }
 
   public String getQuery() {
@@ -53,6 +66,16 @@ public class GraphQLRequest {
   public void setVariables(Map<String, Object> variables) {
     if (variables != null) {
       this.variables = variables;
+    }
+  }
+
+  public Map<String, Object> getExtensions() {
+    return extensions;
+  }
+
+  public void setExtensions(Map<String, Object> extensions) {
+    if (extensions != null) {
+      this.extensions = extensions;
     }
   }
 

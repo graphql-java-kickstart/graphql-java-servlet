@@ -39,8 +39,10 @@ class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputPars
 
     if (isSingleQuery(query)) {
       Map<String, Object> variables = getVariables(request);
+      Map<String, Object> extensions = getExtensions(request);
       String operationName = request.getParameter("operationName");
-      GraphQLRequest graphqlRequest = new GraphQLRequest(query, variables, operationName);
+      GraphQLRequest graphqlRequest =
+          new GraphQLRequest(query, variables, extensions, operationName);
       return invocationInputFactory.createReadOnly(graphqlRequest, request, response);
     }
 
@@ -58,6 +60,13 @@ class GraphQLGetInvocationInputParser extends AbstractGraphQLInvocationInputPars
   private Map<String, Object> getVariables(HttpServletRequest request) {
     return Optional.ofNullable(request.getParameter("variables"))
         .map(graphQLObjectMapper::deserializeVariables)
+        .map(HashMap::new)
+        .orElseGet(HashMap::new);
+  }
+
+  private Map<String, Object> getExtensions(HttpServletRequest request) {
+    return Optional.ofNullable(request.getParameter("extensions"))
+        .map(graphQLObjectMapper::deserializeExtensions)
         .map(HashMap::new)
         .orElseGet(HashMap::new);
   }

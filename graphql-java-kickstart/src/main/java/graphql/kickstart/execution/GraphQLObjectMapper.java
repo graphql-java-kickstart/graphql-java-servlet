@@ -175,6 +175,12 @@ public class GraphQLObjectMapper {
   }
 
   @SneakyThrows
+  public Map<String, Object> deserializeExtensions(String extensions) {
+    return ExtensionsDeserializer.deserializeExtensionsObject(
+        getJacksonMapper().readValue(extensions, Object.class), getJacksonMapper());
+  }
+
+  @SneakyThrows
   public Map<String, List<String>> deserializeMultipartMap(InputStream inputStream) {
     return getJacksonMapper().readValue(inputStream, MULTIPART_MAP_TYPE_REFERENCE);
   }

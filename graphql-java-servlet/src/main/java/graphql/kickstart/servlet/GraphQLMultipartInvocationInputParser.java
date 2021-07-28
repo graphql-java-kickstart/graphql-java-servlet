@@ -150,13 +150,20 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
           graphQLObjectMapper.deserializeVariables(read(variablesItem.get().getInputStream()));
     }
 
+    Map<String, Object> extensions = null;
+    final Optional<Part> extensionsItem = getPart(parts, "extensions");
+    if (extensionsItem.isPresent()) {
+      extensions =
+          graphQLObjectMapper.deserializeExtensions(read(extensionsItem.get().getInputStream()));
+    }
+
     String operationName = null;
     final Optional<Part> operationNameItem = getPart(parts, "operationName");
     if (operationNameItem.isPresent()) {
       operationName = read(operationNameItem.get().getInputStream()).trim();
     }
 
-    return new GraphQLRequest(query, variables, operationName);
+    return new GraphQLRequest(query, variables, extensions, operationName);
   }
 
   private String read(InputStream inputStream) throws IOException {
