@@ -60,6 +60,10 @@ class ListenerHandler {
         });
   }
 
+  void beforeFlush() {
+    runCallbacks(it -> it.beforeFlush(request, response));
+  }
+
   void onSuccess() {
     runCallbacks(it -> it.onSuccess(request, response));
   }
