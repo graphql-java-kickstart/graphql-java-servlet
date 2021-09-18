@@ -91,7 +91,10 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     return futureResult
         .thenApplyQueryResult()
         .thenAccept(
-            it -> writeResultResponse(futureResult.getInvocationInput(), it, request, response))
+            it -> {
+              listenerHandler.beforeFlush();
+              writeResultResponse(futureResult.getInvocationInput(), it, request, response);
+            })
         .thenAccept(it -> listenerHandler.onSuccess())
         .exceptionally(
             t ->
