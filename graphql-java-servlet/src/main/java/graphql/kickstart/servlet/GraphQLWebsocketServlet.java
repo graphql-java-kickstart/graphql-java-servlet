@@ -116,6 +116,24 @@ public class GraphQLWebsocketServlet extends Endpoint {
             .collect(toList());
   }
 
+  public GraphQLWebsocketServlet(
+      GraphQLInvoker graphQLInvoker,
+      GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
+      GraphQLObjectMapper graphQLObjectMapper,
+      List<SubscriptionProtocolFactory> subscriptionProtocolFactory,
+      SubscriptionProtocolFactory fallbackSubscriptionProtocolFactory) {
+
+    this.subscriptionProtocolFactories = subscriptionProtocolFactory;
+    this.fallbackSubscriptionProtocolFactory = fallbackSubscriptionProtocolFactory;
+
+    allSubscriptionProtocols =
+        Stream.concat(
+                subscriptionProtocolFactories.stream(),
+                Stream.of(fallbackSubscriptionProtocolFactory))
+            .map(SubscriptionProtocolFactory::getProtocol)
+            .collect(toList());
+  }
+
   @Override
   public void onOpen(Session session, EndpointConfig endpointConfig) {
     final WebSocketSubscriptionProtocolFactory subscriptionProtocolFactory =
@@ -234,6 +252,12 @@ public class GraphQLWebsocketServlet extends Endpoint {
         log.error("GraphQLWebsocketServlet did not shut down cleanly!");
         sessionSubscriptionCache.clear();
       }
+
+      for (SubscriptionProtocolFactory protocolFactory : subscriptionProtocolFactories) {
+        protocolFactory.shutdown();
+      }
+
+      fallbackSubscriptionProtocolFactory.shutdown();
     }
 
     isShutDown.set(true);

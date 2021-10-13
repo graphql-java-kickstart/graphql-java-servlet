@@ -61,4 +61,8 @@ class ApolloSubscriptionKeepAliveRunner {
       future.cancel(true);
     }
   }
+
+  void shutdown() {
+    this.executor.shutdown();
+  }
 }

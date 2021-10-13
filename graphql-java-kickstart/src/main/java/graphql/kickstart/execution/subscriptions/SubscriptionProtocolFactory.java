@@ -16,4 +16,8 @@ public abstract class SubscriptionProtocolFactory {
   }
 
   public abstract Consumer<String> createConsumer(SubscriptionSession session);
+
+  public void shutdown() {
+    // do nothing
+  }
 }

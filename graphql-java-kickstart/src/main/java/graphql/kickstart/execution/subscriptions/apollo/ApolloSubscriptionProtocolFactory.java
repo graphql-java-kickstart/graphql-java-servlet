@@ -19,6 +19,7 @@ public class ApolloSubscriptionProtocolFactory extends SubscriptionProtocolFacto
   public static final int KEEP_ALIVE_INTERVAL = 15;
   @Getter private final GraphQLObjectMapper objectMapper;
   private final ApolloCommandProvider commandProvider;
+  private KeepAliveSubscriptionConnectionListener keepAlive;
 
   public ApolloSubscriptionProtocolFactory(
       GraphQLObjectMapper objectMapper,
@@ -67,7 +68,8 @@ public class ApolloSubscriptionProtocolFactory extends SubscriptionProtocolFacto
     if (keepAliveInterval != null
         && listeners.stream()
             .noneMatch(KeepAliveSubscriptionConnectionListener.class::isInstance)) {
-      listeners.add(new KeepAliveSubscriptionConnectionListener(keepAliveInterval));
+      keepAlive = new KeepAliveSubscriptionConnectionListener(keepAliveInterval);
+      listeners.add(keepAlive);
     }
     commandProvider =
         new ApolloCommandProvider(
@@ -80,5 +82,12 @@ public class ApolloSubscriptionProtocolFactory extends SubscriptionProtocolFacto
   @Override
   public Consumer<String> createConsumer(SubscriptionSession session) {
     return new ApolloSubscriptionConsumer(session, objectMapper, commandProvider);
+  }
+
+  @Override
+  public void shutdown() {
+    if (keepAlive != null) {
+      keepAlive.shutdown();
+    }
   }
 }
