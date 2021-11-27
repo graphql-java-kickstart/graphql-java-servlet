@@ -20,7 +20,7 @@ See [GraphQL Java documentation](https://www.graphql-java.com/documentation/late
 regarding GraphQL Java itself. 
 
 We try to stay up to date with GraphQL Java as much as possible. The current version supports
- **GraphQL Java 16.1**.
+ **GraphQL Java 17.3**.
  
 This project requires at least Java 8.
 
