@@ -7,6 +7,7 @@ import graphql.execution.ExecutionId;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.context.GraphQLContext;
 import graphql.schema.GraphQLSchema;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.security.auth.Subject;
@@ -43,6 +44,7 @@ public class GraphQLSingleInvocationInput implements GraphQLInvocationInput {
         .query(graphQLRequest.getQuery())
         .operationName(graphQLRequest.getOperationName())
         .context(context)
+        .graphQLContext(Collections.singletonMap(context.getClass(), context))
         .root(root)
         .variables(graphQLRequest.getVariables())
         .extensions(graphQLRequest.getExtensions())
