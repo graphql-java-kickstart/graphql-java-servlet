@@ -47,7 +47,7 @@ public enum ContextSetting {
   public GraphQLBatchedInvocationInput getBatch(
       List<GraphQLRequest> requests,
       GraphQLSchema schema,
-      Supplier<GraphQLContext> contextSupplier,
+      Supplier<GraphQLKickstartContext> contextSupplier,
       Object root) {
     switch (this) {
       case PER_QUERY_WITH_INSTRUMENTATION:

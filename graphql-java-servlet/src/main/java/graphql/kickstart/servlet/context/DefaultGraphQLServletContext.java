@@ -1,6 +1,7 @@
 package graphql.kickstart.servlet.context;
 
 import graphql.kickstart.execution.context.DefaultGraphQLContext;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,20 +20,19 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext
 
   protected DefaultGraphQLServletContext(
       DataLoaderRegistry dataLoaderRegistry,
-      Subject subject,
       HttpServletRequest httpServletRequest,
       HttpServletResponse httpServletResponse) {
-    super(dataLoaderRegistry, subject);
+    super(dataLoaderRegistry);
     this.httpServletRequest = httpServletRequest;
     this.httpServletResponse = httpServletResponse;
   }
 
-  public static Builder createServletContext(DataLoaderRegistry registry, Subject subject) {
-    return new Builder(registry, subject);
+  public static Builder createServletContext(DataLoaderRegistry registry) {
+    return new Builder(registry);
   }
 
   public static Builder createServletContext() {
-    return new Builder(new DataLoaderRegistry(), null);
+    return new Builder(new DataLoaderRegistry());
   }
 
   @Override
@@ -59,21 +59,28 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext
     return httpServletRequest.getParts().stream().collect(Collectors.groupingBy(Part::getName));
   }
 
+  @Override
+  public Map<Object, Object> getMapOfContext() {
+    Map<Object, Object> map = new HashMap<>();
+    map.put(DataLoaderRegistry.class, getDataLoaderRegistry());
+    map.put(HttpServletRequest.class, httpServletRequest);
+    map.put(HttpServletResponse.class, httpServletResponse);
+    return map;
+  }
+
   public static class Builder {
 
     private HttpServletRequest httpServletRequest;
     private HttpServletResponse httpServletResponse;
     private DataLoaderRegistry dataLoaderRegistry;
-    private Subject subject;
 
-    private Builder(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
+    private Builder(DataLoaderRegistry dataLoaderRegistry) {
       this.dataLoaderRegistry = dataLoaderRegistry;
-      this.subject = subject;
     }
 
     public DefaultGraphQLServletContext build() {
       return new DefaultGraphQLServletContext(
-          dataLoaderRegistry, subject, httpServletRequest, httpServletResponse);
+          dataLoaderRegistry, httpServletRequest, httpServletResponse);
     }
 
     public Builder with(HttpServletRequest httpServletRequest) {
@@ -83,11 +90,6 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext
 
     public Builder with(DataLoaderRegistry dataLoaderRegistry) {
       this.dataLoaderRegistry = dataLoaderRegistry;
-      return this;
-    }
-
-    public Builder with(Subject subject) {
-      this.subject = subject;
       return this;
     }
 

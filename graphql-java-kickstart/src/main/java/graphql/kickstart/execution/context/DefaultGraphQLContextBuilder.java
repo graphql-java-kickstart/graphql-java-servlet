@@ -4,7 +4,7 @@ package graphql.kickstart.execution.context;
 public class DefaultGraphQLContextBuilder implements GraphQLContextBuilder {
 
   @Override
-  public GraphQLContext build() {
+  public GraphQLKickstartContext build() {
     return new DefaultGraphQLContext();
   }
 }

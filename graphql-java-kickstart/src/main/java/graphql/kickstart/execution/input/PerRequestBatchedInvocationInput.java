@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.context.ContextSetting;
-import graphql.kickstart.execution.context.GraphQLContext;
+import graphql.kickstart.execution.context.GraphQLKickstartContext;
 import graphql.schema.GraphQLSchema;
 import java.util.List;
 import java.util.function.Supplier;
@@ -20,10 +20,10 @@ public class PerRequestBatchedInvocationInput implements GraphQLBatchedInvocatio
   public PerRequestBatchedInvocationInput(
       List<GraphQLRequest> requests,
       GraphQLSchema schema,
-      Supplier<GraphQLContext> contextSupplier,
+      Supplier<GraphQLKickstartContext> contextSupplier,
       Object root,
       ContextSetting contextSetting) {
-    GraphQLContext context = contextSupplier.get();
+    GraphQLKickstartContext context = contextSupplier.get();
     invocationInputs =
         requests.stream()
             .map(request -> new GraphQLSingleInvocationInput(request, schema, context, root))

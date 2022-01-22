@@ -4,7 +4,6 @@ import graphql.AssertException
 import graphql.annotations.annotationTypes.GraphQLField
 import graphql.annotations.annotationTypes.GraphQLName
 import graphql.annotations.processor.GraphQLAnnotations
-import graphql.execution.instrumentation.Instrumentation
 import graphql.execution.instrumentation.InstrumentationState
 import graphql.execution.instrumentation.SimpleInstrumentation
 import graphql.execution.instrumentation.parameters.InstrumentationCreateStateParameters
@@ -12,11 +11,10 @@ import graphql.kickstart.execution.GraphQLRequest
 import graphql.kickstart.execution.config.ExecutionStrategyProvider
 import graphql.kickstart.execution.config.InstrumentationProvider
 import graphql.kickstart.execution.context.DefaultGraphQLContext
-import graphql.kickstart.execution.context.GraphQLContext
+import graphql.kickstart.execution.context.GraphQLKickstartContext
 import graphql.kickstart.servlet.context.GraphQLServletContextBuilder
 import graphql.kickstart.servlet.core.GraphQLServletListener
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder
-import graphql.kickstart.servlet.input.NoOpBatchInputPreProcessor
 import graphql.kickstart.servlet.osgi.*
 import graphql.schema.*
 import org.dataloader.DataLoaderRegistry
@@ -286,9 +284,8 @@ class OsgiGraphQLHttpServletSpec extends Specification {
   def "context builder is bound and unbound"() {
     setup:
     def servlet = new OsgiGraphQLHttpServlet()
-    def context = Mock(GraphQLContext)
+    def context = Mock(GraphQLKickstartContext)
     context.getDataLoaderRegistry() >> new DataLoaderRegistry()
-    context.getSubject() >> Optional.empty()
     def contextBuilder = Mock(GraphQLServletContextBuilder)
     contextBuilder.build() >> context
     def request = GraphQLRequest.createIntrospectionRequest()
