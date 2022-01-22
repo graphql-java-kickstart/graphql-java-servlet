@@ -28,12 +28,23 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext
     return new Builder(new DataLoaderRegistry());
   }
 
+  /**
+   * @deprecated Use <tt>dataFetchingEnvironment.getGraphQlContext().get(Session.class)</tt>
+   *     instead. Since 13.0.0
+   */
   @Override
+  @Deprecated
   public Session getSession() {
     return session;
   }
 
+  /**
+   * @deprecated Use
+   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HandshakeRequest.class)</tt> instead.
+   *     Since 13.0.0
+   */
   @Override
+  @Deprecated
   public HandshakeRequest getHandshakeRequest() {
     return handshakeRequest;
   }

@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
@@ -35,17 +34,35 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext
     return new Builder(new DataLoaderRegistry());
   }
 
+  /**
+   * @deprecated Use
+   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)</tt> instead.
+   *     Since 13.0.0
+   */
   @Override
+  @Deprecated
   public HttpServletRequest getHttpServletRequest() {
     return httpServletRequest;
   }
 
+  /**
+   * @deprecated Use
+   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HttpServletResponse.class)</tt>
+   *     instead. Since 13.0.0
+   */
   @Override
+  @Deprecated
   public HttpServletResponse getHttpServletResponse() {
     return httpServletResponse;
   }
 
+  /**
+   * @deprecated Use
+   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)</tt> instead
+   *     to get the request and retrieve the file parts yourself. Since 13.0.0
+   */
   @Override
+  @Deprecated
   @SneakyThrows
   public List<Part> getFileParts() {
     return httpServletRequest.getParts().stream()
@@ -53,7 +70,13 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext
         .collect(Collectors.toList());
   }
 
+  /**
+   * @deprecated Use
+   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)</tt> instead
+   *     to get the request and retrieve the parts yourself. Since 13.0.0
+   */
   @Override
+  @Deprecated
   @SneakyThrows
   public Map<String, List<Part>> getParts() {
     return httpServletRequest.getParts().stream().collect(Collectors.groupingBy(Part::getName));
