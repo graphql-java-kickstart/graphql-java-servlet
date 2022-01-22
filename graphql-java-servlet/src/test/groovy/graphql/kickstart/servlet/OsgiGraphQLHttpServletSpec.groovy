@@ -286,6 +286,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
     def servlet = new OsgiGraphQLHttpServlet()
     def context = Mock(GraphQLKickstartContext)
     context.getDataLoaderRegistry() >> new DataLoaderRegistry()
+    context.getMapOfContext() >> new HashMap<Object, Object>()
     def contextBuilder = Mock(GraphQLServletContextBuilder)
     contextBuilder.build() >> context
     def request = GraphQLRequest.createIntrospectionRequest()
