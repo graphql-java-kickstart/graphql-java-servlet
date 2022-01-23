@@ -87,9 +87,10 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
                   }
                 });
 
-    String query = read(inputStream);
+    String query = read(inputStream, request.getCharacterEncoding());
     if ("query".equals(key) && isSingleQuery(query)) {
-      GraphQLRequest graphqlRequest = buildRequestFromQuery(query, graphQLObjectMapper, parts);
+      GraphQLRequest graphqlRequest =
+          buildRequestFromQuery(query, graphQLObjectMapper, parts, request.getCharacterEncoding());
       variablesMap.ifPresent(m -> mapMultipartVariables(graphqlRequest, m, parts));
       return invocationInputFactory.create(graphqlRequest, request, response);
     } else if (isSingleQuery(query)) {
@@ -109,6 +110,7 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
         .filter(parts::containsKey)
         .map(key -> getPart(parts, key))
         .findFirst()
+        .filter(Optional::isPresent)
         .map(Optional::get);
   }
 
@@ -141,33 +143,38 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
   }
 
   private GraphQLRequest buildRequestFromQuery(
-      String query, GraphQLObjectMapper graphQLObjectMapper, Map<String, List<Part>> parts)
+      String query,
+      GraphQLObjectMapper graphQLObjectMapper,
+      Map<String, List<Part>> parts,
+      String charset)
       throws IOException {
     Map<String, Object> variables = null;
     final Optional<Part> variablesItem = getPart(parts, "variables");
     if (variablesItem.isPresent()) {
       variables =
-          graphQLObjectMapper.deserializeVariables(read(variablesItem.get().getInputStream()));
+          graphQLObjectMapper.deserializeVariables(
+              read(variablesItem.get().getInputStream(), charset));
     }
 
     Map<String, Object> extensions = null;
     final Optional<Part> extensionsItem = getPart(parts, "extensions");
     if (extensionsItem.isPresent()) {
       extensions =
-          graphQLObjectMapper.deserializeExtensions(read(extensionsItem.get().getInputStream()));
+          graphQLObjectMapper.deserializeExtensions(
+              read(extensionsItem.get().getInputStream(), charset));
     }
 
     String operationName = null;
     final Optional<Part> operationNameItem = getPart(parts, "operationName");
     if (operationNameItem.isPresent()) {
-      operationName = read(operationNameItem.get().getInputStream()).trim();
+      operationName = read(operationNameItem.get().getInputStream(), charset).trim();
     }
 
     return new GraphQLRequest(query, variables, extensions, operationName);
   }
 
-  private String read(InputStream inputStream) throws IOException {
-    try (InputStreamReader streamReader = new InputStreamReader(inputStream);
+  private String read(InputStream inputStream, String charset) throws IOException {
+    try (InputStreamReader streamReader = new InputStreamReader(inputStream, charset);
         BufferedReader reader = new BufferedReader(streamReader)) {
       return reader.lines().collect(joining());
     }

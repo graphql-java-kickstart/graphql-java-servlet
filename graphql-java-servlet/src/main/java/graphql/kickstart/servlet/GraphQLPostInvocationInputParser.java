@@ -10,7 +10,6 @@ import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
