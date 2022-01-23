@@ -422,6 +422,25 @@ class AbstractGraphQLHttpServletSpec extends Specification {
     getResponseContent().data.echo == "test"
   }
 
+  def "query over HTTP POST multiline body returns data"() {
+    setup:
+    request.setContent("""
+        query { object {
+a
+b
+        } }""".bytes)
+    request.setMethod("POST")
+    request.contentType = "application/graphql"
+
+    when:
+    servlet.doPost(request, response)
+
+    then:
+    response.getStatus() == STATUS_OK
+    response.getContentType() == CONTENT_TYPE_JSON_UTF8
+    getResponseContent().data.object.b == null
+  }
+
   def "disabling async support on request over HTTP POST does not start async request"() {
     setup:
     servlet = TestUtils.createDefaultServlet({ env -> env.arguments.arg }, { env -> env.arguments.arg }, { env ->
