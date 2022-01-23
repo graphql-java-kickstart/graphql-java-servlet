@@ -1,43 +1,48 @@
 package graphql.kickstart.servlet.context;
 
 import graphql.kickstart.execution.context.DefaultGraphQLContext;
-import javax.security.auth.Subject;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import org.dataloader.DataLoaderRegistry;
 
+/** @deprecated Use {@link graphql.kickstart.execution.context.GraphQLKickstartContext} instead */
+@Deprecated
 public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext
     implements GraphQLWebSocketContext {
 
-  private final Session session;
-  private final HandshakeRequest handshakeRequest;
-
   private DefaultGraphQLWebSocketContext(
-      DataLoaderRegistry dataLoaderRegistry,
-      Subject subject,
-      Session session,
-      HandshakeRequest handshakeRequest) {
-    super(dataLoaderRegistry, subject);
-    this.session = session;
-    this.handshakeRequest = handshakeRequest;
+      DataLoaderRegistry dataLoaderRegistry, Session session, HandshakeRequest handshakeRequest) {
+    super(dataLoaderRegistry);
+    put(Session.class, session);
+    put(HandshakeRequest.class, handshakeRequest);
   }
 
-  public static Builder createWebSocketContext(DataLoaderRegistry registry, Subject subject) {
-    return new Builder(registry, subject);
+  public static Builder createWebSocketContext(DataLoaderRegistry registry) {
+    return new Builder(registry);
   }
 
   public static Builder createWebSocketContext() {
-    return new Builder(new DataLoaderRegistry(), null);
+    return new Builder(new DataLoaderRegistry());
   }
 
+  /**
+   * @deprecated Use {@code dataFetchingEnvironment.getGraphQlContext().get(Session.class)} instead.
+   *     Since 13.0.0
+   */
   @Override
+  @Deprecated
   public Session getSession() {
-    return session;
+    return (Session) getMapOfContext().get(Session.class);
   }
 
+  /**
+   * @deprecated Use {@code dataFetchingEnvironment.getGraphQlContext().get(HandshakeRequest.class)}
+   *     instead. Since 13.0.0
+   */
   @Override
+  @Deprecated
   public HandshakeRequest getHandshakeRequest() {
-    return handshakeRequest;
+    return (HandshakeRequest) getMapOfContext().get(HandshakeRequest.class);
   }
 
   public static class Builder {
@@ -45,16 +50,13 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext
     private Session session;
     private HandshakeRequest handshakeRequest;
     private DataLoaderRegistry dataLoaderRegistry;
-    private Subject subject;
 
-    private Builder(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
+    private Builder(DataLoaderRegistry dataLoaderRegistry) {
       this.dataLoaderRegistry = dataLoaderRegistry;
-      this.subject = subject;
     }
 
     public DefaultGraphQLWebSocketContext build() {
-      return new DefaultGraphQLWebSocketContext(
-          dataLoaderRegistry, subject, session, handshakeRequest);
+      return new DefaultGraphQLWebSocketContext(dataLoaderRegistry, session, handshakeRequest);
     }
 
     public Builder with(Session session) {
@@ -69,11 +71,6 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext
 
     public Builder with(DataLoaderRegistry dataLoaderRegistry) {
       this.dataLoaderRegistry = dataLoaderRegistry;
-      return this;
-    }
-
-    public Builder with(Subject subject) {
-      this.subject = subject;
       return this;
     }
   }

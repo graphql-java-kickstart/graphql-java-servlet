@@ -8,8 +8,9 @@ import graphql.execution.instrumentation.SimpleInstrumentation
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions
 import graphql.kickstart.execution.context.ContextSetting
 import graphql.kickstart.execution.context.DefaultGraphQLContext
-import graphql.kickstart.execution.context.GraphQLContext
+import graphql.kickstart.execution.context.GraphQLKickstartContext
 import graphql.kickstart.execution.instrumentation.ConfigurableDispatchInstrumentation
+import graphql.kickstart.servlet.context.GraphQLServletContextBuilder
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.dataloader.BatchLoader
@@ -83,20 +84,20 @@ class DataLoaderDispatchingSpec extends Specification {
   }
 
   def contextBuilder() {
-    return new graphql.kickstart.servlet.context.GraphQLServletContextBuilder() {
+    return new GraphQLServletContextBuilder() {
       @Override
-      GraphQLContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        new DefaultGraphQLContext(registry(), null)
+      GraphQLKickstartContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        new DefaultGraphQLContext(registry())
       }
 
       @Override
-      GraphQLContext build(Session session, HandshakeRequest handshakeRequest) {
-        new DefaultGraphQLContext(registry(), null)
+      GraphQLKickstartContext build(Session session, HandshakeRequest handshakeRequest) {
+        new DefaultGraphQLContext(registry())
       }
 
       @Override
-      GraphQLContext build() {
-        new DefaultGraphQLContext(registry(), null)
+      GraphQLKickstartContext build() {
+        new DefaultGraphQLContext(registry())
       }
     }
   }

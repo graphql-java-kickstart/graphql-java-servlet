@@ -4,59 +4,80 @@ import graphql.kickstart.execution.context.DefaultGraphQLContext;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import lombok.SneakyThrows;
 import org.dataloader.DataLoaderRegistry;
 
+/** @deprecated Use {@link graphql.kickstart.execution.context.GraphQLKickstartContext} instead */
 public class DefaultGraphQLServletContext extends DefaultGraphQLContext
     implements GraphQLServletContext {
 
-  private final HttpServletRequest httpServletRequest;
-  private final HttpServletResponse httpServletResponse;
-
   protected DefaultGraphQLServletContext(
       DataLoaderRegistry dataLoaderRegistry,
-      Subject subject,
       HttpServletRequest httpServletRequest,
       HttpServletResponse httpServletResponse) {
-    super(dataLoaderRegistry, subject);
-    this.httpServletRequest = httpServletRequest;
-    this.httpServletResponse = httpServletResponse;
+    super(dataLoaderRegistry);
+    put(HttpServletRequest.class, httpServletRequest);
+    put(HttpServletResponse.class, httpServletResponse);
   }
 
-  public static Builder createServletContext(DataLoaderRegistry registry, Subject subject) {
-    return new Builder(registry, subject);
+  public static Builder createServletContext(DataLoaderRegistry registry) {
+    return new Builder(registry);
   }
 
   public static Builder createServletContext() {
-    return new Builder(new DataLoaderRegistry(), null);
+    return new Builder(new DataLoaderRegistry());
   }
 
+  /**
+   * @deprecated Use {@code
+   *     dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)} instead. Since
+   *     13.0.0
+   */
   @Override
+  @Deprecated
   public HttpServletRequest getHttpServletRequest() {
-    return httpServletRequest;
+    return (HttpServletRequest) getMapOfContext().get(HttpServletRequest.class);
   }
 
+  /**
+   * @deprecated Use {@code
+   *     dataFetchingEnvironment.getGraphQlContext().get(HttpServletResponse.class)} instead. Since
+   *     13.0.0
+   */
   @Override
+  @Deprecated
   public HttpServletResponse getHttpServletResponse() {
-    return httpServletResponse;
+    return (HttpServletResponse) getMapOfContext().get(HttpServletResponse.class);
   }
 
+  /**
+   * @deprecated Use {@code
+   *     dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)} instead to get
+   *     the request and retrieve the file parts yourself. Since 13.0.0
+   */
   @Override
+  @Deprecated
   @SneakyThrows
   public List<Part> getFileParts() {
-    return httpServletRequest.getParts().stream()
+    return getHttpServletRequest().getParts().stream()
         .filter(part -> part.getContentType() != null)
         .collect(Collectors.toList());
   }
 
+  /**
+   * @deprecated Use {@code
+   *     dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)} instead to get
+   *     the request and retrieve the parts yourself. Since 13.0.0
+   */
   @Override
+  @Deprecated
   @SneakyThrows
   public Map<String, List<Part>> getParts() {
-    return httpServletRequest.getParts().stream().collect(Collectors.groupingBy(Part::getName));
+    return getHttpServletRequest().getParts().stream()
+        .collect(Collectors.groupingBy(Part::getName));
   }
 
   public static class Builder {
@@ -64,16 +85,14 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext
     private HttpServletRequest httpServletRequest;
     private HttpServletResponse httpServletResponse;
     private DataLoaderRegistry dataLoaderRegistry;
-    private Subject subject;
 
-    private Builder(DataLoaderRegistry dataLoaderRegistry, Subject subject) {
+    private Builder(DataLoaderRegistry dataLoaderRegistry) {
       this.dataLoaderRegistry = dataLoaderRegistry;
-      this.subject = subject;
     }
 
     public DefaultGraphQLServletContext build() {
       return new DefaultGraphQLServletContext(
-          dataLoaderRegistry, subject, httpServletRequest, httpServletResponse);
+          dataLoaderRegistry, httpServletRequest, httpServletResponse);
     }
 
     public Builder with(HttpServletRequest httpServletRequest) {
@@ -83,11 +102,6 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext
 
     public Builder with(DataLoaderRegistry dataLoaderRegistry) {
       this.dataLoaderRegistry = dataLoaderRegistry;
-      return this;
-    }
-
-    public Builder with(Subject subject) {
-      this.subject = subject;
       return this;
     }
 

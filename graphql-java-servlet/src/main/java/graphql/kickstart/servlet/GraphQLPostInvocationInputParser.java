@@ -10,6 +10,7 @@ import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,12 +28,12 @@ class GraphQLPostInvocationInputParser extends AbstractGraphQLInvocationInputPar
   public GraphQLInvocationInput getGraphQLInvocationInput(
       HttpServletRequest request, HttpServletResponse response) throws IOException {
     if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
-      String query = request.getReader().lines().collect(joining());
+      String query = request.getReader().lines().collect(joining(" "));
       GraphQLRequest graphqlRequest = GraphQLRequest.createQueryOnlyRequest(query);
       return invocationInputFactory.create(graphqlRequest, request, response);
     }
 
-    String body = request.getReader().lines().collect(joining());
+    String body = request.getReader().lines().collect(joining(" "));
     if (isSingleQuery(body)) {
       GraphQLRequest graphqlRequest = graphQLObjectMapper.readGraphQLRequest(body);
       return invocationInputFactory.create(graphqlRequest, request, response);
