@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+/** @deprecated Use {@link graphql.kickstart.execution.context.GraphQLKickstartContext} instead */
 public interface GraphQLServletContext extends GraphQLKickstartContext {
 
   List<Part> getFileParts();

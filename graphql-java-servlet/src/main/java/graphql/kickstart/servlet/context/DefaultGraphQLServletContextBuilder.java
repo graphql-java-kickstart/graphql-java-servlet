@@ -2,6 +2,8 @@ package graphql.kickstart.servlet.context;
 
 import graphql.kickstart.execution.context.DefaultGraphQLContextBuilder;
 import graphql.kickstart.execution.context.GraphQLKickstartContext;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.websocket.Session;
@@ -13,14 +15,17 @@ public class DefaultGraphQLServletContextBuilder extends DefaultGraphQLContextBu
 
   @Override
   public GraphQLKickstartContext build(HttpServletRequest request, HttpServletResponse response) {
-    return DefaultGraphQLServletContext.createServletContext().with(request).with(response).build();
+    Map<Object, Object> map = new HashMap<>();
+    map.put(HttpServletRequest.class, request);
+    map.put(HttpServletResponse.class, response);
+    return GraphQLKickstartContext.of(map);
   }
 
   @Override
   public GraphQLKickstartContext build(Session session, HandshakeRequest handshakeRequest) {
-    return DefaultGraphQLWebSocketContext.createWebSocketContext()
-        .with(session)
-        .with(handshakeRequest)
-        .build();
+    Map<Object, Object> map = new HashMap<>();
+    map.put(Session.class, session);
+    map.put(HandshakeRequest.class, handshakeRequest);
+    return GraphQLKickstartContext.of(map);
   }
 }

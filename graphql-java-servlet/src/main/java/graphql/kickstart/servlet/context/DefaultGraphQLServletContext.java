@@ -1,7 +1,6 @@
 package graphql.kickstart.servlet.context;
 
 import graphql.kickstart.execution.context.DefaultGraphQLContext;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -11,19 +10,17 @@ import javax.servlet.http.Part;
 import lombok.SneakyThrows;
 import org.dataloader.DataLoaderRegistry;
 
+/** @deprecated Use {@link graphql.kickstart.execution.context.GraphQLKickstartContext} instead */
 public class DefaultGraphQLServletContext extends DefaultGraphQLContext
     implements GraphQLServletContext {
-
-  private final HttpServletRequest httpServletRequest;
-  private final HttpServletResponse httpServletResponse;
 
   protected DefaultGraphQLServletContext(
       DataLoaderRegistry dataLoaderRegistry,
       HttpServletRequest httpServletRequest,
       HttpServletResponse httpServletResponse) {
     super(dataLoaderRegistry);
-    this.httpServletRequest = httpServletRequest;
-    this.httpServletResponse = httpServletResponse;
+    put(HttpServletRequest.class, httpServletRequest);
+    put(HttpServletResponse.class, httpServletResponse);
   }
 
   public static Builder createServletContext(DataLoaderRegistry registry) {
@@ -35,60 +32,52 @@ public class DefaultGraphQLServletContext extends DefaultGraphQLContext
   }
 
   /**
-   * @deprecated Use
-   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)</tt> instead.
-   *     Since 13.0.0
+   * @deprecated Use {@code
+   *     dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)} instead. Since
+   *     13.0.0
    */
   @Override
   @Deprecated
   public HttpServletRequest getHttpServletRequest() {
-    return httpServletRequest;
+    return (HttpServletRequest) getMapOfContext().get(HttpServletRequest.class);
   }
 
   /**
-   * @deprecated Use
-   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HttpServletResponse.class)</tt>
-   *     instead. Since 13.0.0
+   * @deprecated Use {@code
+   *     dataFetchingEnvironment.getGraphQlContext().get(HttpServletResponse.class)} instead. Since
+   *     13.0.0
    */
   @Override
   @Deprecated
   public HttpServletResponse getHttpServletResponse() {
-    return httpServletResponse;
+    return (HttpServletResponse) getMapOfContext().get(HttpServletResponse.class);
   }
 
   /**
-   * @deprecated Use
-   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)</tt> instead
-   *     to get the request and retrieve the file parts yourself. Since 13.0.0
+   * @deprecated Use {@code
+   *     dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)} instead to get
+   *     the request and retrieve the file parts yourself. Since 13.0.0
    */
   @Override
   @Deprecated
   @SneakyThrows
   public List<Part> getFileParts() {
-    return httpServletRequest.getParts().stream()
+    return getHttpServletRequest().getParts().stream()
         .filter(part -> part.getContentType() != null)
         .collect(Collectors.toList());
   }
 
   /**
-   * @deprecated Use
-   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)</tt> instead
-   *     to get the request and retrieve the parts yourself. Since 13.0.0
+   * @deprecated Use {@code
+   *     dataFetchingEnvironment.getGraphQlContext().get(HttpServletRequest.class)} instead to get
+   *     the request and retrieve the parts yourself. Since 13.0.0
    */
   @Override
   @Deprecated
   @SneakyThrows
   public Map<String, List<Part>> getParts() {
-    return httpServletRequest.getParts().stream().collect(Collectors.groupingBy(Part::getName));
-  }
-
-  @Override
-  public Map<Object, Object> getMapOfContext() {
-    Map<Object, Object> map = new HashMap<>();
-    map.put(DataLoaderRegistry.class, getDataLoaderRegistry());
-    map.put(HttpServletRequest.class, httpServletRequest);
-    map.put(HttpServletResponse.class, httpServletResponse);
-    return map;
+    return getHttpServletRequest().getParts().stream()
+        .collect(Collectors.groupingBy(Part::getName));
   }
 
   public static class Builder {

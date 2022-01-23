@@ -1,23 +1,20 @@
 package graphql.kickstart.servlet.context;
 
 import graphql.kickstart.execution.context.DefaultGraphQLContext;
-import java.util.HashMap;
-import java.util.Map;
 import javax.websocket.Session;
 import javax.websocket.server.HandshakeRequest;
 import org.dataloader.DataLoaderRegistry;
 
+/** @deprecated Use {@link graphql.kickstart.execution.context.GraphQLKickstartContext} instead */
+@Deprecated
 public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext
     implements GraphQLWebSocketContext {
-
-  private final Session session;
-  private final HandshakeRequest handshakeRequest;
 
   private DefaultGraphQLWebSocketContext(
       DataLoaderRegistry dataLoaderRegistry, Session session, HandshakeRequest handshakeRequest) {
     super(dataLoaderRegistry);
-    this.session = session;
-    this.handshakeRequest = handshakeRequest;
+    put(Session.class, session);
+    put(HandshakeRequest.class, handshakeRequest);
   }
 
   public static Builder createWebSocketContext(DataLoaderRegistry registry) {
@@ -29,33 +26,23 @@ public class DefaultGraphQLWebSocketContext extends DefaultGraphQLContext
   }
 
   /**
-   * @deprecated Use <tt>dataFetchingEnvironment.getGraphQlContext().get(Session.class)</tt>
-   *     instead. Since 13.0.0
-   */
-  @Override
-  @Deprecated
-  public Session getSession() {
-    return session;
-  }
-
-  /**
-   * @deprecated Use
-   *     <tt>dataFetchingEnvironment.getGraphQlContext().get(HandshakeRequest.class)</tt> instead.
+   * @deprecated Use {@code dataFetchingEnvironment.getGraphQlContext().get(Session.class)} instead.
    *     Since 13.0.0
    */
   @Override
   @Deprecated
-  public HandshakeRequest getHandshakeRequest() {
-    return handshakeRequest;
+  public Session getSession() {
+    return (Session) getMapOfContext().get(Session.class);
   }
 
+  /**
+   * @deprecated Use {@code dataFetchingEnvironment.getGraphQlContext().get(HandshakeRequest.class)}
+   *     instead. Since 13.0.0
+   */
   @Override
-  public Map<Object, Object> getMapOfContext() {
-    Map<Object, Object> map = new HashMap<>();
-    map.put(DataLoaderRegistry.class, getDataLoaderRegistry());
-    map.put(Session.class, session);
-    map.put(HandshakeRequest.class, handshakeRequest);
-    return map;
+  @Deprecated
+  public HandshakeRequest getHandshakeRequest() {
+    return (HandshakeRequest) getMapOfContext().get(HandshakeRequest.class);
   }
 
   public static class Builder {
