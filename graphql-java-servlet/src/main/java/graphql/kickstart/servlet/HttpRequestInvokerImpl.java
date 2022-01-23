@@ -1,7 +1,11 @@
 package graphql.kickstart.servlet;
 
+import static graphql.kickstart.servlet.HttpRequestHandler.STATUS_BAD_REQUEST;
+import static graphql.kickstart.servlet.HttpRequestHandler.STATUS_INTERNAL_SERVER_ERROR;
+
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
+import graphql.GraphQLException;
 import graphql.kickstart.execution.FutureExecutionResult;
 import graphql.kickstart.execution.GraphQLInvoker;
 import graphql.kickstart.execution.GraphQLQueryResult;
@@ -76,10 +80,22 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
         .getAsyncExecutor()
         .execute(
             () -> {
-              FutureExecutionResult futureResult = invoke(invocationInput, request, response);
-              futureHolder.set(futureResult);
-              handle(futureResult, request, response, listenerHandler)
-                  .thenAccept(it -> asyncContext.complete());
+              try {
+                FutureExecutionResult futureResult = invoke(invocationInput, request, response);
+                futureHolder.set(futureResult);
+                handle(futureResult, request, response, listenerHandler)
+                    .thenAccept(it -> asyncContext.complete());
+              } catch (GraphQLException e) {
+                response.setStatus(STATUS_BAD_REQUEST);
+                log.info("Bad request: cannot handle http request", e);
+                listenerHandler.onError(e);
+                asyncContext.complete();
+              } catch (Exception e) {
+                response.setStatus(STATUS_INTERNAL_SERVER_ERROR);
+                log.error("Cannot handle http request", e);
+                listenerHandler.onError(e);
+                asyncContext.complete();
+              }
             });
   }
 
