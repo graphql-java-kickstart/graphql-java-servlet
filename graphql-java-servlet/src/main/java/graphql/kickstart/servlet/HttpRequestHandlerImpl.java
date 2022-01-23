@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import graphql.GraphQLException;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,9 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
   @Override
   public void handle(HttpServletRequest request, HttpServletResponse response) throws IOException {
     try {
+      if (request.getCharacterEncoding() == null) {
+        request.setCharacterEncoding(StandardCharsets.UTF_8.name());
+      }
       GraphQLInvocationInputParser invocationInputParser =
           GraphQLInvocationInputParser.create(
               request,
@@ -39,7 +43,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
               configuration.getObjectMapper(),
               configuration.getContextSetting());
       GraphQLInvocationInput invocationInput =
-          invocationInputParser.getGraphQLInvocationInput(request, response);
+          invocationInputParser.  getGraphQLInvocationInput(request, response);
       requestInvoker.execute(invocationInput, request, response);
     } catch (GraphQLException | JsonProcessingException e) {
       response.setStatus(STATUS_BAD_REQUEST);

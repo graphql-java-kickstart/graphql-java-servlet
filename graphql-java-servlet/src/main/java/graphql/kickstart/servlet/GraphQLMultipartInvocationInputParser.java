@@ -109,6 +109,7 @@ class GraphQLMultipartInvocationInputParser extends AbstractGraphQLInvocationInp
         .filter(parts::containsKey)
         .map(key -> getPart(parts, key))
         .findFirst()
+        .filter(Optional::isPresent)
         .map(Optional::get);
   }
 
