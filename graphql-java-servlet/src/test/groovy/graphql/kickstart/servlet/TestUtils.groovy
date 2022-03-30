@@ -14,7 +14,7 @@ import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
 import graphql.schema.idl.errors.SchemaProblem
-import org.jetbrains.annotations.NotNull
+import lombok.NonNull
 
 import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicReference
@@ -105,7 +105,7 @@ class TestUtils {
   private static Executor executor() {
     new Executor() {
       @Override
-      void execute(@NotNull Runnable command) {
+      void execute(@NonNull Runnable command) {
         command.run()
       }
     }
