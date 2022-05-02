@@ -6,6 +6,7 @@ import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.GraphQLConfiguration;
 import graphql.kickstart.servlet.HttpRequestInvoker;
 import graphql.kickstart.servlet.HttpRequestInvokerImpl;
+import graphql.kickstart.servlet.ListenerHandler;
 import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,11 +37,12 @@ public class CachingHttpRequestInvoker implements HttpRequestInvoker {
   public void execute(
       GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
-      HttpServletResponse response) {
+      HttpServletResponse response,
+      ListenerHandler listenerHandler) {
     try {
       if (!cacheReader.responseFromCache(
           invocationInput, request, response, configuration.getResponseCacheManager())) {
-        requestInvoker.execute(invocationInput, request, response);
+        requestInvoker.execute(invocationInput, request, response, listenerHandler);
       }
     } catch (IOException e) {
       response.setStatus(STATUS_BAD_REQUEST);

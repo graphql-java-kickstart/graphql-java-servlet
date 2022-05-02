@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-class ListenerHandler {
+public class ListenerHandler {
 
   private final List<RequestCallback> callbacks;
   private final HttpServletRequest request;
@@ -58,6 +58,10 @@ class ListenerHandler {
             log.error("Error running callback: {}", callback, t);
           }
         });
+  }
+
+  void onParseError(Throwable throwable) {
+    runCallbacks(it -> it.onParseError(request, response, throwable));
   }
 
   void beforeFlush() {

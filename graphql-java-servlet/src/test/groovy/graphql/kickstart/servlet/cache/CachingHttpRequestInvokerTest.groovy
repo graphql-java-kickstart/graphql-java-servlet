@@ -8,6 +8,7 @@ import graphql.kickstart.execution.GraphQLQueryResult
 import graphql.kickstart.execution.input.GraphQLSingleInvocationInput
 import graphql.kickstart.servlet.GraphQLConfiguration
 import graphql.kickstart.servlet.HttpRequestInvoker
+import graphql.kickstart.servlet.ListenerHandler
 import spock.lang.Specification
 
 import javax.servlet.ServletOutputStream
@@ -28,6 +29,7 @@ class CachingHttpRequestInvokerTest extends Specification {
   def configuration
   def graphqlObjectMapper
   def outputStreamMock
+  def listenerHandlerMock
 
   def setup() {
     cacheReaderMock = Mock(CacheReader)
@@ -42,6 +44,7 @@ class CachingHttpRequestInvokerTest extends Specification {
     outputStreamMock = Mock(ServletOutputStream)
     graphqlInvoker.execute(invocationInputMock) >> FutureExecutionResult.single(invocationInputMock, CompletableFuture.completedFuture(Mock(GraphQLQueryResult)))
     cachingInvoker = new CachingHttpRequestInvoker(configuration, httpRequestInvokerMock, cacheReaderMock)
+    listenerHandlerMock = Mock(ListenerHandler)
 
     configuration.getResponseCacheManager() >> responseCacheManagerMock
     configuration.getGraphQLInvoker() >> graphqlInvoker
@@ -57,10 +60,10 @@ class CachingHttpRequestInvokerTest extends Specification {
     cacheReaderMock.responseFromCache(invocationInputMock, requestMock, responseMock, responseCacheManagerMock) >> false
 
     when:
-    cachingInvoker.execute(invocationInputMock, requestMock, responseMock)
+    cachingInvoker.execute(invocationInputMock, requestMock, responseMock, listenerHandlerMock)
 
     then:
-    1 * httpRequestInvokerMock.execute(invocationInputMock, requestMock, responseMock)
+    1 * httpRequestInvokerMock.execute(invocationInputMock, requestMock, responseMock, listenerHandlerMock)
   }
 
   def "should not execute regular invoker if cache exists"() {
@@ -68,10 +71,10 @@ class CachingHttpRequestInvokerTest extends Specification {
     cacheReaderMock.responseFromCache(invocationInputMock, requestMock, responseMock, responseCacheManagerMock) >> true
 
     when:
-    cachingInvoker.execute(invocationInputMock, requestMock, responseMock)
+    cachingInvoker.execute(invocationInputMock, requestMock, responseMock, listenerHandlerMock)
 
     then:
-    0 * httpRequestInvokerMock.execute(invocationInputMock, requestMock, responseMock)
+    0 * httpRequestInvokerMock.execute(invocationInputMock, requestMock, responseMock, listenerHandlerMock)
   }
 
   def "should return bad request response when ioexception"() {
@@ -79,7 +82,7 @@ class CachingHttpRequestInvokerTest extends Specification {
     cacheReaderMock.responseFromCache(invocationInputMock, requestMock, responseMock, responseCacheManagerMock) >> { throw new IOException() }
 
     when:
-    cachingInvoker.execute(invocationInputMock, requestMock, responseMock)
+    cachingInvoker.execute(invocationInputMock, requestMock, responseMock, listenerHandlerMock)
 
     then:
     1 * responseMock.setStatus(400)
@@ -90,7 +93,7 @@ class CachingHttpRequestInvokerTest extends Specification {
     def invoker = new CachingHttpRequestInvoker(configuration)
 
     when:
-    invoker.execute(invocationInputMock, requestMock, responseMock)
+    invoker.execute(invocationInputMock, requestMock, responseMock, listenerHandlerMock)
 
     then:
     noExceptionThrown()

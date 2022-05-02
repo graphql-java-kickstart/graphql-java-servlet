@@ -767,7 +767,7 @@ b
     servlet.doPost(request, response)
 
     then:
-    response.getStatus() == STATUS_ERROR
+    response.getStatus() == STATUS_BAD_REQUEST
     response.getContentLength() == 0
   }
 
@@ -1128,8 +1128,7 @@ b
     servlet.doGet(request, response)
 
     then:
-    noExceptionThrown()
-    response.getStatus() == STATUS_ERROR
+    response.getStatus() == STATUS_BAD_REQUEST
   }
 
   def "errors while data fetching are masked in the response"() {
