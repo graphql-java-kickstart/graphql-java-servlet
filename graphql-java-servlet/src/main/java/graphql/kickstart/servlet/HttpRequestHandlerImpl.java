@@ -1,6 +1,5 @@
 package graphql.kickstart.servlet;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import graphql.GraphQLException;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import java.io.IOException;
