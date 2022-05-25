@@ -83,7 +83,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
               try {
                 FutureExecutionResult futureResult = invoke(invocationInput, request, response);
                 futureHolder.set(futureResult);
-                handle0(futureResult, request, response, listenerHandler)
+                handleInternal(futureResult, request, response, listenerHandler)
                     .thenAccept(it -> asyncContext.complete());
               } catch (GraphQLException e) {
                 response.setStatus(STATUS_BAD_REQUEST);
@@ -106,7 +106,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       ListenerHandler listenerHandler) {
     try {
       FutureExecutionResult futureResult = invoke(invocationInput, request, response);
-      handle0(futureResult, request, response, listenerHandler);
+      handleInternal(futureResult, request, response, listenerHandler);
     } catch (GraphQLException e) {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad request: cannot handle http request", e);
@@ -118,7 +118,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     }
   }
 
-  private CompletableFuture<Void> handle0(
+  private CompletableFuture<Void> handleInternal(
       FutureExecutionResult futureResult,
       HttpServletRequest request,
       HttpServletResponse response,
