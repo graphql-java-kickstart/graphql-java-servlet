@@ -36,7 +36,7 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
     }
 
     ListenerHandler listenerHandler =
-        ListenerHandler.start(request, response, configuration.getListeners());
+      ListenerHandler.start(request, response, configuration.getListeners());
 
     try {
       GraphQLInvocationInput invocationInput = parseInvocationInput(request, response);
