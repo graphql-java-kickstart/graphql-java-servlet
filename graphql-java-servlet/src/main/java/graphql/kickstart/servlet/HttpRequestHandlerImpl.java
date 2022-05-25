@@ -62,11 +62,11 @@ class HttpRequestHandlerImpl implements HttpRequestHandler {
       HttpServletResponse response) {
     try {
       GraphQLInvocationInputParser invocationInputParser =
-          GraphQLInvocationInputParser.create(
-              request,
-              configuration.getInvocationInputFactory(),
-              configuration.getObjectMapper(),
-              configuration.getContextSetting());
+        GraphQLInvocationInputParser.create(
+          request,
+          configuration.getInvocationInputFactory(),
+          configuration.getObjectMapper(),
+          configuration.getContextSetting());
       return invocationInputParser.getGraphQLInvocationInput(request, response);
     } catch (Exception e) {
       throw new InvocationInputParseException(e);
