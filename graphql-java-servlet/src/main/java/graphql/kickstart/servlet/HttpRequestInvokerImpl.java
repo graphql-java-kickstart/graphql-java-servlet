@@ -45,7 +45,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
     if (request.isAsyncSupported()) {
       invokeAndHandleAsync(invocationInput, request, response, listenerHandler);
     } else {
-      handle(invoke(invocationInput, request, response), request, response, listenerHandler).join();
+      handle(invocationInput, request, response, listenerHandler);
     }
   }
 
@@ -83,7 +83,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
               try {
                 FutureExecutionResult futureResult = invoke(invocationInput, request, response);
                 futureHolder.set(futureResult);
-                handle(futureResult, request, response, listenerHandler)
+                handleInternal(futureResult, request, response, listenerHandler)
                     .thenAccept(it -> asyncContext.complete());
               } catch (GraphQLException e) {
                 response.setStatus(STATUS_BAD_REQUEST);
@@ -99,7 +99,26 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
             });
   }
 
-  private CompletableFuture<Void> handle(
+  private void handle(
+      GraphQLInvocationInput invocationInput,
+      HttpServletRequest request,
+      HttpServletResponse response,
+      ListenerHandler listenerHandler) {
+    try {
+      FutureExecutionResult futureResult = invoke(invocationInput, request, response);
+      handleInternal(futureResult, request, response, listenerHandler);
+    } catch (GraphQLException e) {
+      response.setStatus(STATUS_BAD_REQUEST);
+      log.info("Bad request: cannot handle http request", e);
+      listenerHandler.onError(e);
+    } catch (Exception e) {
+      response.setStatus(STATUS_INTERNAL_SERVER_ERROR);
+      log.error("Cannot handle http request", e);
+      listenerHandler.onError(e);
+    }
+  }
+
+  private CompletableFuture<Void> handleInternal(
       FutureExecutionResult futureResult,
       HttpServletRequest request,
       HttpServletResponse response,
