@@ -22,6 +22,14 @@ public interface GraphQLServletListener {
   interface RequestCallback {
 
     /**
+     * Called when failed to parse InvocationInput and the response was not written.
+     * @param request http request
+     * @param response http response
+     */
+    default void onParseError(
+        HttpServletRequest request, HttpServletResponse response, Throwable throwable) {}
+
+    /**
      * Called right before the response will be written and flushed. Can be used for applying some
      * changes to the response object, like adding response headers.
      * @param request http request

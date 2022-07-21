@@ -755,6 +755,22 @@ b
     getResponseContent().data.echoFiles == ["test", "test again"]
   }
 
+  def "errors while accessing file from the request"() {
+    setup:
+    request = Spy(MockHttpServletRequest)
+    request.setMethod("POST")
+    request.setContentType("multipart/form-data, boundary=test")
+    // See https://github.com/apache/tomcat/blob/main/java/org/apache/catalina/connector/Request.java#L2775...L2791
+    request.getParts() >> { throw new IllegalStateException() }
+
+    when:
+    servlet.doPost(request, response)
+
+    then:
+    response.getStatus() == STATUS_BAD_REQUEST
+    response.getContentLength() == 0
+  }
+
   def "batched query over HTTP POST body returns data"() {
     setup:
     request.setContent('[{ "query": "query { echo(arg:\\"test\\") }" }, { "query": "query { echo(arg:\\"test\\") }" }]'.bytes)
@@ -1112,8 +1128,7 @@ b
     servlet.doGet(request, response)
 
     then:
-    noExceptionThrown()
-    response.getStatus() == STATUS_ERROR
+    response.getStatus() == STATUS_BAD_REQUEST
   }
 
   def "errors while data fetching are masked in the response"() {

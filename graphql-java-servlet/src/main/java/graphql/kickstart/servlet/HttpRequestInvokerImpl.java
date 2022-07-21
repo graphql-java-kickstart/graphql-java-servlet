@@ -39,9 +39,8 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
   public void execute(
       GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
-      HttpServletResponse response) {
-    ListenerHandler listenerHandler =
-        ListenerHandler.start(request, response, configuration.getListeners());
+      HttpServletResponse response,
+      ListenerHandler listenerHandler) {
     if (request.isAsyncSupported()) {
       invokeAndHandleAsync(invocationInput, request, response, listenerHandler);
     } else {

@@ -9,5 +9,6 @@ public interface HttpRequestInvoker {
   void execute(
       GraphQLInvocationInput invocationInput,
       HttpServletRequest request,
-      HttpServletResponse response);
+      HttpServletResponse response,
+      ListenerHandler listenerHandler);
 }
