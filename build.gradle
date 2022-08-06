@@ -30,7 +30,6 @@ plugins {
     id "biz.aQute.bnd.builder" version "6.3.1" apply false
     id "org.sonarqube" version "3.4.0.2513"
     id "jacoco"
-//    id 'io.codearte.nexus-staging' version '0.30.0'
     id "io.github.gradle-nexus.publish-plugin" version '1.1.0'
 }
 
@@ -173,20 +172,6 @@ subprojects {
                     }
                 }
             }
-//            repositories {
-//                maven {
-//                    name 'ossrh'
-//                    if (version.toString().endsWith("-SNAPSHOT")) {
-//                        url "https://oss.sonatype.org/content/repositories/snapshots/"
-//                    } else {
-//                        url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-//                    }
-//                    credentials {
-//                        username = System.env.OSS_USER_TOKEN_KEY ?: project.findProperty('OSS_USER_TOKEN_KEY') ?: ''
-//                        password = System.env.OSS_USER_TOKEN_PASS ?: project.findProperty('OSS_USER_TOKEN_PASS') ?: ''
-//                    }
-//                }
-//            }
         }
     }
 }
