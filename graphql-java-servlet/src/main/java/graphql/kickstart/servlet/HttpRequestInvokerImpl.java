@@ -41,7 +41,7 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       HttpServletRequest request,
       HttpServletResponse response,
       ListenerHandler listenerHandler) {
-    if (configuration.isAsyncEnabled()) {
+    if (request.isAsyncSupported()) {
       invokeAndHandleAsync(invocationInput, request, response, listenerHandler);
     } else {
       handle(invocationInput, request, response, listenerHandler);

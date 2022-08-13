@@ -32,7 +32,6 @@ public class GraphQLConfiguration {
   private final GraphQLObjectMapper objectMapper;
   private final List<GraphQLServletListener> listeners;
   private final long subscriptionTimeout;
-  @Getter private final boolean asyncEnabled;
   @Getter private final long asyncTimeout;
   private final ContextSetting contextSetting;
   private final GraphQLResponseCacheManager responseCacheManager;
@@ -46,7 +45,6 @@ public class GraphQLConfiguration {
       GraphQLObjectMapper objectMapper,
       List<GraphQLServletListener> listeners,
       long subscriptionTimeout,
-      boolean asyncEnabled,
       long asyncTimeout,
       ContextSetting contextSetting,
       Supplier<BatchInputPreProcessor> batchInputPreProcessor,
@@ -58,7 +56,6 @@ public class GraphQLConfiguration {
     this.objectMapper = objectMapper;
     this.listeners = listeners;
     this.subscriptionTimeout = subscriptionTimeout;
-    this.asyncEnabled = asyncEnabled;
     this.asyncTimeout = asyncTimeout;
     this.contextSetting = contextSetting;
     this.batchInputPreProcessor = batchInputPreProcessor;
@@ -142,7 +139,6 @@ public class GraphQLConfiguration {
     private GraphQLObjectMapper objectMapper = GraphQLObjectMapper.newBuilder().build();
     private List<GraphQLServletListener> listeners = new ArrayList<>();
     private long subscriptionTimeout = 0;
-    private boolean asyncEnabled = false;
     private long asyncTimeout = 30000;
     private ContextSetting contextSetting = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION;
     private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier =
@@ -209,11 +205,6 @@ public class GraphQLConfiguration {
 
     public Builder with(Executor asyncExecutor) {
       this.asyncExecutor = asyncExecutor;
-      return this;
-    }
-
-    public Builder asyncEnabled(boolean enabled) {
-      this.asyncEnabled = enabled;
       return this;
     }
 
@@ -284,7 +275,6 @@ public class GraphQLConfiguration {
           objectMapper,
           listeners,
           subscriptionTimeout,
-          asyncEnabled,
           asyncTimeout,
           contextSetting,
           batchInputPreProcessorSupplier,
