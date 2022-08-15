@@ -20,6 +20,7 @@ import java.io.UncheckedIOException;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
@@ -105,7 +106,8 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       ListenerHandler listenerHandler) {
     try {
       FutureExecutionResult futureResult = invoke(invocationInput, request, response);
-      handleInternal(futureResult, request, response, listenerHandler);
+      handleInternal(futureResult, request, response, listenerHandler)
+          .get(configuration.getAsyncTimeout(), TimeUnit.MILLISECONDS);
     } catch (GraphQLException e) {
       response.setStatus(STATUS_BAD_REQUEST);
       log.info("Bad request: cannot handle http request", e);
