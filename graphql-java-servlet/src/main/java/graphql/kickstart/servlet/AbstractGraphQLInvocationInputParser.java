@@ -17,6 +17,6 @@ abstract class AbstractGraphQLInvocationInputParser implements GraphQLInvocation
   }
 
   boolean isBatchedQuery(String query) {
-    return query != null && !query.trim().isEmpty() && query.trim().startsWith("[");
+    return query != null && query.trim().startsWith("[");
   }
 }

@@ -26,7 +26,8 @@ class GraphQLPostInvocationInputParser extends AbstractGraphQLInvocationInputPar
 
   public GraphQLInvocationInput getGraphQLInvocationInput(
       HttpServletRequest request, HttpServletResponse response) throws IOException {
-    if (APPLICATION_GRAPHQL.equals(request.getContentType())) {
+    String contentType = request.getContentType();
+    if (contentType != null && APPLICATION_GRAPHQL.equals(contentType.split(";")[0].trim())) {
       String query = request.getReader().lines().collect(joining(" "));
       GraphQLRequest graphqlRequest = GraphQLRequest.createQueryOnlyRequest(query);
       return invocationInputFactory.create(graphqlRequest, request, response);
