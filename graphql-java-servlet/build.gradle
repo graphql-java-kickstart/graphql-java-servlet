@@ -31,7 +31,7 @@ dependencies {
     testImplementation 'io.github.graphql-java:graphql-java-annotations:8.3'
 
     // Unit testing
-    testImplementation "org.codehaus.groovy:groovy-all:3.0.12"
+    testImplementation "org.codehaus.groovy:groovy-all:3.0.13"
     testImplementation "org.spockframework:spock-core:2.1-groovy-3.0"
     testRuntimeOnly "cglib:cglib-nodep:3.3.0"
     testRuntimeOnly "org.objenesis:objenesis:3.3"
