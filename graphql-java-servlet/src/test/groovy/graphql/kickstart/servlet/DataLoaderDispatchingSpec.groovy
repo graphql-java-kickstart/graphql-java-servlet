@@ -21,10 +21,10 @@ import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
 import spock.lang.Specification
 
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.websocket.Session
-import javax.websocket.server.HandshakeRequest
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.websocket.Session
+import jakarta.websocket.server.HandshakeRequest
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.atomic.AtomicInteger

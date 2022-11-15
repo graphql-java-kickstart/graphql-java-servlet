@@ -1,8 +1,8 @@
 package graphql.kickstart.servlet.core;
 
 import graphql.kickstart.execution.GraphQLRootObjectBuilder;
-import javax.servlet.http.HttpServletRequest;
-import javax.websocket.server.HandshakeRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.websocket.server.HandshakeRequest;
 
 public interface GraphQLServletRootObjectBuilder extends GraphQLRootObjectBuilder {
 
