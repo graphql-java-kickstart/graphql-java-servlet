@@ -3,7 +3,7 @@ package graphql.kickstart.servlet.subscriptions;
 import graphql.kickstart.execution.subscriptions.DefaultSubscriptionSession;
 import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionMapper;
 import java.util.Map;
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 
 public class WebSocketSubscriptionSession extends DefaultSubscriptionSession {
 

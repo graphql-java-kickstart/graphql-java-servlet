@@ -1,8 +1,8 @@
 package graphql.kickstart.servlet;
 
 import java.util.concurrent.atomic.AtomicReference;
-import javax.servlet.AsyncEvent;
-import javax.servlet.AsyncListener;
+import jakarta.servlet.AsyncEvent;
+import jakarta.servlet.AsyncListener;
 import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Subscription;
 

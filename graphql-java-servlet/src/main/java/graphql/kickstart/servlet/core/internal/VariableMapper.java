@@ -3,7 +3,7 @@ package graphql.kickstart.servlet.core.internal;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import javax.servlet.http.Part;
+import jakarta.servlet.http.Part;
 
 public class VariableMapper {
 

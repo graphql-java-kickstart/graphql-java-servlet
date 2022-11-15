@@ -5,9 +5,9 @@ import graphql.kickstart.execution.context.ContextSetting;
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 interface GraphQLInvocationInputParser {
 
