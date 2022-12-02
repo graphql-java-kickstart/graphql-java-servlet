@@ -31,12 +31,12 @@ dependencies {
     testImplementation 'io.github.graphql-java:graphql-java-annotations:8.3'
 
     // Unit testing
-    testImplementation "org.codehaus.groovy:groovy-all:3.0.12"
+    testImplementation "org.codehaus.groovy:groovy-all:3.0.13"
     testImplementation "org.spockframework:spock-core:2.1-groovy-3.0"
     testRuntimeOnly "cglib:cglib-nodep:3.3.0"
     testRuntimeOnly "org.objenesis:objenesis:3.3"
     testImplementation "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
-    testImplementation 'org.springframework:spring-test:5.3.22'
-    testRuntimeOnly 'org.springframework:spring-web:5.3.22'
+    testImplementation 'org.springframework:spring-test:5.3.23'
+    testRuntimeOnly 'org.springframework:spring-web:5.3.23'
     testImplementation 'com.google.guava:guava:31.1-jre'
 }
