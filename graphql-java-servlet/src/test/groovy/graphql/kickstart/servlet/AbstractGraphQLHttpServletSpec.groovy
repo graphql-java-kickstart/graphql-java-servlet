@@ -1120,7 +1120,7 @@ b
       throw new TestException()
     }.build()).build()
     servlet = GraphQLHttpServlet.with(configuration)
-    servlet.init(null)
+    servlet.init()
 
     request.setPathInfo('/schema.json')
 
