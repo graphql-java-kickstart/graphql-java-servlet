@@ -5,6 +5,7 @@ import graphql.Scalars
 import graphql.execution.ExecutionStepInfo
 import graphql.execution.MergedField
 import graphql.execution.reactive.SingleSubscriberPublisher
+import graphql.kickstart.servlet.core.GraphQLServletListener
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory
 import graphql.language.Field
 import graphql.schema.GraphQLNonNull
@@ -29,6 +30,8 @@ class AbstractGraphQLHttpServletSpec extends Specification {
   public static final String CONTENT_TYPE_JSON_UTF8 = 'application/json;charset=UTF-8'
   public static final String CONTENT_TYPE_SERVER_SENT_EVENTS = 'text/event-stream;charset=UTF-8'
 
+  def listener = Mock(GraphQLServletListener)
+
   @Shared
   ObjectMapper mapper = new ObjectMapper()
 
@@ -49,7 +52,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
         subscriptionLatch.countDown()
       }))
       return publisherRef.get()
-    })
+    },listener)
 
     request = new MockHttpServletRequest()
     request.setAsyncSupported(true)
