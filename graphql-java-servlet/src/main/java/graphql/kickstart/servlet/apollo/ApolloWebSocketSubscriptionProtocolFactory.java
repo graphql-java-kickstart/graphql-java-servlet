@@ -10,7 +10,7 @@ import graphql.kickstart.execution.subscriptions.apollo.ApolloSubscriptionProtoc
 import graphql.kickstart.servlet.subscriptions.WebSocketSubscriptionProtocolFactory;
 import java.time.Duration;
 import java.util.Collection;
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 
 public class ApolloWebSocketSubscriptionProtocolFactory extends ApolloSubscriptionProtocolFactory
     implements WebSocketSubscriptionProtocolFactory {

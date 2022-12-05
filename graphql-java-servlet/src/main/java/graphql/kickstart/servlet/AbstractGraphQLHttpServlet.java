@@ -8,10 +8,10 @@ import graphql.kickstart.execution.input.GraphQLSingleInvocationInput;
 import graphql.kickstart.servlet.core.GraphQLMBean;
 import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.schema.GraphQLFieldDefinition;
-import javax.servlet.Servlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /** @author Andrew Potter */

@@ -2,8 +2,8 @@ package graphql.kickstart.servlet.config;
 
 import graphql.kickstart.execution.config.DefaultGraphQLSchemaProvider;
 import graphql.schema.GraphQLSchema;
-import javax.servlet.http.HttpServletRequest;
-import javax.websocket.server.HandshakeRequest;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.websocket.server.HandshakeRequest;
 
 /** @author Andrew Potter */
 public class DefaultGraphQLSchemaServletProvider extends DefaultGraphQLSchemaProvider

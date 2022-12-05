@@ -4,7 +4,7 @@ import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionMapper;
 import graphql.kickstart.execution.subscriptions.apollo.ApolloSubscriptionSession;
 import graphql.kickstart.servlet.subscriptions.WebSocketSubscriptionSession;
 import java.util.Map;
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 
 public class ApolloWebSocketSubscriptionSession extends ApolloSubscriptionSession {
 

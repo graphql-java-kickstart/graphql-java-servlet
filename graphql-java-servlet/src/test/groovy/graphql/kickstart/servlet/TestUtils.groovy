@@ -62,7 +62,7 @@ class TestUtils {
         .with(contextBuilder)
         .with(executor())
         .build())
-    servlet.init(null)
+    servlet.init()
     return servlet
   }
 
@@ -86,7 +86,7 @@ class TestUtils {
             listeners
         )
     )
-    servlet.init(null)
+    servlet.init()
     return servlet
   }
 
