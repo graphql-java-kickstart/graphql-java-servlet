@@ -27,8 +27,8 @@ buildscript {
 }
 
 plugins {
-    id "biz.aQute.bnd.builder" version "6.3.1" apply false
-    id "org.sonarqube" version "3.4.0.2513"
+    id "biz.aQute.bnd.builder" version "6.4.0" apply false
+    id "org.sonarqube" version "3.5.0.2730"
     id "jacoco"
     id "io.github.gradle-nexus.publish-plugin" version '1.1.0'
 }
