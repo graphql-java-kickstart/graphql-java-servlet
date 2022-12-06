@@ -116,6 +116,9 @@ public class HttpRequestInvokerImpl implements HttpRequestInvoker {
       response.setStatus(STATUS_INTERNAL_SERVER_ERROR);
       log.error("Cannot handle http request", e);
       listenerHandler.onError(e);
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
     }
   }
 
