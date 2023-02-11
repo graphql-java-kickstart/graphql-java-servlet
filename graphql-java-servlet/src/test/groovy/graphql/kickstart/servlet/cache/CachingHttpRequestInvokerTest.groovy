@@ -11,9 +11,9 @@ import graphql.kickstart.servlet.HttpRequestInvoker
 import graphql.kickstart.servlet.ListenerHandler
 import spock.lang.Specification
 
-import jakarta.servlet.ServletOutputStream
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
+import javax.servlet.ServletOutputStream
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.CompletableFuture
 
 class CachingHttpRequestInvokerTest extends Specification {

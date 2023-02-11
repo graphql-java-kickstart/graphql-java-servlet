@@ -1,6 +1,6 @@
 package graphql.kickstart.servlet
 
-import jakarta.servlet.http.Part
+import javax.servlet.http.Part
 
 /**
  * @author Andrew Potter

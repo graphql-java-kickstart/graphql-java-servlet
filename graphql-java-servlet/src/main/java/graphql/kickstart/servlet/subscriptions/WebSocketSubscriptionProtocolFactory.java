@@ -2,7 +2,7 @@ package graphql.kickstart.servlet.subscriptions;
 
 import graphql.kickstart.execution.subscriptions.SubscriptionSession;
 import java.util.function.Consumer;
-import jakarta.websocket.Session;
+import javax.websocket.Session;
 
 public interface WebSocketSubscriptionProtocolFactory {
 

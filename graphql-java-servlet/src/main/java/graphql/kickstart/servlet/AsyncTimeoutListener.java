@@ -1,8 +1,8 @@
 package graphql.kickstart.servlet;
 
 import java.io.IOException;
-import jakarta.servlet.AsyncEvent;
-import jakarta.servlet.AsyncListener;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 
 interface AsyncTimeoutListener extends AsyncListener {
 

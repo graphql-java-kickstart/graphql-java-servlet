@@ -31,7 +31,7 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.metatype.annotations.Designate;
 
 @Component(
-    service = {jakarta.servlet.http.HttpServlet.class, jakarta.servlet.Servlet.class},
+    service = {javax.servlet.http.HttpServlet.class, javax.servlet.Servlet.class},
     property = {"service.description=GraphQL HTTP Servlet"})
 @Designate(ocd = OsgiGraphQLHttpServletConfiguration.class, factory = true)
 public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {

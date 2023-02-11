@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import jakarta.servlet.AsyncContext;
+import javax.servlet.AsyncContext;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 

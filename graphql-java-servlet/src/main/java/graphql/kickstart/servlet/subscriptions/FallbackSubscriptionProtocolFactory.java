@@ -6,7 +6,7 @@ import graphql.kickstart.execution.subscriptions.GraphQLSubscriptionMapper;
 import graphql.kickstart.execution.subscriptions.SubscriptionProtocolFactory;
 import graphql.kickstart.execution.subscriptions.SubscriptionSession;
 import java.util.function.Consumer;
-import jakarta.websocket.Session;
+import javax.websocket.Session;
 
 /** @author Andrew Potter */
 public class FallbackSubscriptionProtocolFactory extends SubscriptionProtocolFactory

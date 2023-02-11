@@ -1,4 +1,4 @@
-# GraphQL Java Servlet
+# GraphQL Java Servlet 14
 [![Maven Central](https://img.shields.io/maven-central/v/com.graphql-java-kickstart/graphql-java-servlet.svg)](https://maven-badges.herokuapp.com/maven-central/com.graphql-java-kickstart/graphql-java-servlet)
 [![Build Status](https://github.com/graphql-java-kickstart/graphql-java-servlet/workflows/Publish%20snapshot/badge.svg)](https://github.com/graphql-java-kickstart/graphql-java-servlet/actions?query=workflow%3A%22Publish+snapshot%22)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=graphql-java-kickstart_graphql-java-servlet&metric=alert_status)](https://sonarcloud.io/dashboard?id=graphql-java-kickstart_graphql-java-servlet)
@@ -19,7 +19,17 @@ This project wraps the Java implementation of GraphQL provided by [GraphQL Java]
 See [GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
 regarding GraphQL Java itself. 
 
-We try to stay up to date with GraphQL Java as much as possible. See [gradle.properties](gradle.properties) to see currently supported versions.
+We try to stay up to date with GraphQL Java as much as possible maintaining the retro-compatibility 
+with Springframework 5.
+
+The `14.*` version must be used if your project is based on Spring version <= `5`, 
+or it is using javax-servlet-api dependency and cannot be upgraded to jakarta.
+
+It also supports legacy projects that can compile with older JDK versions: the oldest supported one 
+is the `11`.
+
+
+See [gradle.properties](gradle.properties) to see currently supported versions.
 
 ## Installation and getting started
 

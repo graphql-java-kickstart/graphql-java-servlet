@@ -5,8 +5,8 @@ import graphql.kickstart.execution.GraphQLObjectMapper
 import org.springframework.mock.web.MockAsyncContext
 import spock.lang.Specification
 
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 
 class SingleAsynchronousQueryResponseWriterTest extends Specification {
 

@@ -2,7 +2,7 @@ package graphql.kickstart.servlet.cache;
 
 import graphql.kickstart.execution.input.GraphQLInvocationInput;
 import java.util.Optional;
-import jakarta.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
 
 public interface GraphQLResponseCacheManager {
 
