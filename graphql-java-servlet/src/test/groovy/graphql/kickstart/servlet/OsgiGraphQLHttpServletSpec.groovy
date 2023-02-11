@@ -5,7 +5,7 @@ import graphql.annotations.annotationTypes.GraphQLField
 import graphql.annotations.annotationTypes.GraphQLName
 import graphql.annotations.processor.GraphQLAnnotations
 import graphql.execution.instrumentation.InstrumentationState
-import graphql.execution.instrumentation.SimpleInstrumentation
+import graphql.execution.instrumentation.SimplePerformantInstrumentation
 import graphql.execution.instrumentation.parameters.InstrumentationCreateStateParameters
 import graphql.kickstart.execution.GraphQLRequest
 import graphql.kickstart.execution.config.ExecutionStrategyProvider
@@ -349,7 +349,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
   def "instrumentation provider is bound and unbound"() {
     setup:
     def servlet = new OsgiGraphQLHttpServlet()
-    def instrumentation = new SimpleInstrumentation()
+    def instrumentation = new SimplePerformantInstrumentation()
     def instrumentationProvider = Mock(InstrumentationProvider)
     instrumentationProvider.getInstrumentation() >> instrumentation
     def request = GraphQLRequest.createIntrospectionRequest()

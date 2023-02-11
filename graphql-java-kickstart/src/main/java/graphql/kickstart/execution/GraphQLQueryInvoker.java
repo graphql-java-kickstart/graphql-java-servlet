@@ -50,13 +50,12 @@ public class GraphQLQueryInvoker {
 
     private Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider =
         DefaultExecutionStrategyProvider::new;
-    private Supplier<Instrumentation> getInstrumentation =
-        () -> SimplePerformantInstrumentation.INSTANCE;
+    private Supplier<Instrumentation> getInstrumentation = () -> SimplePerformantInstrumentation.INSTANCE;
     private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider =
         () -> NoOpPreparsedDocumentProvider.INSTANCE;
     private Supplier<DataLoaderDispatcherInstrumentationOptions>
         dataLoaderDispatcherInstrumentationOptionsSupplier =
-            DataLoaderDispatcherInstrumentationOptions::newOptions;
+        DataLoaderDispatcherInstrumentationOptions::newOptions;
 
     public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
       return withExecutionStrategyProvider(() -> provider);

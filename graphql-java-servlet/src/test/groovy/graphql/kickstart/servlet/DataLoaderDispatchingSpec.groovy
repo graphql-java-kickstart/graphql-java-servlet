@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import graphql.ExecutionInput
 import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.Instrumentation
-import graphql.execution.instrumentation.SimpleInstrumentation
+import graphql.execution.instrumentation.SimplePerformantInstrumentation
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions
 import graphql.kickstart.execution.context.ContextSetting
 import graphql.kickstart.execution.context.DefaultGraphQLContext
@@ -14,7 +14,7 @@ import graphql.kickstart.servlet.context.GraphQLServletContextBuilder
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import org.dataloader.BatchLoader
-import org.dataloader.DataLoader
+import org.dataloader.DataLoaderFactory
 import org.dataloader.DataLoaderRegistry
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
@@ -59,9 +59,9 @@ class DataLoaderDispatchingSpec extends Specification {
 
   def registry() {
     DataLoaderRegistry registry = new DataLoaderRegistry()
-    registry.register("A", DataLoader.newDataLoader(batchLoaderWithCounter(fetchCounterA)))
-    registry.register("B", DataLoader.newDataLoader(batchLoaderWithCounter(fetchCounterB)))
-    registry.register("C", DataLoader.newDataLoader(batchLoaderWithCounter(fetchCounterC)))
+    registry.register("A", DataLoaderFactory.newDataLoader(batchLoaderWithCounter(fetchCounterA)))
+    registry.register("B", DataLoaderFactory.newDataLoader(batchLoaderWithCounter(fetchCounterB)))
+    registry.register("C", DataLoaderFactory.newDataLoader(batchLoaderWithCounter(fetchCounterC)))
     registry
   }
 
@@ -120,7 +120,7 @@ class DataLoaderDispatchingSpec extends Specification {
     mapper.readValue(response.getContentAsByteArray(), List)
   }
 
-  Instrumentation simpleInstrumentation = new SimpleInstrumentation()
+  Instrumentation simpleInstrumentation = new SimplePerformantInstrumentation()
   ChainedInstrumentation chainedInstrumentation = new ChainedInstrumentation(Collections.singletonList(simpleInstrumentation))
   def simpleSupplier = { simpleInstrumentation }
   def chainedSupplier = { chainedInstrumentation }

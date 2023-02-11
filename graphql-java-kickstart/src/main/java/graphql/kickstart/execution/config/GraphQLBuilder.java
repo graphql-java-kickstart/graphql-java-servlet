@@ -20,8 +20,7 @@ public class GraphQLBuilder {
       () -> NoOpPreparsedDocumentProvider.INSTANCE;
 
   @Getter
-  private Supplier<Instrumentation> instrumentationSupplier =
-      () -> SimplePerformantInstrumentation.INSTANCE;
+  private Supplier<Instrumentation> instrumentationSupplier = () -> SimplePerformantInstrumentation.INSTANCE;
 
   private Supplier<GraphQLBuilderConfigurer> graphQLBuilderConfigurerSupplier = () -> builder -> {};
 
