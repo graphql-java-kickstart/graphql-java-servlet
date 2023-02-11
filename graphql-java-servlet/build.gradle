@@ -29,7 +29,7 @@ dependencies {
     compileOnly 'org.osgi:org.osgi.service.metatype.annotations:1.4.1'
     compileOnly 'org.osgi:org.osgi.annotation:6.0.0'
 
-    testImplementation 'io.github.graphql-java:graphql-java-annotations:8.3'
+    testImplementation 'io.github.graphql-java:graphql-java-annotations:9.1'
 
     // Unit testing
     testImplementation "org.apache.groovy:groovy-all:4.0.10"

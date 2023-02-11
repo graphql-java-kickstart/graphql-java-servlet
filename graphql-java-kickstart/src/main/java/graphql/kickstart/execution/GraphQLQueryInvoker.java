@@ -2,7 +2,7 @@ package graphql.kickstart.execution;
 
 import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
-import graphql.execution.instrumentation.SimpleInstrumentation;
+import graphql.execution.instrumentation.SimplePerformantInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
@@ -12,7 +12,9 @@ import graphql.kickstart.execution.config.GraphQLBuilder;
 import java.util.List;
 import java.util.function.Supplier;
 
-/** @author Andrew Potter */
+/**
+ * @author Andrew Potter
+ */
 public class GraphQLQueryInvoker {
 
   private final Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider;
@@ -48,12 +50,12 @@ public class GraphQLQueryInvoker {
 
     private Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider =
         DefaultExecutionStrategyProvider::new;
-    private Supplier<Instrumentation> getInstrumentation = () -> SimpleInstrumentation.INSTANCE;
+    private Supplier<Instrumentation> getInstrumentation = () -> SimplePerformantInstrumentation.INSTANCE;
     private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider =
         () -> NoOpPreparsedDocumentProvider.INSTANCE;
     private Supplier<DataLoaderDispatcherInstrumentationOptions>
         dataLoaderDispatcherInstrumentationOptionsSupplier =
-            DataLoaderDispatcherInstrumentationOptions::newOptions;
+        DataLoaderDispatcherInstrumentationOptions::newOptions;
 
     public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
       return withExecutionStrategyProvider(() -> provider);

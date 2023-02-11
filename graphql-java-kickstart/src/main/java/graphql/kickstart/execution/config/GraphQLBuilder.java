@@ -4,7 +4,7 @@ import graphql.GraphQL;
 import graphql.execution.ExecutionStrategy;
 import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
-import graphql.execution.instrumentation.SimpleInstrumentation;
+import graphql.execution.instrumentation.SimplePerformantInstrumentation;
 import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
@@ -20,7 +20,7 @@ public class GraphQLBuilder {
       () -> NoOpPreparsedDocumentProvider.INSTANCE;
 
   @Getter
-  private Supplier<Instrumentation> instrumentationSupplier = () -> SimpleInstrumentation.INSTANCE;
+  private Supplier<Instrumentation> instrumentationSupplier = () -> SimplePerformantInstrumentation.INSTANCE;
 
   private Supplier<GraphQLBuilderConfigurer> graphQLBuilderConfigurerSupplier = () -> builder -> {};
 
