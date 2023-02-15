@@ -37,7 +37,7 @@ dependencies {
     testRuntimeOnly "cglib:cglib-nodep:3.3.0"
     testRuntimeOnly "org.objenesis:objenesis:3.3"
     testImplementation "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
-    testImplementation 'org.springframework:spring-test:6.0.4'
-    testRuntimeOnly 'org.springframework:spring-web:6.0.4'
+    testImplementation 'org.springframework:spring-test:6.0.5'
+    testRuntimeOnly 'org.springframework:spring-web:6.0.5'
     testImplementation 'com.google.guava:guava:31.1-jre'
 }
