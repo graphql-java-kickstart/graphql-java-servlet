@@ -64,14 +64,17 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
   @Override
   public DataFetcher<?> instrumentDataFetcher(
-      DataFetcher<?> dataFetcher, InstrumentationFieldFetchParameters parameters) {
-    DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
+      DataFetcher<?> dataFetcher,
+      InstrumentationFieldFetchParameters parameters,
+      InstrumentationState instrumentationState) {
+    DataLoaderDispatcherInstrumentationState state =
+        InstrumentationState.ofState(instrumentationState);
     if (state.isAggressivelyBatching()) {
       return dataFetcher;
     }
     //
     // currently only AsyncExecutionStrategy with DataLoader and hence this allows us to "dispatch"
-    // on every object if its not using aggressive batching for other execution strategies
+    // on every object if it's not using aggressive batching for other execution strategies
     // which allows them to work if used.
     return (DataFetcher<Object>)
         environment -> {
@@ -87,12 +90,14 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
   @Override
   public InstrumentationContext<ExecutionResult> beginExecuteOperation(
-      InstrumentationExecuteOperationParameters parameters) {
+      InstrumentationExecuteOperationParameters parameters,
+      InstrumentationState instrumentationState) {
     if (!isDataLoaderCompatible(parameters.getExecutionContext())) {
-      DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
+      DataLoaderDispatcherInstrumentationState state =
+          InstrumentationState.ofState(instrumentationState);
       state.setAggressivelyBatching(false);
     }
-    return new SimpleInstrumentationContext<>();
+    return SimpleInstrumentationContext.noOp();
   }
 
   private boolean isDataLoaderCompatible(ExecutionContext executionContext) {
@@ -111,8 +116,10 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
   @Override
   public ExecutionStrategyInstrumentationContext beginExecutionStrategy(
-      InstrumentationExecutionStrategyParameters parameters) {
-    DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
+      InstrumentationExecutionStrategyParameters parameters,
+      InstrumentationState instrumentationState) {
+    DataLoaderDispatcherInstrumentationState state =
+        InstrumentationState.ofState(instrumentationState);
     //
     // if there are no data loaders, there is nothing to do
     //
@@ -134,21 +141,25 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
   @Override
   public InstrumentationContext<Object> beginFieldFetch(
-      InstrumentationFieldFetchParameters parameters) {
-    DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
+      InstrumentationFieldFetchParameters parameters, InstrumentationState instrumentationState) {
+    DataLoaderDispatcherInstrumentationState state =
+        InstrumentationState.ofState(instrumentationState);
     //
     // if there are no data loaders, there is nothing to do
     //
     if (state.hasNoDataLoaders()) {
-      return new SimpleInstrumentationContext<>();
+      return SimpleInstrumentationContext.noOp();
     }
     return state.getApproach().beginFieldFetch(parameters);
   }
 
   @Override
   public CompletableFuture<ExecutionResult> instrumentExecutionResult(
-      ExecutionResult executionResult, InstrumentationExecutionParameters parameters) {
-    DataLoaderDispatcherInstrumentationState state = parameters.getInstrumentationState();
+      ExecutionResult executionResult,
+      InstrumentationExecutionParameters parameters,
+      InstrumentationState instrumentationState) {
+    DataLoaderDispatcherInstrumentationState state =
+        InstrumentationState.ofState(instrumentationState);
     state.getApproach().removeTracking(parameters.getExecutionInput().getExecutionId());
     if (!options.isIncludeStatistics()) {
       return CompletableFuture.completedFuture(executionResult);
