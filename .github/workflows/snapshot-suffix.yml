@@ -1,5 +1,9 @@
-name: "Publish release"
-on: [ workflow_dispatch ]
+name: "Publish snapshot with suffix"
+on:
+  push:
+    branches:
+      - javax
+      - jakarta
 
 jobs:
   validation:
@@ -20,11 +24,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 8
+          java-version: 11
       - name: Cache Gradle
         uses: actions/cache@v3
         env:
-          java-version: 8
+          java-version: 11
         with:
           path: |
             ~/.gradle/caches
@@ -38,7 +42,7 @@ jobs:
         run: ./gradlew --info check
 
   build:
-    name: Publish release
+    name: Publish snapshot
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -48,11 +52,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 8
+          java-version: 11
       - name: Cache Gradle
         uses: actions/cache@v3
         env:
-          java-version: 8
+          java-version: 11
         with:
           path: |
             ~/.gradle/caches
@@ -62,16 +66,11 @@ jobs:
             ${{ runner.os }}-${{ env.java-version }}-gradle-
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-      - name: Prepare environment
-        env:
-          GPG_KEY_CONTENTS: ${{ secrets.GPG_KEY_CONTENTS }}
-          SIGNING_SECRET_KEY_RING_FILE: ${{ secrets.GPG_SIGNING_SECRET_KEY_RING_FILE }}
-        run: sudo bash -c "echo '$GPG_KEY_CONTENTS' | base64 -d > '$SIGNING_SECRET_KEY_RING_FILE'"
-      - name: Publish release
-        env:
-          SIGNING_KEY_ID: ${{ secrets.GPG_SIGNING_KEY_ID }}
-          SIGNING_PASSWORD: ${{ secrets.GPG_SIGNING_PASSWORD }}
-          SIGNING_SECRET_KEY_RING_FILE: ${{ secrets.GPG_SIGNING_SECRET_KEY_RING_FILE }}
-          OSS_USER_TOKEN_KEY: ${{ secrets.OSS_USER_TOKEN_KEY }}
-          OSS_USER_TOKEN_PASS: ${{ secrets.OSS_USER_TOKEN_PASS }}
-        run: bash .github/release.sh
+      - name: Add suffix to modules
+        run: bash .github/add-module-suffix.sh
+#      - name: Gradle Publish Snapshot
+#        if: env.OSS_USER_TOKEN_KEY != null
+#        env:
+#          OSS_USER_TOKEN_KEY: ${{ secrets.OSS_USER_TOKEN_KEY }}
+#          OSS_USER_TOKEN_PASS: ${{ secrets.OSS_USER_TOKEN_PASS }}
+#        run: ./gradlew clean build publish -x test
