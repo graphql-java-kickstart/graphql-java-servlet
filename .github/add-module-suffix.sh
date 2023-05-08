@@ -13,12 +13,20 @@ addSuffix() {
 
 updateLocalDependencies() {
   for module in "${modules[@]}"; do
-    echo "$module"
     cp -rf "$module" "$module"-"$MODULE_SUFFIX"
+    rm -rf "$module"
 
     for dependency in "${modules[@]}"; do
       sed -i -E "s/project\(('|\"):${dependency}('|\")\)/project\(':${dependency}-${MODULE_SUFFIX}'\)/" "$module"-"$MODULE_SUFFIX"/build.gradle
     done
+  done
+
+  updateGradleSettings
+}
+
+updateGradleSettings() {
+  for module in "${modules[@]}"; do
+    sed -i -E "s/('|\"):${module}('|\")\)/':${module}-${MODULE_SUFFIX}'/" settings.gradle
   done
 }
 
