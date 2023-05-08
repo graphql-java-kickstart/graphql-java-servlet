@@ -1,0 +1,74 @@
+name: "Publish snapshot with suffix"
+on:
+  push:
+    branches:
+      - javax
+      - jakarta
+
+jobs:
+  validation:
+    name: Gradle Wrapper Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+
+  test:
+    name: Test run
+    needs: validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        env:
+          java-version: 11
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.java-version }}-gradle-
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+      - name: Gradle Check
+        run: ./gradlew --info check
+
+  build:
+    name: Publish snapshot
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        env:
+          java-version: 11
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.java-version }}-gradle-
+      - name: Add suffix to modules
+        run: .github/add-module-suffix.sh
+      - name: Gradle Publish Snapshot
+        if: env.OSS_USER_TOKEN_KEY != null
+        env:
+          OSS_USER_TOKEN_KEY: ${{ secrets.OSS_USER_TOKEN_KEY }}
+          OSS_USER_TOKEN_PASS: ${{ secrets.OSS_USER_TOKEN_PASS }}
+        run: ./gradlew clean build publish -x test
