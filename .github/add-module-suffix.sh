@@ -23,4 +23,4 @@ updateLocalDependencies() {
 }
 
 echo "Add suffix '-$MODULE_SUFFIX' to modules"
-#addSuffix
+addSuffix
