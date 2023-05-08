@@ -1,4 +1,4 @@
-name: "Publish JDK11 release"
+name: "Publish release"
 on: [ workflow_dispatch ]
 
 jobs:
@@ -20,11 +20,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 17
       - name: Cache Gradle
         uses: actions/cache@v3
         env:
-          java-version: 11
+          java-version: 17
         with:
           path: |
             ~/.gradle/caches
@@ -48,11 +48,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 17
       - name: Cache Gradle
         uses: actions/cache@v3
         env:
-          java-version: 11
+          java-version: 17
         with:
           path: |
             ~/.gradle/caches
@@ -85,11 +85,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 17
       - name: Cache Gradle
         uses: actions/cache@v3
         env:
-          java-version: 11
+          java-version: 17
         with:
           path: |
             ~/.gradle/caches
