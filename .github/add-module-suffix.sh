@@ -26,9 +26,14 @@ updateLocalDependencies() {
 
 updateGradleSettings() {
   for module in "${modules[@]}"; do
-    sed -i -E "s/('|\"):${module}('|\")\)/':${module}-${MODULE_SUFFIX}'/" settings.gradle
+    echo "Replace ${module} with ${module}-${MODULE_SUFFIX} in settings.gradle"
+    sed -i -E "s/('|\"):${module}('|\")/':${module}-${MODULE_SUFFIX}'/" settings.gradle
   done
+
+  cat settings.gradle
 }
 
 echo "Add suffix '-$MODULE_SUFFIX' to modules"
 addSuffix
+
+ls -lh
