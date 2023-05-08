@@ -1,4 +1,4 @@
-name: "Publish release"
+name: "Publish JDK11 release"
 on: [ workflow_dispatch ]
 
 jobs:
