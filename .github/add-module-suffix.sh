@@ -8,7 +8,7 @@ addSuffix() {
   readarray -t <<<"$result"
   modules=("${MAPFILE[@]}")
 
-  replaceLocalDependencies
+  updateLocalDependencies
 }
 
 updateLocalDependencies() {
