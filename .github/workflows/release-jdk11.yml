@@ -1,4 +1,4 @@
-name: "Publish release"
+name: "Publish JDK11 release"
 on: [ workflow_dispatch ]
 
 jobs:
@@ -20,11 +20,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 17
+          java-version: 11
       - name: Cache Gradle
         uses: actions/cache@v3
         env:
-          java-version: 17
+          java-version: 11
         with:
           path: |
             ~/.gradle/caches
@@ -48,11 +48,11 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 17
+          java-version: 11
       - name: Cache Gradle
         uses: actions/cache@v3
         env:
-          java-version: 17
+          java-version: 11
         with:
           path: |
             ~/.gradle/caches
@@ -60,8 +60,6 @@ jobs:
           key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-${{ env.java-version }}-gradle-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
       - name: Prepare environment
         env:
           GPG_KEY_CONTENTS: ${{ secrets.GPG_KEY_CONTENTS }}
@@ -74,4 +72,30 @@ jobs:
           SIGNING_SECRET_KEY_RING_FILE: ${{ secrets.GPG_SIGNING_SECRET_KEY_RING_FILE }}
           OSS_USER_TOKEN_KEY: ${{ secrets.OSS_USER_TOKEN_KEY }}
           OSS_USER_TOKEN_PASS: ${{ secrets.OSS_USER_TOKEN_PASS }}
-        run: bash github-build.sh
+        run: .github/release.sh
+
+  tag:
+    name: Tag release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        env:
+          java-version: 11
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.java-version }}-gradle-
+      - name: Tag release
+        run: .github/tag-release.sh
