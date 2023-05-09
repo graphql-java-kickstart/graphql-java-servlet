@@ -36,6 +36,7 @@ public class GraphQLConfiguration {
   private final ContextSetting contextSetting;
   private final GraphQLResponseCacheManager responseCacheManager;
   @Getter private final Executor asyncExecutor;
+  @Getter private final List<String> allowedOrigins;
   private HttpRequestHandler requestHandler;
 
   private GraphQLConfiguration(
@@ -49,9 +50,11 @@ public class GraphQLConfiguration {
       ContextSetting contextSetting,
       Supplier<BatchInputPreProcessor> batchInputPreProcessor,
       GraphQLResponseCacheManager responseCacheManager,
-      Executor asyncExecutor) {
+      Executor asyncExecutor,
+      List<String> allowedOrigins) {
     this.invocationInputFactory = invocationInputFactory;
     this.asyncExecutor = asyncExecutor;
+    this.allowedOrigins = allowedOrigins;
     this.graphQLInvoker = graphQLInvoker != null ? graphQLInvoker : queryInvoker.toGraphQLInvoker();
     this.objectMapper = objectMapper;
     this.listeners = listeners;
@@ -148,6 +151,7 @@ public class GraphQLConfiguration {
     private int asyncMaxPoolSize = 200;
     private Executor asyncExecutor;
     private AsyncTaskDecorator asyncTaskDecorator;
+    private List<String> allowedOrigins = new ArrayList<>();
 
     private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
       this.invocationInputFactoryBuilder = invocationInputFactoryBuilder;
@@ -249,6 +253,13 @@ public class GraphQLConfiguration {
       return this;
     }
 
+    public Builder allowedOrigins(List<String> allowedOrigins) {
+      if (allowedOrigins != null) {
+        this.allowedOrigins.addAll(allowedOrigins);
+      }
+      return this;
+    }
+
     private Executor getAsyncExecutor() {
       if (asyncExecutor != null) {
         return asyncExecutor;
@@ -279,7 +290,8 @@ public class GraphQLConfiguration {
           contextSetting,
           batchInputPreProcessorSupplier,
           responseCacheManager,
-          getAsyncTaskExecutor());
+          getAsyncTaskExecutor(),
+          allowedOrigins);
     }
   }
 }
