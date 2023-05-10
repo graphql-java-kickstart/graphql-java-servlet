@@ -1,7 +1,6 @@
 package graphql.kickstart.servlet;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
@@ -66,7 +65,6 @@ public class GraphQLWebsocketServlet extends Endpoint {
   private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
   private final AtomicBoolean isShutDown = new AtomicBoolean(false);
   private final Object cacheLock = new Object();
-  private final List<String> allowedOrigins;
 
   public GraphQLWebsocketServlet(GraphQLConfiguration configuration) {
     this(configuration, null);
@@ -79,23 +77,21 @@ public class GraphQLWebsocketServlet extends Endpoint {
         configuration.getGraphQLInvoker(),
         configuration.getInvocationInputFactory(),
         configuration.getObjectMapper(),
-        connectionListeners,
-        configuration.getAllowedOrigins());
+        connectionListeners);
   }
 
   public GraphQLWebsocketServlet(
       GraphQLInvoker graphQLInvoker,
       GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
       GraphQLObjectMapper graphQLObjectMapper) {
-    this(graphQLInvoker, invocationInputFactory, graphQLObjectMapper, null, emptyList());
+    this(graphQLInvoker, invocationInputFactory, graphQLObjectMapper, null);
   }
 
   public GraphQLWebsocketServlet(
       GraphQLInvoker graphQLInvoker,
       GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
       GraphQLObjectMapper graphQLObjectMapper,
-      Collection<SubscriptionConnectionListener> connectionListeners,
-      List<String> allowedOrigins) {
+      Collection<SubscriptionConnectionListener> connectionListeners) {
     List<ApolloSubscriptionConnectionListener> listeners = new ArrayList<>();
     if (connectionListeners != null) {
       connectionListeners.stream()
@@ -118,7 +114,6 @@ public class GraphQLWebsocketServlet extends Endpoint {
                 Stream.of(fallbackSubscriptionProtocolFactory))
             .map(SubscriptionProtocolFactory::getProtocol)
             .collect(toList());
-    this.allowedOrigins = allowedOrigins;
   }
 
   public GraphQLWebsocketServlet(
@@ -134,8 +129,6 @@ public class GraphQLWebsocketServlet extends Endpoint {
                 Stream.of(fallbackSubscriptionProtocolFactory))
             .map(SubscriptionProtocolFactory::getProtocol)
             .collect(toList());
-
-    this.allowedOrigins = emptyList();
   }
 
   @Override
@@ -204,26 +197,6 @@ public class GraphQLWebsocketServlet extends Endpoint {
     } catch (IOException e) {
       log.error("Error closing websocket session for session: {}", session.getId(), t);
     }
-  }
-
-  public boolean checkOrigin(String originHeaderValue) {
-    if (originHeaderValue == null || originHeaderValue.isBlank()) {
-      return allowedOrigins.isEmpty();
-    }
-    String originToCheck = trimTrailingSlash(originHeaderValue);
-    if (!allowedOrigins.isEmpty()) {
-      if (allowedOrigins.contains("*")) {
-        return true;
-      }
-      return allowedOrigins.stream()
-          .map(this::trimTrailingSlash)
-          .anyMatch(originToCheck::equalsIgnoreCase);
-    }
-    return true;
-  }
-
-  private String trimTrailingSlash(String origin) {
-    return (origin.endsWith("/") ? origin.substring(0, origin.length() - 1) : origin);
   }
 
   public void modifyHandshake(
