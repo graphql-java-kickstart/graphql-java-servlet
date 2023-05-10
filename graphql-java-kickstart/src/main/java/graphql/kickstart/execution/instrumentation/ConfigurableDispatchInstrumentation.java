@@ -35,7 +35,9 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
 
   private final Function<DataLoaderRegistry, TrackingApproach> approachFunction;
 
-  /** Creates a DataLoaderDispatcherInstrumentation with the default options */
+  /**
+   * Creates a DataLoaderDispatcherInstrumentation with the default options
+   */
   public ConfigurableDispatchInstrumentation(
       Function<DataLoaderRegistry, TrackingApproach> approachFunction) {
     this(DataLoaderDispatcherInstrumentationOptions.newOptions(), approachFunction);
@@ -46,8 +48,7 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
    *
    * @param options the options to control the behaviour
    */
-  public ConfigurableDispatchInstrumentation(
-      DataLoaderDispatcherInstrumentationOptions options,
+  public ConfigurableDispatchInstrumentation(DataLoaderDispatcherInstrumentationOptions options,
       Function<DataLoaderRegistry, TrackingApproach> approachFunction) {
     this.options = options;
     this.approachFunction = approachFunction;
@@ -59,7 +60,8 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
     return new DataLoaderDispatcherInstrumentationState(
         registry,
         approachFunction.apply(registry),
-        parameters.getExecutionInput().getExecutionId());
+        parameters.getExecutionInput().getExecutionId()
+    );
   }
 
   @Override
@@ -76,12 +78,11 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
     // currently only AsyncExecutionStrategy with DataLoader and hence this allows us to "dispatch"
     // on every object if it's not using aggressive batching for other execution strategies
     // which allows them to work if used.
-    return (DataFetcher<Object>)
-        environment -> {
-          Object obj = dataFetcher.get(environment);
-          doImmediatelyDispatch(state);
-          return obj;
-        };
+    return (DataFetcher<Object>) environment -> {
+      Object obj = dataFetcher.get(environment);
+      doImmediatelyDispatch(state);
+      return obj;
+    };
   }
 
   private void doImmediatelyDispatch(DataLoaderDispatcherInstrumentationState state) {
@@ -165,16 +166,16 @@ public class ConfigurableDispatchInstrumentation extends DataLoaderDispatcherIns
       return CompletableFuture.completedFuture(executionResult);
     } else {
       Map<Object, Object> currentExt = executionResult.getExtensions();
-      Map<Object, Object> statsMap =
-          new LinkedHashMap<>(currentExt == null ? Collections.emptyMap() : currentExt);
+      Map<Object, Object> statsMap = new LinkedHashMap<>(
+          currentExt == null ? Collections.emptyMap() : currentExt);
       Map<Object, Object> dataLoaderStats = buildStatisticsMap(state);
       statsMap.put("dataloader", dataLoaderStats);
 
       log.debug("Data loader stats : {}", dataLoaderStats);
 
       return CompletableFuture.completedFuture(
-          new ExecutionResultImpl(
-              executionResult.getData(), executionResult.getErrors(), statsMap));
+          new ExecutionResultImpl(executionResult.getData(), executionResult.getErrors(),
+              statsMap));
     }
   }
 
