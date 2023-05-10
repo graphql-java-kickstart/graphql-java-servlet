@@ -16,8 +16,9 @@ dependencies {
     api(project(':graphql-java-kickstart'))
 
     // Servlet
-    api 'javax.servlet:javax.servlet-api:4.0.1'
-    api 'javax.websocket:javax.websocket-api:1.1'
+    compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
+    compileOnly 'javax.websocket:javax.websocket-api:1.1'
+    compileOnly 'javax.websocket:javax.websocket-client-api:1.1'
     implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"
 
     // OSGi
@@ -31,7 +32,7 @@ dependencies {
     testImplementation 'io.github.graphql-java:graphql-java-annotations:9.1'
 
     // Unit testing
-    testImplementation "org.apache.groovy:groovy-all:4.0.10"
+    testImplementation "org.apache.groovy:groovy-all:4.0.12"
     testImplementation "org.spockframework:spock-core:2.3-groovy-4.0"
     testRuntimeOnly "cglib:cglib-nodep:3.3.0"
     testRuntimeOnly "org.objenesis:objenesis:3.3"
@@ -39,4 +40,7 @@ dependencies {
     testImplementation 'org.springframework:spring-test:5.3.25'
     testRuntimeOnly 'org.springframework:spring-web:5.3.25'
     testImplementation 'com.google.guava:guava:31.1-jre'
+    testImplementation 'javax.servlet:javax.servlet-api:4.0.1'
+    testImplementation 'javax.websocket:javax.websocket-api:1.1'
+    testImplementation 'javax.websocket:javax.websocket-client-api:1.1'
 }
