@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ev
 
-BRANCH="${GITHUB_REF##*/}"
+FLAVOUR="${1}"
 
 getVersion() {
   ./gradlew properties -q | grep -E "^version" | awk '{print $2}' | tr -d '[:space:]'
@@ -13,10 +13,10 @@ removeSnapshots() {
 
 commitRelease() {
   local APP_VERSION
-  if "${BRANCH}" == "master"; then
+  if [ -z "${FLAVOUR}" ]; then
     APP_VERSION=$(getVersion)
   else
-    APP_VERSION=$(getVersion)-"${BRANCH}"
+    APP_VERSION=$(getVersion)-"${FLAVOUR}"
   fi
   git commit -a -m "Update version for release"
   git tag -a "v${APP_VERSION}" -m "Tag release version"

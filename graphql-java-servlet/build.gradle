@@ -16,9 +16,9 @@ dependencies {
     api(project(':graphql-java-kickstart'))
 
     // Servlet
-    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
-    compileOnly 'jakarta.websocket:jakarta.websocket-api:2.1.0'
-    compileOnly 'jakarta.websocket:jakarta.websocket-client-api:2.1.0'
+    compileOnly "jakarta.servlet:jakarta.servlet-api:6.0.0"
+    compileOnly "jakarta.websocket:jakarta.websocket-api:2.1.0"
+    compileOnly "jakarta.websocket:jakarta.websocket-client-api:2.1.0"
     implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"
 
     // OSGi
@@ -37,10 +37,10 @@ dependencies {
     testRuntimeOnly "cglib:cglib-nodep:3.3.0"
     testRuntimeOnly "org.objenesis:objenesis:3.3"
     testImplementation "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
-    testImplementation 'org.springframework:spring-test:6.0.9'
-    testRuntimeOnly 'org.springframework:spring-web:6.0.9'
+    testImplementation "org.springframework:spring-test:6.0.9"
+    testRuntimeOnly "org.springframework:spring-web:6.0.9"
     testImplementation 'com.google.guava:guava:31.1-jre'
-    testImplementation 'jakarta.servlet:jakarta.servlet-api:6.0.0'
-    testImplementation 'jakarta.websocket:jakarta.websocket-api:2.1.0'
-    testImplementation 'jakarta.websocket:jakarta.websocket-client-api:2.1.0'
+    testImplementation "jakarta.servlet:jakarta.servlet-api:6.0.0"
+    testImplementation "jakarta.websocket:jakarta.websocket-api:2.1.0"
+    testImplementation "jakarta.websocket:jakarta.websocket-client-api:2.1.0"
 }

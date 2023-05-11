@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MODULE_SUFFIX="${GITHUB_REF##*/}"
+MODULE_SUFFIX="${1}"
 
 addSuffix() {
   local result

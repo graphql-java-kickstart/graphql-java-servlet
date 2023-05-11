@@ -76,6 +76,11 @@ subprojects {
         targetCompatibility = TARGET_COMPATIBILITY
     }
 
+    compileTestJava {
+        sourceCompatibility = 17
+        targetCompatibility = 17
+    }
+
     compileJava.dependsOn(processResources)
 
     test {

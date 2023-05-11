@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ev
 
-BRANCH="${GITHUB_REF##*/}"
+FLAVOUR="${1}"
 
 removeSnapshots() {
   sed -i 's/-SNAPSHOT//' gradle.properties
@@ -10,8 +10,8 @@ removeSnapshots() {
 echo "Publishing release to Maven Central"
 removeSnapshots
 
-if [[ "${BRANCH}" != "master" ]]; then
-  .github/add-module-suffix.sh
+if [ -n "${FLAVOUR}" ]; then
+  .github/add-module-suffix.sh $FLAVOUR
 fi
 
 ./gradlew clean build publishToSonatype closeAndReleaseSonatypeStagingRepository
