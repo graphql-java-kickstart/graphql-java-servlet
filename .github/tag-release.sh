@@ -1,8 +1,6 @@
 #!/bin/bash
 set -ev
 
-FLAVOUR="${1}"
-
 getVersion() {
   ./gradlew properties -q | grep -E "^version" | awk '{print $2}' | tr -d '[:space:]'
 }
@@ -13,11 +11,7 @@ removeSnapshots() {
 
 commitRelease() {
   local APP_VERSION
-  if [ -z "${FLAVOUR}" ]; then
-    APP_VERSION=$(getVersion)
-  else
-    APP_VERSION=$(getVersion)-"${FLAVOUR}"
-  fi
+  APP_VERSION=$(getVersion)
   git commit -a -m "Update version for release"
   git tag -a "v${APP_VERSION}" -m "Tag release version"
 }

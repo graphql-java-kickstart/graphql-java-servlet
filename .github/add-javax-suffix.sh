@@ -1,7 +1,5 @@
 #!/bin/bash
 
-MODULE_SUFFIX="${1}"
-
 addSuffix() {
   local result
   result=$(grep include settings.gradle | awk '{print $2}' | tr -d "'" | tr -d ':')
@@ -13,11 +11,11 @@ addSuffix() {
 
 updateLocalDependencies() {
   for module in "${modules[@]}"; do
-    cp -rf "$module" "$module"-"$MODULE_SUFFIX"
+    cp -rf "$module" "$module"-javax
     rm -rf "$module"
 
     for dependency in "${modules[@]}"; do
-      sed -i -E "s/project\(('|\"):${dependency}('|\")\)/project\(':${dependency}-${MODULE_SUFFIX}'\)/" "$module"-"$MODULE_SUFFIX"/build.gradle
+      sed -i -E "s/project\(('|\"):${dependency}('|\")\)/project\(':${dependency}-javax'\)/" "$module"-"javax"/build.gradle
     done
   done
 
@@ -26,14 +24,14 @@ updateLocalDependencies() {
 
 updateGradleSettings() {
   for module in "${modules[@]}"; do
-    echo "Replace ${module} with ${module}-${MODULE_SUFFIX} in settings.gradle"
-    sed -i -E "s/('|\"):${module}('|\")/':${module}-${MODULE_SUFFIX}'/" settings.gradle
+    echo "Replace ${module} with ${module}-javax in settings.gradle"
+    sed -i -E "s/('|\"):${module}('|\")/':${module}-javax'/" settings.gradle
   done
 
   cat settings.gradle
 }
 
-echo "Add suffix '-$MODULE_SUFFIX' to modules"
+echo "Add suffix -javax to modules"
 addSuffix
 
 ls -lh

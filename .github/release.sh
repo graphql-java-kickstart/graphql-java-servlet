@@ -10,8 +10,8 @@ removeSnapshots() {
 echo "Publishing release to Maven Central"
 removeSnapshots
 
-if [ -n "${FLAVOUR}" ]; then
-  .github/add-module-suffix.sh $FLAVOUR
+if [ "${FLAVOUR}" == 'javax' ]; then
+  .github/add-javax-suffix.sh
 fi
 
 ./gradlew clean build publishToSonatype closeAndReleaseSonatypeStagingRepository
