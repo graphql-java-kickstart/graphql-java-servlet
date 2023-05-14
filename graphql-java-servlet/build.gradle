@@ -16,7 +16,7 @@ dependencies {
     api(project(':graphql-java-kickstart'))
 
     // Servlet
-    api 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+    api 'jakarta.servlet:jakarta.servlet-api:5.0.0'
     api 'jakarta.websocket:jakarta.websocket-api:2.1.0'
     api 'jakarta.websocket:jakarta.websocket-client-api:2.1.0'
     implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"
@@ -40,4 +40,7 @@ dependencies {
     testImplementation 'org.springframework:spring-test:6.0.7'
     testRuntimeOnly 'org.springframework:spring-web:6.0.7'
     testImplementation 'com.google.guava:guava:31.1-jre'
+
+    // Jakarta Servlet API 6.x required only for tests
+    testImplementation "jakarta.servlet:jakarta.servlet-api:6.0.0"
 }
