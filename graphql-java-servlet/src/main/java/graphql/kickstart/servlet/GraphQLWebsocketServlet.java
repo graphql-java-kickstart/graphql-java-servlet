@@ -117,9 +117,6 @@ public class GraphQLWebsocketServlet extends Endpoint {
   }
 
   public GraphQLWebsocketServlet(
-      GraphQLInvoker graphQLInvoker,
-      GraphQLSubscriptionInvocationInputFactory invocationInputFactory,
-      GraphQLObjectMapper graphQLObjectMapper,
       List<SubscriptionProtocolFactory> subscriptionProtocolFactory,
       SubscriptionProtocolFactory fallbackSubscriptionProtocolFactory) {
 
