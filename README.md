@@ -19,7 +19,20 @@ This project wraps the Java implementation of GraphQL provided by [GraphQL Java]
 See [GraphQL Java documentation](https://www.graphql-java.com/documentation/latest/) for more in depth details
 regarding GraphQL Java itself. 
 
-We try to stay up to date with GraphQL Java as much as possible. See [gradle.properties](gradle.properties) to see currently supported versions.
+We try to stay up to date with GraphQL Java as much as possible maintaining the retro-compatibility
+with javax and Springframework 5.
+
+On each release we publish two flavours of this project:
+ - the main one is using `jakarta` and Springframework `6.*` 
+ - the legacy one is using `javax` and Springframework `5.*`
+
+On maven central you can distinguish them from the version because the `javax` flavor has the 
+suffix `-javax`.
+
+Both of them also supports legacy projects that can compile with older JDK versions: the oldest
+supported one is the `11`.
+
+See [gradle.properties](gradle.properties) to see currently supported versions.
 
 ## Installation and getting started
 
