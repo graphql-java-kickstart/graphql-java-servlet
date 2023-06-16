@@ -11,11 +11,11 @@ addSuffix() {
 
 updateLocalDependencies() {
   for module in "${modules[@]}"; do
-    cp -rf "$module" "$module"-javax
+    cp -rf "$module" "$module"-jakarta5
     rm -rf "$module"
 
     for dependency in "${modules[@]}"; do
-      sed -i -E "s/project\(('|\"):${dependency}('|\")\)/project\(':${dependency}-javax'\)/" "$module"-"javax"/build.gradle
+      sed -i -E "s/project\(('|\"):${dependency}('|\")\)/project\(':${dependency}-jakarta5'\)/" "$module"-"jakarta5"/build.gradle
     done
   done
 
@@ -24,14 +24,14 @@ updateLocalDependencies() {
 
 updateGradleSettings() {
   for module in "${modules[@]}"; do
-    echo "Replace ${module} with ${module}-javax in settings.gradle"
-    sed -i -E "s/('|\"):${module}('|\")/':${module}-javax'/" settings.gradle
+    echo "Replace ${module} with ${module}-jakarta5 in settings.gradle"
+    sed -i -E "s/('|\"):${module}('|\")/':${module}-jakarta5'/" settings.gradle
   done
 
   cat settings.gradle
 }
 
-echo "Add suffix -javax to modules"
+echo "Add suffix -jakarta5 to modules"
 addSuffix
 
 ls -lh

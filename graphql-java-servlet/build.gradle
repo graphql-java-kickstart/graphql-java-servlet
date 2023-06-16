@@ -16,7 +16,7 @@ dependencies {
     api(project(':graphql-java-kickstart'))
 
     // Servlet
-    compileOnly "jakarta.servlet:jakarta.servlet-api:6.0.0"
+    compileOnly "jakarta.servlet:jakarta.servlet-api:5.0.0"
     compileOnly "jakarta.websocket:jakarta.websocket-api:2.1.0"
     compileOnly "jakarta.websocket:jakarta.websocket-client-api:2.1.0"
     implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"

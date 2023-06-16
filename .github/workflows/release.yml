@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
 
-  test-jakarta:
+  test-jakarta5:
     name: Test run jakarta
     needs: validation
     runs-on: ubuntu-latest
@@ -37,9 +37,9 @@ jobs:
       - name: Gradle Check
         run: ./gradlew --info check
 
-  build-jakarta:
+  build-jakarta5:
     name: Publish release jakarta
-    needs: test-jakarta
+    needs: test-jakarta5
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -73,98 +73,3 @@ jobs:
           OSS_USER_TOKEN_KEY: ${{ secrets.OSS_USER_TOKEN_KEY }}
           OSS_USER_TOKEN_PASS: ${{ secrets.OSS_USER_TOKEN_PASS }}
         run: .github/release.sh
-
-  test-javax:
-    name: Test run javax
-    needs: validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 11
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        env:
-          java-version: 11
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.java-version }}-gradle-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-      - name: Replace jakarta with javax
-        run: .github/replaceJakartaWithJavax.sh
-      - name: Gradle Check
-        run: ./gradlew --info check
-
-  build-javax:
-    name: Publish release javax
-    needs: test-javax
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 11
-
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        env:
-          java-version: 11
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.java-version }}-gradle-
-      - name: Prepare environment
-        env:
-          GPG_KEY_CONTENTS: ${{ secrets.GPG_KEY_CONTENTS }}
-          SIGNING_SECRET_KEY_RING_FILE: ${{ secrets.GPG_SIGNING_SECRET_KEY_RING_FILE }}
-        run: sudo bash -c "echo '$GPG_KEY_CONTENTS' | base64 -d > '$SIGNING_SECRET_KEY_RING_FILE'"
-      - name: Replace jakarta with javax
-        run: .github/replaceJakartaWithJavax.sh
-      - name: Publish release
-        env:
-          SIGNING_KEY_ID: ${{ secrets.GPG_SIGNING_KEY_ID }}
-          SIGNING_PASSWORD: ${{ secrets.GPG_SIGNING_PASSWORD }}
-          SIGNING_SECRET_KEY_RING_FILE: ${{ secrets.GPG_SIGNING_SECRET_KEY_RING_FILE }}
-          OSS_USER_TOKEN_KEY: ${{ secrets.OSS_USER_TOKEN_KEY }}
-          OSS_USER_TOKEN_PASS: ${{ secrets.OSS_USER_TOKEN_PASS }}
-        run: .github/release.sh javax
-  tag:
-    name: Tag release
-    needs: [ build-jakarta, build-javax ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 17
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        env:
-          java-version: 17
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.java-version }}-gradle-
-      - name: Tag release
-        run: .github/tag-release.sh

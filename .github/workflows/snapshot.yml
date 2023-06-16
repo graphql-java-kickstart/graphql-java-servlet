@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
 
-  test-jakarta:
+  test-jakarta5:
     name: Test run jakarta
     needs: validation
     runs-on: ubuntu-latest
@@ -40,7 +40,7 @@ jobs:
       - name: Gradle Check
         run: ./gradlew --info check
 
-  build-jakarta:
+  build-jakarta5:
     name: Publish snapshot jakarta
     needs: test-jakarta
     runs-on: ubuntu-latest
@@ -65,72 +65,6 @@ jobs:
             ${{ runner.os }}-${{ env.java-version }}-gradle-
       - name: Make gradlew executable
         run: chmod +x ./gradlew
-      - name: Gradle Publish Snapshot
-        if: env.OSS_USER_TOKEN_KEY != null
-        env:
-          OSS_USER_TOKEN_KEY: ${{ secrets.OSS_USER_TOKEN_KEY }}
-          OSS_USER_TOKEN_PASS: ${{ secrets.OSS_USER_TOKEN_PASS }}
-        run: ./gradlew clean build publish -x test
-
-  test-javax:
-    name: Test run javax
-    needs: validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 11
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        env:
-          java-version: 11
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.java-version }}-gradle-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-      - name: Replace jakarta with javax
-        run: .github/replaceJakartaWithJavax.sh
-      - name: Gradle Check
-        run: ./gradlew --info check
-
-  build-javax:
-    name: Publish snapshot javax
-    needs: test-javax
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 11
-      - name: Cache Gradle
-        uses: actions/cache@v3
-        env:
-          java-version: 11
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-${{ env.java-version }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ env.java-version }}-gradle-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-      - name: Replace jakarta with javax
-        run: .github/replaceJakartaWithJavax.sh
-      - name: Add suffix to modules
-        run: .github/add-javax-suffix.sh
       - name: Gradle Publish Snapshot
         if: env.OSS_USER_TOKEN_KEY != null
         env:
