@@ -17,8 +17,8 @@ dependencies {
 
     // Servlet
     compileOnly "jakarta.servlet:jakarta.servlet-api:6.0.0"
-    compileOnly "jakarta.websocket:jakarta.websocket-api:2.1.0"
-    compileOnly "jakarta.websocket:jakarta.websocket-client-api:2.1.0"
+    compileOnly "jakarta.websocket:jakarta.websocket-api:2.1.1"
+    compileOnly "jakarta.websocket:jakarta.websocket-client-api:2.1.1"
     implementation "org.slf4j:slf4j-api:$LIB_SLF4J_VER"
 
     // OSGi
@@ -41,6 +41,6 @@ dependencies {
     testRuntimeOnly "org.springframework:spring-web:6.0.10"
     testImplementation 'com.google.guava:guava:32.0.1-jre'
     testImplementation "jakarta.servlet:jakarta.servlet-api:6.0.0"
-    testImplementation "jakarta.websocket:jakarta.websocket-api:2.1.0"
-    testImplementation "jakarta.websocket:jakarta.websocket-client-api:2.1.0"
+    testImplementation "jakarta.websocket:jakarta.websocket-api:2.1.1"
+    testImplementation "jakarta.websocket:jakarta.websocket-client-api:2.1.1"
 }
