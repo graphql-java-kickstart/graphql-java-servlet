@@ -70,7 +70,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
     servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getReadOnlySchema().getQueryType().getFieldDefinitions().get(0).name == "_empty"
   }
 
-  static class TestMutationProvider implements GraphQLMutationProvider {
+  static class TestMutationProvider implements GraphQLMutationProvider, GraphQLProvider {
     @Override
     Collection<GraphQLFieldDefinition> getMutations() {
       return Collections.singletonList(newFieldDefinition().name("int").type(GraphQLInt).staticValue(1).build())
@@ -105,7 +105,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
     servlet.getConfiguration().getInvocationInputFactory().getSchemaProvider().getSchema().getMutationType() == null
   }
 
-  static class TestSubscriptionProvider implements GraphQLSubscriptionProvider {
+  static class TestSubscriptionProvider implements GraphQLSubscriptionProvider, GraphQLProvider {
     @Override
     Collection<GraphQLFieldDefinition> getSubscriptions() {
       return Collections.singletonList(newFieldDefinition().name("subscription").type(new GraphQLAnnotations().object(Subscription.class)).build())
