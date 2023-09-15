@@ -265,7 +265,7 @@ public class GraphQLWebsocketServlet extends Endpoint {
     return isShutDown.get();
   }
 
-  private SubscriptionProtocolFactory getSubscriptionProtocolFactory(List<String> accept) {
+  public SubscriptionProtocolFactory getSubscriptionProtocolFactory(List<String> accept) {
     for (String protocol : accept) {
       for (SubscriptionProtocolFactory subscriptionProtocolFactory :
           subscriptionProtocolFactories) {

@@ -1,6 +1,7 @@
 package graphql.kickstart.servlet;
 
 import graphql.schema.GraphQLSchema;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /** @author Michiel Oliemans */
 public abstract class GraphQLHttpServlet extends AbstractGraphQLHttpServlet {
