@@ -299,6 +299,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
     when:
     servlet.unsetContextBuilder(contextBuilder)
+    servlet.updateSchema()
     then:
     servlet.configuration.invocationInputFactory.create(request).executionInput.context instanceof DefaultGraphQLContext
   }
@@ -319,6 +320,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
     when:
     servlet.unsetRootObjectBuilder(rootObjectBuilder)
+    servlet.updateSchema()
     then:
     servlet.configuration.invocationInputFactory.create(request).executionInput.root != rootObject
   }
@@ -339,6 +341,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
 
     when:
     servlet.unsetExecutionStrategyProvider(executionStrategy)
+    servlet.updateSchema()
     def invocationInput2 = servlet.configuration.invocationInputFactory.create(request)
     servlet.configuration.graphQLInvoker.query(invocationInput2)
 

@@ -15,6 +15,7 @@ import graphql.kickstart.servlet.core.DefaultGraphQLRootObjectBuilder;
 import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder;
 import graphql.kickstart.servlet.osgi.GraphQLCodeRegistryProvider;
+import graphql.kickstart.servlet.osgi.GraphQLConfigurationProvider;
 import graphql.kickstart.servlet.osgi.GraphQLMutationProvider;
 import graphql.kickstart.servlet.osgi.GraphQLProvider;
 import graphql.kickstart.servlet.osgi.GraphQLQueryProvider;
@@ -40,6 +41,7 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
   public OsgiGraphQLHttpServlet() {
     schemaBuilder.updateSchema();
+    schemaBuilder.updateConfiguration();
   }
 
   @Activate
@@ -52,13 +54,21 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     schemaBuilder.deactivate();
   }
 
+  public OsgiSchemaBuilder getSchemaBuilder() {
+    return schemaBuilder;
+  }
+
   @Override
   protected GraphQLConfiguration getConfiguration() {
-    return schemaBuilder.buildConfiguration();
+    return schemaBuilder.getConfiguration();
   }
 
   protected void updateSchema() {
     schemaBuilder.updateSchema();
+  }
+
+  protected void updateConfiguration() {
+    schemaBuilder.updateConfiguration();
   }
 
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -78,7 +88,11 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     if (provider instanceof GraphQLCodeRegistryProvider) {
       schemaBuilder.setCodeRegistryProvider((GraphQLCodeRegistryProvider) provider);
     }
+    if (provider instanceof GraphQLConfigurationProvider) {
+      schemaBuilder.setConfigurationBuilderProvider((GraphQLConfigurationProvider) provider);
+    }
     updateSchema();
+    updateConfiguration();
   }
 
   public void unbindProvider(GraphQLProvider provider) {
@@ -96,6 +110,9 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
     }
     if (provider instanceof GraphQLCodeRegistryProvider) {
       schemaBuilder.setCodeRegistryProvider(() -> GraphQLCodeRegistry.newCodeRegistry().build());
+    }
+    if (provider instanceof GraphQLConfigurationProvider) {
+      schemaBuilder.setConfigurationBuilderProvider(GraphQLConfiguration.Builder::new);
     }
     updateSchema();
   }
@@ -147,28 +164,34 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
   @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
   public void bindServletListener(GraphQLServletListener listener) {
     schemaBuilder.add(listener);
+    updateConfiguration();
   }
 
   public void unbindServletListener(GraphQLServletListener listener) {
     schemaBuilder.remove(listener);
+    updateConfiguration();
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
   public void setContextBuilder(GraphQLServletContextBuilder contextBuilder) {
     schemaBuilder.setContextBuilder(contextBuilder);
+    updateConfiguration();
   }
 
   public void unsetContextBuilder(GraphQLServletContextBuilder contextBuilder) {
     schemaBuilder.setContextBuilder(new DefaultGraphQLServletContextBuilder());
+    updateConfiguration();
   }
 
   @Reference(cardinality = ReferenceCardinality.OPTIONAL, policy = ReferencePolicy.DYNAMIC)
   public void setRootObjectBuilder(GraphQLServletRootObjectBuilder rootObjectBuilder) {
     schemaBuilder.setRootObjectBuilder(rootObjectBuilder);
+    updateConfiguration();
   }
 
   public void unsetRootObjectBuilder(GraphQLRootObjectBuilder rootObjectBuilder) {
     schemaBuilder.setRootObjectBuilder(new DefaultGraphQLRootObjectBuilder());
+    updateConfiguration();
   }
 
   @Reference(
@@ -177,10 +200,12 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
       policyOption = ReferencePolicyOption.GREEDY)
   public void setExecutionStrategyProvider(ExecutionStrategyProvider provider) {
     schemaBuilder.setExecutionStrategyProvider(provider);
+    updateConfiguration();
   }
 
   public void unsetExecutionStrategyProvider(ExecutionStrategyProvider provider) {
     schemaBuilder.setExecutionStrategyProvider(new DefaultExecutionStrategyProvider());
+    updateConfiguration();
   }
 
   @Reference(
@@ -189,10 +214,12 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
       policyOption = ReferencePolicyOption.GREEDY)
   public void setInstrumentationProvider(InstrumentationProvider provider) {
     schemaBuilder.setInstrumentationProvider(provider);
+    updateConfiguration();
   }
 
   public void unsetInstrumentationProvider(InstrumentationProvider provider) {
     schemaBuilder.setInstrumentationProvider(new NoOpInstrumentationProvider());
+    updateConfiguration();
   }
 
   @Reference(
@@ -201,10 +228,12 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
       policyOption = ReferencePolicyOption.GREEDY)
   public void setErrorHandler(GraphQLErrorHandler errorHandler) {
     schemaBuilder.setErrorHandler(errorHandler);
+    updateConfiguration();
   }
 
   public void unsetErrorHandler(GraphQLErrorHandler errorHandler) {
     schemaBuilder.setErrorHandler(new DefaultGraphQLErrorHandler());
+    updateConfiguration();
   }
 
   @Reference(
@@ -213,10 +242,12 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
       policyOption = ReferencePolicyOption.GREEDY)
   public void setPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
     schemaBuilder.setPreparsedDocumentProvider(preparsedDocumentProvider);
+    updateConfiguration();
   }
 
   public void unsetPreparsedDocumentProvider(PreparsedDocumentProvider preparsedDocumentProvider) {
     schemaBuilder.setPreparsedDocumentProvider(NoOpPreparsedDocumentProvider.INSTANCE);
+    updateConfiguration();
   }
 
   @Reference(
@@ -230,6 +261,20 @@ public class OsgiGraphQLHttpServlet extends AbstractGraphQLHttpServlet {
 
   public void unbindCodeRegistryProvider(GraphQLCodeRegistryProvider graphQLCodeRegistryProvider) {
     schemaBuilder.setCodeRegistryProvider(() -> GraphQLCodeRegistry.newCodeRegistry().build());
+    updateSchema();
+  }
+
+  @Reference(
+      cardinality = ReferenceCardinality.OPTIONAL,
+      policy = ReferencePolicy.DYNAMIC,
+      policyOption = ReferencePolicyOption.GREEDY)
+  public void bindConfigurationProvider(GraphQLConfigurationProvider graphQLConfigurationProvider) {
+    schemaBuilder.setConfigurationBuilderProvider(graphQLConfigurationProvider);
+    updateSchema();
+  }
+
+  public void unbindConfigurationProvider(GraphQLConfigurationProvider graphQLConfigurationProvider) {
+    schemaBuilder.setConfigurationBuilderProvider(GraphQLConfiguration.Builder::new);
     updateSchema();
   }
 

@@ -18,9 +18,6 @@ import graphql.schema.GraphQLSchema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.Getter;
 
@@ -67,12 +64,12 @@ public class GraphQLConfiguration {
   }
 
   public static GraphQLConfiguration.Builder with(GraphQLSchemaServletProvider schemaProvider) {
-    return new Builder(GraphQLInvocationInputFactory.newBuilder(schemaProvider));
+    return new Builder().with(GraphQLInvocationInputFactory.newBuilder(schemaProvider));
   }
 
   public static GraphQLConfiguration.Builder with(
       GraphQLInvocationInputFactory invocationInputFactory) {
-    return new Builder(invocationInputFactory);
+    return new Builder().with(invocationInputFactory);
   }
 
   public GraphQLInvocationInputFactory getInvocationInputFactory() {
@@ -144,18 +141,8 @@ public class GraphQLConfiguration {
     private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier =
         NoOpBatchInputPreProcessor::new;
     private GraphQLResponseCacheManager responseCacheManager;
-    private int asyncCorePoolSize = 10;
-    private int asyncMaxPoolSize = 200;
     private Executor asyncExecutor;
     private AsyncTaskDecorator asyncTaskDecorator;
-
-    private Builder(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
-      this.invocationInputFactoryBuilder = invocationInputFactoryBuilder;
-    }
-
-    private Builder(GraphQLInvocationInputFactory invocationInputFactory) {
-      this.invocationInputFactory = invocationInputFactory;
-    }
 
     public Builder with(GraphQLInvoker graphQLInvoker) {
       this.graphQLInvoker = graphQLInvoker;
@@ -183,17 +170,39 @@ public class GraphQLConfiguration {
       return this;
     }
 
+    public Builder with(GraphQLInvocationInputFactory.Builder invocationInputFactoryBuilder) {
+      if (this.invocationInputFactoryBuilder != null) {
+        throw new IllegalArgumentException("Cannot set invocationInputFactoryBuilder if invocationInputFactory is used");
+      }
+      this.invocationInputFactoryBuilder = invocationInputFactoryBuilder;
+      return this;
+    }
+
+    public Builder with(GraphQLInvocationInputFactory invocationInputFactory) {
+      if (this.invocationInputFactoryBuilder != null) {
+        throw new IllegalArgumentException("Cannot set invocationInputFactory if invocationInputFactoryBuilder is used");
+      }
+      this.invocationInputFactory = invocationInputFactory;
+      return this;
+    }
+
     public Builder with(GraphQLServletContextBuilder contextBuilder) {
+      if (this.invocationInputFactoryBuilder == null) {
+        throw new IllegalArgumentException("Cannot use a contextBuilder without setting invocationInputFactoryBuilder first");
+      }
       this.invocationInputFactoryBuilder.withGraphQLContextBuilder(contextBuilder);
       return this;
     }
 
     public Builder with(GraphQLServletRootObjectBuilder rootObjectBuilder) {
+      if (this.invocationInputFactoryBuilder == null) {
+        throw new IllegalArgumentException("Cannot use a rootObjectBuilder without setting invocationInputFactoryBuilder first");
+      }
       this.invocationInputFactoryBuilder.withGraphQLRootObjectBuilder(rootObjectBuilder);
       return this;
     }
 
-    public Builder with(long subscriptionTimeout) {
+    public Builder subscriptionTimeout(long subscriptionTimeout) {
       this.subscriptionTimeout = subscriptionTimeout;
       return this;
     }
@@ -205,16 +214,6 @@ public class GraphQLConfiguration {
 
     public Builder with(Executor asyncExecutor) {
       this.asyncExecutor = asyncExecutor;
-      return this;
-    }
-
-    public Builder asyncCorePoolSize(int asyncCorePoolSize) {
-      this.asyncCorePoolSize = asyncCorePoolSize;
-      return this;
-    }
-
-    public Builder asyncMaxPoolSize(int asyncMaxPoolSize) {
-      this.asyncMaxPoolSize = asyncMaxPoolSize;
       return this;
     }
 
@@ -249,20 +248,12 @@ public class GraphQLConfiguration {
       return this;
     }
 
-    private Executor getAsyncExecutor() {
-      if (asyncExecutor != null) {
-        return asyncExecutor;
-      }
-      return new ThreadPoolExecutor(
-          asyncCorePoolSize,
-          asyncMaxPoolSize,
-          60,
-          TimeUnit.SECONDS,
-          new LinkedBlockingQueue<>(Integer.MAX_VALUE));
-    }
-
     private Executor getAsyncTaskExecutor() {
-      return new AsyncTaskExecutor(getAsyncExecutor(), asyncTaskDecorator);
+      if (asyncExecutor != null) {
+        return new AsyncTaskExecutor(asyncExecutor, asyncTaskDecorator);
+      }
+
+      return null;
     }
 
     public GraphQLConfiguration build() {
