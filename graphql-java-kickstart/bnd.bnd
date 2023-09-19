@@ -1,2 +1,4 @@
 Export-Package: graphql.kickstart.*
-Import-Package: !lombok,*
+Import-Package: !lombok,\
+  graphql.*;version="[20.2,22)",\
+  *
