@@ -1,4 +1,14 @@
 Export-Package: graphql.kickstart.*
 Import-Package: !lombok,\
-  graphql.*;version="[20.2,22)",\
+  graphql;version="[20.2,22)",\
+  graphql.execution;version="[20.2,22)",\
+  graphql.execution.instrumentation;version="[20.2,22)",\
+  graphql.execution.instrumentation.dataloader;version="[20.2,22)",\
+  graphql.execution.instrumentation.parameters;version="[20.2,22)",\
+  graphql.execution.preparsed;version="[20.2,22)",\
+  graphql.execution.reactive;version="[20.2,22)",\
+  graphql.introspection;version="[20.2,22)",\
+  graphql.language;version="[20.2,22)",\
+  graphql.parser;version="[20.2,22)",\
+  graphql.schema;version="[20.2,22)",\
   *
