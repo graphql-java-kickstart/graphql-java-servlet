@@ -8,10 +8,6 @@ apply plugin: 'groovy'
 apply plugin: 'java-library-distribution'
 apply plugin: 'biz.aQute.bnd.builder'
 
-jar {
-    bndfile = 'bnd.bnd'
-}
-
 dependencies {
     api(project(':graphql-java-kickstart'))
 

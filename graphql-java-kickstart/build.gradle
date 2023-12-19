@@ -1,9 +1,4 @@
 apply plugin: 'biz.aQute.bnd.builder'
-
-jar {
-    bndfile = 'bnd.bnd'
-}
-
 apply plugin: 'java-library-distribution'
 
 dependencies {
