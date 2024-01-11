@@ -37,8 +37,8 @@ dependencies {
     testRuntimeOnly "net.bytebuddy:byte-buddy:1.14.11"
     testRuntimeOnly "org.objenesis:objenesis:3.3"
     testImplementation "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
-    testImplementation "org.springframework:spring-test:6.1.2"
-    testRuntimeOnly "org.springframework:spring-web:6.1.2"
+    testImplementation "org.springframework:spring-test:6.1.3"
+    testRuntimeOnly "org.springframework:spring-web:6.1.3"
     testImplementation 'com.google.guava:guava:33.0.0-jre'
     testImplementation "jakarta.servlet:jakarta.servlet-api:6.0.0"
     testImplementation "jakarta.websocket:jakarta.websocket-api:2.1.1"
