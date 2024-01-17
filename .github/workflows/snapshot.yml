@@ -25,7 +25,7 @@ jobs:
           distribution: 'zulu'
           java-version: 17
       - name: Cache Gradle
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           java-version: 17
         with:
@@ -53,7 +53,7 @@ jobs:
           distribution: 'zulu'
           java-version: 17
       - name: Cache Gradle
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           java-version: 17
         with:
@@ -85,7 +85,7 @@ jobs:
           distribution: 'zulu'
           java-version: 11
       - name: Cache Gradle
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           java-version: 11
         with:
@@ -115,7 +115,7 @@ jobs:
           distribution: 'zulu'
           java-version: 11
       - name: Cache Gradle
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           java-version: 11
         with:
@@ -152,13 +152,13 @@ jobs:
           distribution: 'zulu'
           java-version: 17
       - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Cache Gradle packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
