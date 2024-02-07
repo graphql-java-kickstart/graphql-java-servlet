@@ -265,6 +265,43 @@ class OsgiGraphQLHttpServletSpec extends Specification {
     null == servlet.configuration.invocationInputFactory.schemaProvider.schema.getType("Upload")
   }
 
+  static class TestDirectiveProvider implements GraphQLDirectiveProvider {
+    @Override
+    Set<GraphQLDirective> getDirectives() {
+      return new HashSet<>(Arrays.asList(GraphQLDirective.newDirective().name("myDirective").build()));
+    }
+  }
+
+  def "directive provider adds directives"() {
+    setup:
+    OsgiGraphQLHttpServlet servlet = new OsgiGraphQLHttpServlet()
+    TestDirectiveProvider directiveProvider = new TestDirectiveProvider()
+
+    when:
+    servlet.bindDirectivesProvider(directiveProvider)
+
+    then:
+    def directive = servlet.configuration.invocationInputFactory.schemaProvider.schema.getDirective("myDirective")
+    directive != null
+    directive.name == "myDirective"
+
+    when:
+    servlet.unbindDirectivesProvider(directiveProvider)
+
+    then:
+    null == servlet.configuration.invocationInputFactory.schemaProvider.schema.getDirective("myDirective")
+
+    when:
+    servlet.bindProvider(directiveProvider)
+    then:
+    servlet.configuration.invocationInputFactory.schemaProvider.schema.getDirective("myDirective").name == "myDirective"
+
+    when:
+    servlet.unbindProvider(directiveProvider)
+    then:
+    null == servlet.configuration.invocationInputFactory.schemaProvider.schema.getType("myDirective")
+  }
+
   def "servlet listener is bound and unbound"() {
     setup:
     def servlet = new OsgiGraphQLHttpServlet()
