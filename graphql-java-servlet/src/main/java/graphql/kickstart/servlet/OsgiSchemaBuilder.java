@@ -25,11 +25,13 @@ import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import graphql.kickstart.servlet.osgi.GraphQLCodeRegistryProvider;
 import graphql.kickstart.servlet.osgi.GraphQLFieldProvider;
+import graphql.kickstart.servlet.osgi.GraphQLDirectiveProvider;
 import graphql.kickstart.servlet.osgi.GraphQLMutationProvider;
 import graphql.kickstart.servlet.osgi.GraphQLQueryProvider;
 import graphql.kickstart.servlet.osgi.GraphQLSubscriptionProvider;
 import graphql.kickstart.servlet.osgi.GraphQLTypesProvider;
 import graphql.schema.GraphQLCodeRegistry;
+import graphql.schema.GraphQLDirective;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLType;
@@ -50,6 +52,7 @@ class OsgiSchemaBuilder {
   private final List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
   private final List<GraphQLSubscriptionProvider> subscriptionProviders = new ArrayList<>();
   private final List<GraphQLTypesProvider> typesProviders = new ArrayList<>();
+  private final List<GraphQLDirectiveProvider> directiveProviders = new ArrayList<>();
   private final List<GraphQLServletListener> listeners = new ArrayList<>();
 
   private GraphQLServletContextBuilder contextBuilder = new DefaultGraphQLServletContextBuilder();
@@ -103,6 +106,7 @@ class OsgiSchemaBuilder {
                 .mutation(buildMutationType())
                 .subscription(buildSubscriptionType())
                 .additionalTypes(buildTypes())
+                .additionalDirectives(buildDirectives())
                 .codeRegistry(codeRegistryProvider.getCodeRegistry())
                 .build());
   }
@@ -159,6 +163,13 @@ class OsgiSchemaBuilder {
     return null;
   }
 
+  private Set<GraphQLDirective> buildDirectives() {
+    return directiveProviders.stream()
+        .map(GraphQLDirectiveProvider::getDirectives)
+        .flatMap(Collection::stream)
+        .collect(toSet());
+  }
+
   void add(GraphQLQueryProvider provider) {
     queryProviders.add(provider);
   }
@@ -175,6 +186,10 @@ class OsgiSchemaBuilder {
     typesProviders.add(provider);
   }
 
+  void add(GraphQLDirectiveProvider provider) {
+    directiveProviders.add(provider);
+  }
+
   void remove(GraphQLQueryProvider provider) {
     queryProviders.remove(provider);
   }
@@ -189,6 +204,10 @@ class OsgiSchemaBuilder {
 
   void remove(GraphQLTypesProvider provider) {
     typesProviders.remove(provider);
+  }
+
+  void remove(GraphQLDirectiveProvider provider) {
+    directiveProviders.remove(provider);
   }
 
   GraphQLSchemaServletProvider getSchemaProvider() {
