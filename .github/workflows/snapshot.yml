@@ -42,7 +42,7 @@ jobs:
 
   build-jakarta5:
     name: Publish snapshot jakarta
-    needs: test-jakarta
+    needs: test-jakarta5
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
