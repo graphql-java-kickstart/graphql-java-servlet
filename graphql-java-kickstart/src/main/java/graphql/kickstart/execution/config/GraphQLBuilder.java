@@ -90,7 +90,7 @@ public class GraphQLBuilder {
     Instrumentation instrumentation = configuredInstrumentationSupplier.get();
     builder.instrumentation(instrumentation);
     if (containsDispatchInstrumentation(instrumentation)) {
-      builder.doNotAddDefaultInstrumentations();
+      builder.doNotAutomaticallyDispatchDataLoader();
     }
     graphQLBuilderConfigurerSupplier.get().configure(builder);
     return builder.build();
