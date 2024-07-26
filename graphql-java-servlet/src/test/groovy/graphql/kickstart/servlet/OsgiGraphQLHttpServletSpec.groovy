@@ -7,6 +7,7 @@ import graphql.annotations.processor.GraphQLAnnotations
 import graphql.execution.instrumentation.InstrumentationState
 import graphql.execution.instrumentation.SimplePerformantInstrumentation
 import graphql.execution.instrumentation.parameters.InstrumentationCreateStateParameters
+import graphql.introspection.Introspection
 import graphql.kickstart.execution.GraphQLRequest
 import graphql.kickstart.execution.config.ExecutionStrategyProvider
 import graphql.kickstart.execution.config.InstrumentationProvider
@@ -268,7 +269,7 @@ class OsgiGraphQLHttpServletSpec extends Specification {
   static class TestDirectiveProvider implements GraphQLDirectiveProvider {
     @Override
     Set<GraphQLDirective> getDirectives() {
-      return new HashSet<>(Arrays.asList(GraphQLDirective.newDirective().name("myDirective").build()));
+      return new HashSet<>(Arrays.asList(GraphQLDirective.newDirective().name("myDirective").validLocation(Introspection.DirectiveLocation.FIELD).build()));
     }
   }
 
