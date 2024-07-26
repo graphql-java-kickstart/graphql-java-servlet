@@ -1,15 +1,12 @@
 package graphql.kickstart.servlet
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import graphql.ExecutionInput
 import graphql.execution.instrumentation.ChainedInstrumentation
 import graphql.execution.instrumentation.Instrumentation
 import graphql.execution.instrumentation.SimplePerformantInstrumentation
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions
 import graphql.kickstart.execution.context.ContextSetting
 import graphql.kickstart.execution.context.DefaultGraphQLContext
 import graphql.kickstart.execution.context.GraphQLKickstartContext
-import graphql.kickstart.execution.instrumentation.ConfigurableDispatchInstrumentation
 import graphql.kickstart.servlet.context.GraphQLServletContextBuilder
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
@@ -127,7 +124,7 @@ class DataLoaderDispatchingSpec extends Specification {
 
   def "batched query with per query context does not batch loads together"() {
     setup:
-    configureServlet(ContextSetting.PER_QUERY_WITH_INSTRUMENTATION)
+    configureServlet(ContextSetting.PER_QUERY)
     request.addParameter('query', '[{ "query": "query { query(arg:\\"test\\") { echo(arg:\\"test\\") { echo(arg:\\"test\\") } }}" }, { "query": "query{query(arg:\\"test\\") { echo (arg:\\"test\\") { echo(arg:\\"test\\")} }}" },' +
         ' { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }, { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }]')
     resetCounters()
@@ -153,7 +150,7 @@ class DataLoaderDispatchingSpec extends Specification {
 
   def "batched query with per request context batches all queries within the request"() {
     setup:
-    servlet = configureServlet(ContextSetting.PER_REQUEST_WITH_INSTRUMENTATION)
+    servlet = configureServlet(ContextSetting.PER_REQUEST)
     request.addParameter('query', '[{ "query": "query { query(arg:\\"test\\") { echo(arg:\\"test\\") { echo(arg:\\"test\\") } }}" }, { "query": "query{query(arg:\\"test\\") { echo (arg:\\"test\\") { echo(arg:\\"test\\")} }}" },' +
         ' { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }, { "query": "query{queryTwo(arg:\\"test\\") { echo (arg:\\"test\\")}}" }]')
     resetCounters()
@@ -193,61 +190,25 @@ class DataLoaderDispatchingSpec extends Specification {
     }
   }
 
-  def "PER_QUERY_WITHOUT_INSTRUMENTATION does not add instrumentation"() {
+  def "PER_QUERY does not add instrumentation"() {
     when:
-    def chainedFromContext = ContextSetting.PER_QUERY_WITHOUT_INSTRUMENTATION
-        .configureInstrumentationForContext(chainedSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
-    def simpleFromContext = ContextSetting.PER_QUERY_WITHOUT_INSTRUMENTATION
-        .configureInstrumentationForContext(simpleSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
+    def chainedFromContext = ContextSetting.PER_QUERY
+        .configureInstrumentationForContext(chainedSupplier, Collections.emptyList())
+    def simpleFromContext = ContextSetting.PER_QUERY
+        .configureInstrumentationForContext(simpleSupplier, Collections.emptyList())
     then:
     simpleInstrumentation == simpleFromContext.get()
     chainedInstrumentation == chainedFromContext.get()
   }
 
-  def "PER_REQUEST_WITHOUT_INSTRUMENTATION does not add instrumentation"() {
+  def "PER_REQUEST_does not add instrumentation"() {
     when:
-    def chainedFromContext = ContextSetting.PER_REQUEST_WITHOUT_INSTRUMENTATION
-        .configureInstrumentationForContext(chainedSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
-    def simpleFromContext = ContextSetting.PER_REQUEST_WITHOUT_INSTRUMENTATION
-        .configureInstrumentationForContext(simpleSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
+    def chainedFromContext = ContextSetting.PER_REQUEST
+        .configureInstrumentationForContext(chainedSupplier, Collections.emptyList())
+    def simpleFromContext = ContextSetting.PER_REQUEST
+        .configureInstrumentationForContext(simpleSupplier, Collections.emptyList())
     then:
     simpleInstrumentation == simpleFromContext.get()
     chainedInstrumentation == chainedFromContext.get()
-  }
-
-  def "PER_QUERY_WITH_INSTRUMENTATION adds instrumentation"() {
-    when:
-    def chainedFromContext = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION
-        .configureInstrumentationForContext(chainedSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
-    def simpleFromContext = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION
-        .configureInstrumentationForContext(simpleSupplier, Collections.emptyList(), DataLoaderDispatcherInstrumentationOptions.newOptions())
-    def fromSimple = unwrapChainedInstrumentations(simpleFromContext.get())
-    def fromChained = unwrapChainedInstrumentations(chainedFromContext.get())
-    then:
-    fromSimple.size() == 2
-    fromSimple.contains(simpleInstrumentation)
-    fromSimple.stream().anyMatch({ inst -> inst instanceof ConfigurableDispatchInstrumentation })
-    fromChained.size() == 2
-    fromChained.contains(simpleInstrumentation)
-    fromChained.stream().anyMatch({ inst -> inst instanceof ConfigurableDispatchInstrumentation })
-  }
-
-  def "PER_REQUEST_WITH_INSTRUMENTATION adds instrumentation"() {
-    setup:
-    ExecutionInput mockInput = ExecutionInput.newExecutionInput().query("query { query(arg:\"test\")").dataLoaderRegistry(new DataLoaderRegistry()).build()
-    when:
-    def chainedFromContext = ContextSetting.PER_REQUEST_WITH_INSTRUMENTATION
-        .configureInstrumentationForContext(chainedSupplier, Collections.singletonList(mockInput), DataLoaderDispatcherInstrumentationOptions.newOptions())
-    def simpleFromContext = ContextSetting.PER_REQUEST_WITH_INSTRUMENTATION
-        .configureInstrumentationForContext(simpleSupplier, Collections.singletonList(mockInput), DataLoaderDispatcherInstrumentationOptions.newOptions())
-    def fromSimple = unwrapChainedInstrumentations(simpleFromContext.get())
-    def fromChained = unwrapChainedInstrumentations(chainedFromContext.get())
-    then:
-    fromSimple.size() == 2
-    fromSimple.contains(simpleInstrumentation)
-    fromSimple.stream().anyMatch({ inst -> inst instanceof ConfigurableDispatchInstrumentation })
-    fromChained.size() == 2
-    fromChained.contains(simpleInstrumentation)
-    fromChained.stream().anyMatch({ inst -> inst instanceof ConfigurableDispatchInstrumentation })
   }
 }
