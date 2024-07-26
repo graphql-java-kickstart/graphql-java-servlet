@@ -45,7 +45,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
 
     return new ExecutionStrategyInstrumentationContext() {
       @Override
-      public void onDispatched(CompletableFuture<ExecutionResult> result) {
+      public void onDispatched() {
         // default empty implementation
       }
 
@@ -110,7 +110,7 @@ public abstract class AbstractTrackingApproach implements TrackingApproach {
     return new InstrumentationContext<Object>() {
 
       @Override
-      public void onDispatched(CompletableFuture result) {
+      public void onDispatched() {
         synchronized (stack) {
           stack.increaseFetchCount(executionId, level);
           stack.setStatus(executionId, dispatchIfNeeded(stack, executionId, level));
