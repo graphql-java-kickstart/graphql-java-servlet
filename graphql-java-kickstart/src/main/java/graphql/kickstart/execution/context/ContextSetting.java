@@ -1,21 +1,12 @@
 package graphql.kickstart.execution.context;
 
-import graphql.ExecutionInput;
-import graphql.execution.ExecutionId;
-import graphql.execution.instrumentation.ChainedInstrumentation;
-import graphql.execution.instrumentation.Instrumentation;
 import graphql.kickstart.execution.GraphQLRequest;
 import graphql.kickstart.execution.input.GraphQLBatchedInvocationInput;
 import graphql.kickstart.execution.input.PerQueryBatchedInvocationInput;
 import graphql.kickstart.execution.input.PerRequestBatchedInvocationInput;
-import graphql.kickstart.execution.instrumentation.FieldLevelTrackingApproach;
-import graphql.kickstart.execution.instrumentation.RequestLevelTrackingApproach;
 import graphql.schema.GraphQLSchema;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import org.dataloader.DataLoaderRegistry;
 
 /**
  * An enum representing possible context settings. These are modeled after Apollo's link settings.
@@ -53,20 +44,5 @@ public enum ContextSetting {
       default:
         throw new ContextSettingNotConfiguredException();
     }
-  }
-
-  /**
-   * Augments the provided instrumentation supplier to also supply the correct dispatching
-   * instrumentation.
-   *
-   * @param instrumentation the instrumentation supplier to augment
-   * @param executionInputs the inputs that will be dispatched by the instrumentation
-//   * @param options the DataLoader dispatching instrumentation options that will be used.
-   * @return augmented instrumentation supplier.
-   */
-  public Supplier<Instrumentation> configureInstrumentationForContext(
-      Supplier<Instrumentation> instrumentation,
-      List<ExecutionInput> executionInputs) {
-    return instrumentation;
   }
 }
