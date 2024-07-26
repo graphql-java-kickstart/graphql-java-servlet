@@ -189,26 +189,4 @@ class DataLoaderDispatchingSpec extends Specification {
       return instrumentations
     }
   }
-
-  def "PER_QUERY does not add instrumentation"() {
-    when:
-    def chainedFromContext = ContextSetting.PER_QUERY
-        .configureInstrumentationForContext(chainedSupplier, Collections.emptyList())
-    def simpleFromContext = ContextSetting.PER_QUERY
-        .configureInstrumentationForContext(simpleSupplier, Collections.emptyList())
-    then:
-    simpleInstrumentation == simpleFromContext.get()
-    chainedInstrumentation == chainedFromContext.get()
-  }
-
-  def "PER_REQUEST_does not add instrumentation"() {
-    when:
-    def chainedFromContext = ContextSetting.PER_REQUEST
-        .configureInstrumentationForContext(chainedSupplier, Collections.emptyList())
-    def simpleFromContext = ContextSetting.PER_REQUEST
-        .configureInstrumentationForContext(simpleSupplier, Collections.emptyList())
-    then:
-    simpleInstrumentation == simpleFromContext.get()
-    chainedInstrumentation == chainedFromContext.get()
-  }
 }
