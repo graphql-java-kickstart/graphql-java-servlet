@@ -2,10 +2,8 @@ package graphql.kickstart.execution.config;
 
 import graphql.GraphQL;
 import graphql.execution.ExecutionStrategy;
-import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.SimplePerformantInstrumentation;
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.schema.GraphQLSchema;
@@ -89,18 +87,7 @@ public class GraphQLBuilder {
 
     Instrumentation instrumentation = configuredInstrumentationSupplier.get();
     builder.instrumentation(instrumentation);
-    if (containsDispatchInstrumentation(instrumentation)) {
-      builder.doNotAutomaticallyDispatchDataLoader();
-    }
     graphQLBuilderConfigurerSupplier.get().configure(builder);
     return builder.build();
-  }
-
-  private boolean containsDispatchInstrumentation(Instrumentation instrumentation) {
-    if (instrumentation instanceof ChainedInstrumentation) {
-      return ((ChainedInstrumentation) instrumentation)
-          .getInstrumentations().stream().anyMatch(this::containsDispatchInstrumentation);
-    }
-    return instrumentation instanceof DataLoaderDispatcherInstrumentation;
   }
 }

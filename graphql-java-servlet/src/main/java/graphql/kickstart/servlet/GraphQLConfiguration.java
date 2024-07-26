@@ -140,7 +140,7 @@ public class GraphQLConfiguration {
     private List<GraphQLServletListener> listeners = new ArrayList<>();
     private long subscriptionTimeout = 0;
     private long asyncTimeout = 30000;
-    private ContextSetting contextSetting = ContextSetting.PER_QUERY_WITH_INSTRUMENTATION;
+    private ContextSetting contextSetting = ContextSetting.PER_QUERY;
     private Supplier<BatchInputPreProcessor> batchInputPreProcessorSupplier =
         NoOpBatchInputPreProcessor::new;
     private GraphQLResponseCacheManager responseCacheManager;

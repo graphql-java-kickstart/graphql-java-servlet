@@ -3,7 +3,6 @@ package graphql.kickstart.execution;
 import graphql.execution.instrumentation.ChainedInstrumentation;
 import graphql.execution.instrumentation.Instrumentation;
 import graphql.execution.instrumentation.SimplePerformantInstrumentation;
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentationOptions;
 import graphql.execution.preparsed.NoOpPreparsedDocumentProvider;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.kickstart.execution.config.DefaultExecutionStrategyProvider;
@@ -20,17 +19,14 @@ public class GraphQLQueryInvoker {
   private final Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider;
   private final Supplier<Instrumentation> getInstrumentation;
   private final Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider;
-  private final Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier;
 
   protected GraphQLQueryInvoker(
       Supplier<ExecutionStrategyProvider> getExecutionStrategyProvider,
       Supplier<Instrumentation> getInstrumentation,
-      Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider,
-      Supplier<DataLoaderDispatcherInstrumentationOptions> optionsSupplier) {
+      Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider) {
     this.getExecutionStrategyProvider = getExecutionStrategyProvider;
     this.getInstrumentation = getInstrumentation;
     this.getPreparsedDocumentProvider = getPreparsedDocumentProvider;
-    this.optionsSupplier = optionsSupplier;
   }
 
   public static Builder newBuilder() {
@@ -43,7 +39,7 @@ public class GraphQLQueryInvoker {
             .executionStrategyProvider(getExecutionStrategyProvider)
             .instrumentation(getInstrumentation)
             .preparsedDocumentProvider(getPreparsedDocumentProvider);
-    return new GraphQLInvoker(graphQLBuilder, new BatchedDataLoaderGraphQLBuilder(optionsSupplier));
+    return new GraphQLInvoker(graphQLBuilder, new BatchedDataLoaderGraphQLBuilder());
   }
 
   public static class Builder {
@@ -54,9 +50,6 @@ public class GraphQLQueryInvoker {
         () -> SimplePerformantInstrumentation.INSTANCE;
     private Supplier<PreparsedDocumentProvider> getPreparsedDocumentProvider =
         () -> NoOpPreparsedDocumentProvider.INSTANCE;
-    private Supplier<DataLoaderDispatcherInstrumentationOptions>
-        dataLoaderDispatcherInstrumentationOptionsSupplier =
-            DataLoaderDispatcherInstrumentationOptions::newOptions;
 
     public Builder withExecutionStrategyProvider(ExecutionStrategyProvider provider) {
       return withExecutionStrategyProvider(() -> provider);
@@ -97,23 +90,11 @@ public class GraphQLQueryInvoker {
       return this;
     }
 
-    public Builder withDataLoaderDispatcherInstrumentationOptions(
-        DataLoaderDispatcherInstrumentationOptions options) {
-      return withDataLoaderDispatcherInstrumentationOptions(() -> options);
-    }
-
-    public Builder withDataLoaderDispatcherInstrumentationOptions(
-        Supplier<DataLoaderDispatcherInstrumentationOptions> supplier) {
-      this.dataLoaderDispatcherInstrumentationOptionsSupplier = supplier;
-      return this;
-    }
-
     public GraphQLQueryInvoker build() {
       return new GraphQLQueryInvoker(
           getExecutionStrategyProvider,
           getInstrumentation,
-          getPreparsedDocumentProvider,
-          dataLoaderDispatcherInstrumentationOptionsSupplier);
+          getPreparsedDocumentProvider);
     }
   }
 }
