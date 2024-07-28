@@ -24,8 +24,8 @@ import graphql.kickstart.servlet.core.GraphQLServletListener;
 import graphql.kickstart.servlet.core.GraphQLServletRootObjectBuilder;
 import graphql.kickstart.servlet.input.GraphQLInvocationInputFactory;
 import graphql.kickstart.servlet.osgi.GraphQLCodeRegistryProvider;
-import graphql.kickstart.servlet.osgi.GraphQLFieldProvider;
 import graphql.kickstart.servlet.osgi.GraphQLDirectiveProvider;
+import graphql.kickstart.servlet.osgi.GraphQLConfigurationProvider;
 import graphql.kickstart.servlet.osgi.GraphQLMutationProvider;
 import graphql.kickstart.servlet.osgi.GraphQLQueryProvider;
 import graphql.kickstart.servlet.osgi.GraphQLSubscriptionProvider;
@@ -43,10 +43,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+import lombok.Getter;
 import lombok.Setter;
 
 @Setter
-class OsgiSchemaBuilder {
+public class OsgiSchemaBuilder {
 
   private final List<GraphQLQueryProvider> queryProviders = new ArrayList<>();
   private final List<GraphQLMutationProvider> mutationProviders = new ArrayList<>();
@@ -65,23 +67,25 @@ class OsgiSchemaBuilder {
       NoOpPreparsedDocumentProvider.INSTANCE;
   private GraphQLCodeRegistryProvider codeRegistryProvider =
       () -> GraphQLCodeRegistry.newCodeRegistry().build();
+  private GraphQLConfigurationProvider configurationBuilderProvider = GraphQLConfiguration.Builder::new;
 
   private GraphQLSchemaServletProvider schemaProvider;
 
-  private ScheduledExecutorService executor;
+  private ScheduledExecutorService schemaExecutor;
   private ScheduledFuture<?> updateFuture;
   private int schemaUpdateDelay;
+  @Getter private GraphQLConfiguration configuration;
 
   void activate(int schemaUpdateDelay) {
     this.schemaUpdateDelay = schemaUpdateDelay;
     if (schemaUpdateDelay != 0) {
-      executor = Executors.newSingleThreadScheduledExecutor();
+      schemaExecutor = Executors.newSingleThreadScheduledExecutor();
     }
   }
 
   void deactivate() {
-    if (executor != null) {
-      executor.shutdown();
+    if (schemaExecutor != null) {
+      schemaExecutor.shutdown();
     }
   }
 
@@ -94,7 +98,7 @@ class OsgiSchemaBuilder {
       }
 
       updateFuture =
-          executor.schedule(this::doUpdateSchema, schemaUpdateDelay, TimeUnit.MILLISECONDS);
+          schemaExecutor.schedule(this::doUpdateSchema, schemaUpdateDelay, TimeUnit.MILLISECONDS);
     }
   }
 
@@ -140,25 +144,21 @@ class OsgiSchemaBuilder {
   }
 
   private GraphQLObjectType buildMutationType() {
-    return buildObjectType("Mutation", new ArrayList<>(mutationProviders));
+    return buildObjectType("Mutation", mutationProviders.stream().flatMap(s -> s.getMutations().stream()));
   }
 
   private GraphQLObjectType buildSubscriptionType() {
-    return buildObjectType("Subscription", new ArrayList<>(subscriptionProviders));
+    return buildObjectType("Subscription", subscriptionProviders.stream().flatMap(s -> s.getSubscriptions().stream()));
   }
 
-  private GraphQLObjectType buildObjectType(String name, List<GraphQLFieldProvider> providers) {
-    if (!providers.isEmpty()) {
-      final GraphQLObjectType.Builder typeBuilder =
-          newObject().name(name).description("Root " + name.toLowerCase() + " type");
+  private GraphQLObjectType buildObjectType(String name, Stream<GraphQLFieldDefinition> fields) {
+    final GraphQLObjectType.Builder typeBuilder =
+        newObject().name(name).description("Root " + name.toLowerCase() + " type");
 
-      for (GraphQLFieldProvider provider : providers) {
-        provider.getFields().forEach(typeBuilder::field);
-      }
+    fields.forEach(typeBuilder::field);
 
-      if (!typeBuilder.build().getFieldDefinitions().isEmpty()) {
-        return typeBuilder.build();
-      }
+    if (!typeBuilder.build().getFieldDefinitions().isEmpty()) {
+      return typeBuilder.build();
     }
     return null;
   }
@@ -214,8 +214,9 @@ class OsgiSchemaBuilder {
     return schemaProvider;
   }
 
-  GraphQLConfiguration buildConfiguration() {
-    return GraphQLConfiguration.with(buildInvocationInputFactory())
+  void updateConfiguration() {
+    configuration = configurationBuilderProvider.getConfigurationBuilder()
+        .with(buildInvocationInputFactory())
         .with(buildQueryInvoker())
         .with(buildObjectMapper())
         .with(listeners)
