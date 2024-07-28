@@ -117,11 +117,6 @@ class DataLoaderDispatchingSpec extends Specification {
     mapper.readValue(response.getContentAsByteArray(), List)
   }
 
-  Instrumentation simpleInstrumentation = new SimplePerformantInstrumentation()
-  ChainedInstrumentation chainedInstrumentation = new ChainedInstrumentation(Collections.singletonList(simpleInstrumentation))
-  def simpleSupplier = { simpleInstrumentation }
-  def chainedSupplier = { chainedInstrumentation }
-
   def "batched query with per query context does not batch loads together"() {
     setup:
     configureServlet(ContextSetting.PER_QUERY)
@@ -172,21 +167,5 @@ class DataLoaderDispatchingSpec extends Specification {
     loadCounterB.get() == 2
     fetchCounterC.get() == 1
     loadCounterC.get() == 2
-  }
-
-  def unwrapChainedInstrumentations(Instrumentation instrumentation) {
-    if (!instrumentation instanceof ChainedInstrumentation) {
-      return Collections.singletonList(instrumentation)
-    } else {
-      List<Instrumentation> instrumentations = new ArrayList<>()
-      for (Instrumentation current : ((ChainedInstrumentation) instrumentation).getInstrumentations()) {
-        if (current instanceof ChainedInstrumentation) {
-          instrumentations.addAll(unwrapChainedInstrumentations(current))
-        } else {
-          instrumentations.add(current)
-        }
-      }
-      return instrumentations
-    }
   }
 }
