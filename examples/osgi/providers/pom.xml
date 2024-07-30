@@ -11,14 +11,14 @@
         </configuration>
         <extensions>true</extensions>
         <groupId>org.apache.felix</groupId>
-        <version>3.3.0</version>
+        <version>5.1.9</version>
       </plugin>
     </plugins>
   </build>
 
   <dependencies>
     <dependency>
-      <artifactId>graphql-java-servlet</artifactId>
+      <artifactId>graphql-java-servlet-javax</artifactId>
       <groupId>com.graphql-java-kickstart</groupId>
       <scope>provided</scope>
       <version>${graphql.java.servlet.version}</version>
@@ -33,13 +33,13 @@
       <artifactId>osgi.enterprise</artifactId>
       <groupId>org.osgi</groupId>
       <scope>provided</scope>
-      <version>6.0.0</version>
+      <version>7.0.0</version>
     </dependency>
     <dependency>
       <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
       <groupId>org.apache.felix</groupId>
       <scope>provided</scope>
-      <version>1.2.4</version>
+      <version>1.2.10</version>
     </dependency>
   </dependencies>
   <modelVersion>4.0.0</modelVersion>
