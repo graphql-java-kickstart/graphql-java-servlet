@@ -34,11 +34,11 @@ dependencies {
     // Unit testing
     testImplementation "org.apache.groovy:groovy-all:4.0.23"
     testImplementation "org.spockframework:spock-core:2.3-groovy-4.0"
-    testRuntimeOnly "net.bytebuddy:byte-buddy:1.15.2"
+    testRuntimeOnly "net.bytebuddy:byte-buddy:1.15.5"
     testRuntimeOnly "org.objenesis:objenesis:3.4"
     testImplementation "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
-    testImplementation "org.springframework:spring-test:6.1.13"
-    testRuntimeOnly "org.springframework:spring-web:6.1.13"
+    testImplementation "org.springframework:spring-test:6.1.14"
+    testRuntimeOnly "org.springframework:spring-web:6.1.14"
     testImplementation 'com.google.guava:guava:33.3.1-jre'
     testImplementation "jakarta.servlet:jakarta.servlet-api:6.1.0"
     testImplementation "jakarta.websocket:jakarta.websocket-api:2.2.0"
