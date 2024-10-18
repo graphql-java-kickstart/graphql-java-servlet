@@ -72,5 +72,5 @@ This is the legacy flavour using the `javax` dependency and the version `5.*` of
 
 ## Installation and getting started
 
-See [Getting started](https://www.graphql-java-kickstart.com/servlet/getting-started/) for more
+See [Getting started](https://graphql-java-kickstart.github.io/servlet/getting-started/) for more
 detailed instructions.
