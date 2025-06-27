@@ -112,7 +112,7 @@
   </parent>
 
   <properties>
-    <jackson.version>2.13.4.2</jackson.version>
+    <jackson.version>2.15.0</jackson.version>
   </properties>
 
 </project>
