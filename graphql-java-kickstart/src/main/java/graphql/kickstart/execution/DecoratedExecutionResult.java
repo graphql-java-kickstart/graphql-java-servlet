@@ -2,18 +2,27 @@ package graphql.kickstart.execution;
 
 import graphql.ExecutionResult;
 import graphql.GraphQLError;
+import graphql.incremental.IncrementalExecutionResult;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 
 @RequiredArgsConstructor
-class DecoratedExecutionResult implements ExecutionResult {
+public class DecoratedExecutionResult implements ExecutionResult {
 
   private final ExecutionResult result;
 
   boolean isAsynchronous() {
     return result.getData() instanceof Publisher;
+  }
+
+  boolean isIncremental() {
+    return result instanceof IncrementalExecutionResult;
+  }
+
+  public IncrementalExecutionResult asIncrementalExecutionResult() {
+    return (IncrementalExecutionResult) result;
   }
 
   @Override

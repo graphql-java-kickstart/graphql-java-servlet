@@ -23,6 +23,14 @@ public class QueryResponseWriterFactoryImpl implements QueryResponseWriterFactor
           configuration.getObjectMapper(),
           configuration.getSubscriptionTimeout());
     }
+
+    if (queryResult.isIncremental()) {
+      return new SingleIncrementalQueryResponseWriter(
+          queryResult.getResult().asIncrementalExecutionResult(),
+          configuration.getObjectMapper(),
+          configuration.getSubscriptionTimeout());
+    }
+
     if (queryResult.isError()) {
       return new ErrorQueryResponseWriter(queryResult.getStatusCode(), queryResult.getMessage());
     }

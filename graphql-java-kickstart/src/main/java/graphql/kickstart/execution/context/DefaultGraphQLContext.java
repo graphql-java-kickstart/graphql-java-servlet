@@ -36,6 +36,10 @@ public class DefaultGraphQLContext implements GraphQLKickstartContext {
     map.put(key, value);
   }
 
+  public void putAll(Map<Object, Object> values) {
+    map.putAll(values);
+  }
+
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
     return dataLoaderRegistry;

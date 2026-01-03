@@ -80,30 +80,11 @@ class DataLoaderDispatchingSpec extends Specification {
     }
   }
 
-  def contextBuilder() {
-    return new GraphQLServletContextBuilder() {
-      @Override
-      GraphQLKickstartContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-        new DefaultGraphQLContext(registry())
-      }
-
-      @Override
-      GraphQLKickstartContext build(Session session, HandshakeRequest handshakeRequest) {
-        new DefaultGraphQLContext(registry())
-      }
-
-      @Override
-      GraphQLKickstartContext build() {
-        new DefaultGraphQLContext(registry())
-      }
-    }
-  }
-
   def configureServlet(ContextSetting contextSetting) {
     servlet = TestUtils.createDataLoadingServlet(queryDataFetcher("A", loadCounterA),
         queryDataFetcher("B", loadCounterB), queryDataFetcher("C", loadCounterC)
         , contextSetting,
-        contextBuilder())
+        TestUtils.contextBuilder(this::registry))
   }
 
   def resetCounters() {

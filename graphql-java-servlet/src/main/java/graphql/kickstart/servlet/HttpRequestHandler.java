@@ -8,6 +8,9 @@ public interface HttpRequestHandler {
 
   String APPLICATION_JSON_UTF8 = "application/json;charset=UTF-8";
   String APPLICATION_EVENT_STREAM_UTF8 = "text/event-stream;charset=UTF-8";
+  String MULTIPART_MIXED = "multipart/mixed; boundary=\"-\"";
+  String MULTIPART_BOUNDARY = "---\r\n";
+  String MULTIPART_CONTENT_TYPE = "Content-Type: application/json; charset=UTF-8\r\n\r\n";
 
   int STATUS_OK = 200;
   int STATUS_BAD_REQUEST = 400;

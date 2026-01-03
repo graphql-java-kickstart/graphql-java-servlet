@@ -23,6 +23,8 @@ public interface GraphQLQueryResult {
 
   boolean isAsynchronous();
 
+  boolean isIncremental();
+
   default DecoratedExecutionResult getResult() {
     return null;
   }
