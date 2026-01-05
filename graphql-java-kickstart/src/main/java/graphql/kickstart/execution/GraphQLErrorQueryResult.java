@@ -21,6 +21,11 @@ class GraphQLErrorQueryResult implements GraphQLQueryResult {
   }
 
   @Override
+  public boolean isIncremental() {
+    return false;
+  }
+
+  @Override
   public boolean isError() {
     return true;
   }

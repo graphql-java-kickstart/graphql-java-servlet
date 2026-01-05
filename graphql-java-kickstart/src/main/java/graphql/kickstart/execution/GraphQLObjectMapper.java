@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import graphql.GraphQLError;
+import graphql.incremental.DelayedIncrementalPartialResult;
+import graphql.incremental.IncrementalPayload;
 import graphql.kickstart.execution.config.ConfiguringObjectMapperProvider;
 import graphql.kickstart.execution.config.GraphQLServletObjectMapperConfigurer;
 import graphql.kickstart.execution.config.ObjectMapperProvider;
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -118,22 +121,35 @@ public class GraphQLObjectMapper {
     return getJacksonMapper().writeValueAsBytes(createResultFromExecutionResult(executionResult));
   }
 
+  @SneakyThrows
+  public byte[] serializeDelayedIncrementalResultsAsBytes(DelayedIncrementalPartialResult delayedIncrementalPartialResult) {
+    return getJacksonMapper().writeValueAsBytes(createResultFromDelayedIncrementalPayloadResult(delayedIncrementalPartialResult));
+  }
+
   public boolean areErrorsPresent(ExecutionResult executionResult) {
     return graphQLErrorHandlerSupplier.get().errorsPresent(executionResult.getErrors());
   }
 
-  public ExecutionResult sanitizeErrors(ExecutionResult executionResult) {
-    Object data = executionResult.getData();
+  public boolean areExtensionsPresent(ExecutionResult executionResult) {
     Map<Object, Object> extensions = executionResult.getExtensions();
-    List<GraphQLError> errors = executionResult.getErrors();
+    return extensions != null && !extensions.isEmpty();
+  }
 
+  public ExecutionResult sanitizeErrors(ExecutionResult executionResult) {
     GraphQLErrorHandler errorHandler = graphQLErrorHandlerSupplier.get();
-    if (errorHandler.errorsPresent(errors)) {
-      errors = errorHandler.processErrors(errors);
-    } else {
-      errors = null;
-    }
-    return new ExecutionResultImpl(data, errors, extensions);
+    return executionResult.transform(er -> {
+      List<GraphQLError> errors = executionResult.getErrors();
+      if (errorHandler.errorsPresent(errors)) {
+        errors = errorHandler.processErrors(errors);
+      } else {
+        errors = List.of();
+      }
+      er.errors(errors);
+    });
+  }
+
+  public DelayedIncrementalPartialResult sanitizeErrors(DelayedIncrementalPartialResult delayedIncrementalPartialResult) {
+    return delayedIncrementalPartialResult;
   }
 
   public Map<String, Object> createResultFromExecutionResult(ExecutionResult executionResult) {
@@ -141,28 +157,35 @@ public class GraphQLObjectMapper {
     return convertSanitizedExecutionResult(sanitizedExecutionResult);
   }
 
+  public Map<String, Object> createResultFromDelayedIncrementalPayloadResult(DelayedIncrementalPartialResult delayedIncrementalPartialResult) {
+    DelayedIncrementalPartialResult sanitizedDelayedIncrementalPartialResult = sanitizeErrors(delayedIncrementalPartialResult);
+    return convertSanitizedDelayedIncrementalPartialResult(sanitizedDelayedIncrementalPartialResult);
+  }
+
   public Map<String, Object> convertSanitizedExecutionResult(ExecutionResult executionResult) {
     return convertSanitizedExecutionResult(executionResult, true);
   }
 
+  public Map<String, Object> convertSanitizedDelayedIncrementalPartialResult(
+      DelayedIncrementalPartialResult delayedIncrementalPartialResult) {
+    return delayedIncrementalPartialResult.toSpecification();
+  }
+
   public Map<String, Object> convertSanitizedExecutionResult(
       ExecutionResult executionResult, boolean includeData) {
-    final Map<String, Object> result = new LinkedHashMap<>();
+    final Map<String, Object> result = new HashMap<>(executionResult.toSpecification());
 
-    if (areErrorsPresent(executionResult)) {
-      result.put(
-          "errors",
-          executionResult.getErrors().stream()
-              .map(GraphQLError::toSpecification)
-              .collect(toList()));
+    if (!areErrorsPresent(executionResult)) {
+      result.remove("errors");
     }
 
-    if (executionResult.getExtensions() != null && !executionResult.getExtensions().isEmpty()) {
-      result.put("extensions", executionResult.getExtensions());
+    if (!includeData) {
+      result.remove("data");
     }
+    result.putIfAbsent("data", null);
 
-    if (includeData) {
-      result.put("data", executionResult.getData());
+    if (!areExtensionsPresent(executionResult)) {
+      result.remove("extensions");
     }
 
     return result;

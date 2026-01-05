@@ -13,6 +13,7 @@ import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Shared
 import spock.lang.Specification
 
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -28,6 +29,7 @@ class AbstractGraphQLHttpServletSpec extends Specification {
   public static final int STATUS_ERROR = 500
   public static final String CONTENT_TYPE_JSON_UTF8 = 'application/json;charset=UTF-8'
   public static final String CONTENT_TYPE_SERVER_SENT_EVENTS = 'text/event-stream;charset=UTF-8'
+  public static final String CONTENT_TYPE_MULTIPART_MIXED = "multipart/mixed; boundary=\"-\";charset=UTF-8"
 
   @Shared
   ObjectMapper mapper = new ObjectMapper()
@@ -1226,4 +1228,36 @@ b
     servlet.getConfiguration().getObjectMapper().getJacksonMapper().writeValueAsString(stepInfo) != "{}"
   }
 
+  def "incremental query over HTTP POST body returns data"() {
+    setup:
+    request.setContent(mapper.writeValueAsBytes([
+        query: 'query { echo(arg:"test") ... @defer(label: "deferredEcho") { deferredEcho: echo(arg:"test") } }'
+    ]))
+    request.setMethod("POST")
+
+    when:
+    servlet.doPost(request, response)
+
+    then:
+    response.getStatus() == STATUS_OK
+    response.getContentType() == CONTENT_TYPE_MULTIPART_MIXED
+
+
+    def actual = response.getContentAsString(Charset.defaultCharset())
+    def expected = '''
+---
+Content-Type: application/json; charset=UTF-8
+
+{"data":{"echo":"test"},"hasNext":true}
+---
+Content-Type: application/json; charset=UTF-8
+
+{"hasNext":false,"incremental":[{"path":[],"label":"deferredEcho","data":{"deferredEcho":"test"}}]}
+---
+'''
+
+    // Normalize CRLF -> LF on both sides
+    def normalize = { s -> s.replace("\r\n", "\n") }
+    normalize(actual) == normalize(expected)
+  }
 }

@@ -19,4 +19,9 @@ class GraphQLBatchedQueryResult implements GraphQLQueryResult {
   public boolean isAsynchronous() {
     return false;
   }
+
+  @Override
+  public boolean isIncremental() {
+    return false;
+  }
 }

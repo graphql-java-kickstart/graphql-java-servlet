@@ -1,9 +1,12 @@
 package graphql.kickstart.servlet
 
 import com.google.common.io.ByteStreams
+import graphql.ExperimentalApi
 import graphql.Scalars
 import graphql.execution.reactive.SingleSubscriberPublisher
 import graphql.kickstart.execution.context.ContextSetting
+import graphql.kickstart.execution.context.DefaultGraphQLContext
+import graphql.kickstart.execution.context.GraphQLKickstartContext
 import graphql.kickstart.servlet.apollo.ApolloScalars
 import graphql.kickstart.servlet.context.GraphQLServletContextBuilder
 import graphql.kickstart.servlet.core.GraphQLServletListener
@@ -14,10 +17,16 @@ import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeRuntimeWiring
 import graphql.schema.idl.errors.SchemaProblem
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.websocket.Session
+import jakarta.websocket.server.HandshakeRequest
 import lombok.NonNull
+import org.dataloader.DataLoaderRegistry
 
 import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Supplier
 
 class TestUtils {
 
@@ -99,7 +108,34 @@ class TestUtils {
       configBuilder.with(Arrays.asList(listeners))
     }
     configBuilder.with(executor());
+    configBuilder.with(contextBuilder())
     configBuilder.build()
+  }
+
+  static def contextBuilder(Supplier<DataLoaderRegistry> dataLoaderRegistrySupplier = DataLoaderRegistry::new, Map<Object, Object> contextMap = [:]) {
+    return new GraphQLServletContextBuilder() {
+      @Override
+      GraphQLKickstartContext build(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        context()
+      }
+
+      @Override
+      GraphQLKickstartContext build(Session session, HandshakeRequest handshakeRequest) {
+        context()
+      }
+
+      @Override
+      GraphQLKickstartContext build() {
+        context()
+      }
+
+      private context() {
+        var context = new DefaultGraphQLContext(dataLoaderRegistrySupplier.get())
+        context.put(ExperimentalApi.ENABLE_INCREMENTAL_SUPPORT, true)
+        context.putAll(contextMap)
+        return context
+      }
+    }
   }
 
   private static Executor executor() {

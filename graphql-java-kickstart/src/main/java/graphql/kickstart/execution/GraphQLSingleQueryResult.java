@@ -17,4 +17,9 @@ class GraphQLSingleQueryResult implements GraphQLQueryResult {
   public boolean isAsynchronous() {
     return result.isAsynchronous();
   }
+
+  @Override
+  public boolean isIncremental() {
+    return result.isIncremental();
+  }
 }
