@@ -32,14 +32,14 @@ dependencies {
     testImplementation 'io.github.graphql-java:graphql-java-annotations:9.1'
 
     // Unit testing
-    testImplementation "org.apache.groovy:groovy-all:4.0.23"
-    testImplementation "org.spockframework:spock-core:2.3-groovy-4.0"
-    testRuntimeOnly "net.bytebuddy:byte-buddy:1.15.2"
-    testRuntimeOnly "org.objenesis:objenesis:3.4"
+    testImplementation "org.apache.groovy:groovy-all:4.0.33"
+    testImplementation "org.spockframework:spock-core:2.4-groovy-5.0"
+    testRuntimeOnly "net.bytebuddy:byte-buddy:1.18.13"
+    testRuntimeOnly "org.objenesis:objenesis:3.6"
     testImplementation "org.slf4j:slf4j-simple:$LIB_SLF4J_VER"
-    testImplementation "org.springframework:spring-test:6.1.13"
-    testRuntimeOnly "org.springframework:spring-web:6.1.13"
-    testImplementation 'com.google.guava:guava:33.3.1-jre'
+    testImplementation "org.springframework:spring-test:6.2.19"
+    testRuntimeOnly "org.springframework:spring-web:6.2.19"
+    testImplementation 'com.google.guava:guava:33.7.1-jre'
     testImplementation "jakarta.servlet:jakarta.servlet-api:6.1.0"
     testImplementation "jakarta.websocket:jakarta.websocket-api:2.2.0"
     testImplementation "jakarta.websocket:jakarta.websocket-client-api:2.2.0"
